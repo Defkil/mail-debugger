@@ -2,6 +2,7 @@
   import { QueryClientProvider } from '@tanstack/svelte-query';
   import { queryClient } from '$lib/query';
   import HealthBadge from '../components/HealthBadge.svelte';
+  import ThemeToggle from '../components/ThemeToggle.svelte';
   import '../app.css';
 
   let { children } = $props();
@@ -11,7 +12,10 @@
   <div class="flex min-h-screen flex-col bg-surface-950 text-surface-100">
     <nav class="flex items-center justify-between border-b border-surface-800 px-6 py-3">
       <a href="/" class="text-lg font-semibold text-primary-500">Mail Debugger</a>
-      <HealthBadge />
+      <div class="flex items-center gap-3">
+        <HealthBadge />
+        <ThemeToggle />
+      </div>
     </nav>
     <main class="flex-1 p-6">
       {@render children()}

@@ -5,6 +5,14 @@
     <link rel="icon" href="%sveltekit.assets%/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mail Debugger</title>
+    <script>
+      (function () {
+        var theme = localStorage.getItem('theme');
+        if (theme === 'light' || (!theme && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+          document.documentElement.classList.add('light');
+        }
+      })();
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">
