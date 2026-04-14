@@ -39,7 +39,12 @@
 <div class="flex flex-wrap items-center gap-3">
   <TextInput placeholder="From" bind:value={from} oninput={emit} />
   <TextInput placeholder="To" bind:value={to} oninput={emit} />
-  <TextInput placeholder="Subject" bind:value={subject} oninput={emit} class="flex-1" />
+  <TextInput
+    placeholder="Subject"
+    bind:value={subject}
+    oninput={emit}
+    class="flex-1"
+  />
   {#if hasFilter}
     <Button variant="ghost" onclick={clear}>Clear</Button>
   {/if}

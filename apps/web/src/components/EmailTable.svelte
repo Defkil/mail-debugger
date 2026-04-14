@@ -39,17 +39,18 @@
     },
     onSortingChange: setSorting,
     onPaginationChange: (updater) => {
-      const next = typeof updater === 'function' ? updater(pagination) : updater;
+      const next =
+        typeof updater === 'function' ? updater(pagination) : updater;
       onpaginationchange(next);
     },
   });
 </script>
 
 <div class="flex flex-col gap-3">
-  <div class="overflow-x-auto rounded-lg border border-surface-700">
+  <div class="border-surface-700 overflow-x-auto rounded-lg border">
     <table class="w-full text-left text-sm">
       <thead
-        class="border-b border-surface-700 bg-surface-800/50 text-xs uppercase text-surface-400"
+        class="border-surface-700 bg-surface-800/50 text-surface-400 border-b text-xs uppercase"
       >
         {#each table.getHeaderGroups() as headerGroup}
           <tr>
@@ -74,7 +75,7 @@
       <tbody>
         {#each table.getRowModel().rows as row}
           <tr
-            class="cursor-pointer border-b border-surface-800 hover:bg-surface-800/70"
+            class="border-surface-800 hover:bg-surface-800/70 cursor-pointer border-b"
             onclick={() => goto(`/emails/${row.original.id}`)}
           >
             {#each row.getVisibleCells() as cell}

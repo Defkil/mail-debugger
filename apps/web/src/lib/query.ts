@@ -23,7 +23,11 @@ export const queryKeys = {
   health: ['health'] as const,
 };
 
-export function emailListOptions(filter?: EmailFilter, limit?: number, offset?: number) {
+export function emailListOptions(
+  filter?: EmailFilter,
+  limit?: number,
+  offset?: number,
+) {
   return {
     queryKey: queryKeys.emails.list(filter, limit, offset),
     queryFn: () => listEmails(filter, limit, offset),

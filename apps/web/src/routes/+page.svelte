@@ -14,7 +14,10 @@
   let pagination: PaginationState = $state({ pageIndex: 0, pageSize: 25 });
   let showDeleteAll = $state(false);
 
-  const paramsStore = writable({ filter: {} as EmailFilter, pagination: { pageIndex: 0, pageSize: 25 } });
+  const paramsStore = writable({
+    filter: {} as EmailFilter,
+    pagination: { pageIndex: 0, pageSize: 25 },
+  });
   $effect(() => {
     paramsStore.set({ filter, pagination });
   });
@@ -22,8 +25,8 @@
   const qc = useQueryClient();
   const emails = createQuery(
     derived(paramsStore, ({ filter: f, pagination: p }) =>
-      emailListOptions(f, p.pageSize, p.pageIndex * p.pageSize)
-    )
+      emailListOptions(f, p.pageSize, p.pageIndex * p.pageSize),
+    ),
   );
 
   function onFilterChange(f: EmailFilter) {
@@ -46,16 +49,20 @@
       <FilterBar onchange={onFilterChange} />
     </div>
     {#if $emails.data && $emails.data.total > 0}
-      <Button variant="danger" class="shrink-0" onclick={() => (showDeleteAll = true)}>
+      <Button
+        variant="danger"
+        class="shrink-0"
+        onclick={() => (showDeleteAll = true)}
+      >
         Delete All
       </Button>
     {/if}
   </div>
 
   {#if $emails.isLoading}
-    <div class="py-12 text-center text-surface-500">Loading...</div>
+    <div class="text-surface-500 py-12 text-center">Loading...</div>
   {:else if $emails.isError}
-    <div class="py-12 text-center text-danger-500">
+    <div class="text-danger-500 py-12 text-center">
       Failed to load emails: {$emails.error.message}
     </div>
   {:else if $emails.data}

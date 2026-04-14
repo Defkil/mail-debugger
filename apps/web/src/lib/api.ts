@@ -1,4 +1,10 @@
-import type { Email, EmailSummary, EmailFilter, PaginatedResponse, HealthResponse } from './types';
+import type {
+  Email,
+  EmailSummary,
+  EmailFilter,
+  PaginatedResponse,
+  HealthResponse,
+} from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init);
@@ -16,7 +22,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export async function listEmails(
   filter?: EmailFilter,
   limit?: number,
-  offset?: number
+  offset?: number,
 ): Promise<PaginatedResponse<EmailSummary>> {
   const params = new URLSearchParams();
   if (filter?.from) params.set('from', filter.from);
@@ -27,7 +33,9 @@ export async function listEmails(
   if (limit != null) params.set('limit', String(limit));
   if (offset != null) params.set('offset', String(offset));
   const query = params.toString();
-  return request<PaginatedResponse<EmailSummary>>(query ? `/api/emails?${query}` : '/api/emails');
+  return request<PaginatedResponse<EmailSummary>>(
+    query ? `/api/emails?${query}` : '/api/emails',
+  );
 }
 
 export async function getEmail(id: number): Promise<Email> {
@@ -36,12 +44,16 @@ export async function getEmail(id: number): Promise<Email> {
 }
 
 export async function deleteEmail(id: number): Promise<boolean> {
-  const res = await request<{ deleted: boolean }>(`/api/emails/${id}`, { method: 'DELETE' });
+  const res = await request<{ deleted: boolean }>(`/api/emails/${id}`, {
+    method: 'DELETE',
+  });
   return res.deleted;
 }
 
 export async function deleteAllEmails(): Promise<number> {
-  const res = await request<{ deleted: number }>('/api/emails', { method: 'DELETE' });
+  const res = await request<{ deleted: number }>('/api/emails', {
+    method: 'DELETE',
+  });
   return res.deleted;
 }
 

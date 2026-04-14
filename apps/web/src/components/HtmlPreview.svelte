@@ -8,7 +8,8 @@
 
   function resize() {
     if (iframe?.contentDocument) {
-      iframe.style.height = iframe.contentDocument.documentElement.scrollHeight + 'px';
+      iframe.style.height =
+        iframe.contentDocument.documentElement.scrollHeight + 'px';
     }
   }
 </script>
@@ -19,6 +20,6 @@
   sandbox="allow-same-origin"
   onload={resize}
   title="Email HTML preview"
-  class="w-full rounded border border-surface-700 bg-white"
+  class="border-surface-700 w-full rounded border bg-white"
   style="min-height: 200px"
 ></iframe>

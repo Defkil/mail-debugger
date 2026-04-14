@@ -14,13 +14,13 @@
 </script>
 
 <div>
-  <div class="flex gap-1 border-b border-surface-700">
+  <div class="border-surface-700 flex gap-1 border-b">
     {#each tabs as tab}
       <button
         onclick={() => (activeTab = tab)}
         class="border-b-2 px-4 py-2 text-sm transition-colors {activeTab === tab
           ? 'border-primary-500 text-primary-400'
-          : 'border-transparent text-surface-400 hover:text-surface-200'}"
+          : 'text-surface-400 hover:text-surface-200 border-transparent'}"
       >
         {tab.charAt(0).toUpperCase() + tab.slice(1)}
       </button>
@@ -30,7 +30,8 @@
   <div class="mt-4">
     {#if activeTab === 'text'}
       {#if email.textBody}
-        <pre class="whitespace-pre-wrap rounded-lg border border-surface-700 bg-surface-800/50 p-4 text-sm">{email.textBody}</pre>
+        <pre
+          class="border-surface-700 bg-surface-800/50 rounded-lg border p-4 text-sm whitespace-pre-wrap">{email.textBody}</pre>
       {:else}
         <p class="text-surface-500">No plain text body</p>
       {/if}
@@ -41,20 +42,23 @@
         <p class="text-surface-500">No HTML body</p>
       {/if}
     {:else if activeTab === 'headers'}
-      <div class="rounded-lg border border-surface-700 bg-surface-800/50">
+      <div class="border-surface-700 bg-surface-800/50 rounded-lg border">
         <table class="w-full text-sm">
           <tbody>
             {#each Object.entries(email.headers) as [key, value]}
-              <tr class="border-b border-surface-700/50 last:border-0">
-                <td class="px-4 py-2 font-mono text-xs text-surface-400">{key}</td>
-                <td class="break-all px-4 py-2 font-mono text-xs">{value}</td>
+              <tr class="border-surface-700/50 border-b last:border-0">
+                <td class="text-surface-400 px-4 py-2 font-mono text-xs"
+                  >{key}</td
+                >
+                <td class="px-4 py-2 font-mono text-xs break-all">{value}</td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
     {:else if activeTab === 'raw'}
-      <pre class="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg border border-surface-700 bg-surface-800/50 p-4 font-mono text-xs">{email.raw}</pre>
+      <pre
+        class="border-surface-700 bg-surface-800/50 max-h-96 overflow-auto rounded-lg border p-4 font-mono text-xs whitespace-pre-wrap">{email.raw}</pre>
     {/if}
   </div>
 </div>

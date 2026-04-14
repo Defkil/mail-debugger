@@ -12,7 +12,9 @@
   import Button from '../../../components/ui/Button.svelte';
 
   const qc = useQueryClient();
-  const email = createQuery(derived(page, ($p) => emailDetailOptions(Number($p.params.id))));
+  const email = createQuery(
+    derived(page, ($p) => emailDetailOptions(Number($p.params.id))),
+  );
   const id = $derived(Number($page.params.id));
 
   let showDelete = $state(false);
@@ -28,18 +30,14 @@
 
 <div class="mx-auto flex max-w-4xl flex-col gap-6">
   <div class="flex items-center justify-between">
-    <Button variant="ghost" onclick={() => goto('/')}>
-      &larr; Back
-    </Button>
-    <Button variant="danger" onclick={() => (showDelete = true)}>
-      Delete
-    </Button>
+    <Button variant="ghost" onclick={() => goto('/')}>&larr; Back</Button>
+    <Button variant="danger" onclick={() => (showDelete = true)}>Delete</Button>
   </div>
 
   {#if $email.isLoading}
-    <div class="py-12 text-center text-surface-500">Loading...</div>
+    <div class="text-surface-500 py-12 text-center">Loading...</div>
   {:else if $email.isError}
-    <div class="py-12 text-center text-danger-500">
+    <div class="text-danger-500 py-12 text-center">
       {$email.error.message}
     </div>
   {:else if $email.data}

@@ -9,9 +9,13 @@
 </script>
 
 <QueryClientProvider client={queryClient}>
-  <div class="flex min-h-screen flex-col bg-surface-950 text-surface-100">
-    <nav class="flex items-center justify-between border-b border-surface-800 px-6 py-3">
-      <a href="/" class="text-lg font-semibold text-primary-500">Mail Debugger</a>
+  <div class="bg-surface-950 text-surface-100 flex min-h-screen flex-col">
+    <nav
+      class="border-surface-800 flex items-center justify-between border-b px-6 py-3"
+    >
+      <a href="/" class="text-primary-500 text-lg font-semibold"
+        >Mail Debugger</a
+      >
       <div class="flex items-center gap-3">
         <HealthBadge />
         <ThemeToggle />

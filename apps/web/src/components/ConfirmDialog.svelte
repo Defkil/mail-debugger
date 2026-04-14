@@ -10,7 +10,14 @@
     oncancel: () => void;
   }
 
-  let { open, title, message, confirmLabel = 'Delete', onconfirm, oncancel }: Props = $props();
+  let {
+    open,
+    title,
+    message,
+    confirmLabel = 'Delete',
+    onconfirm,
+    oncancel,
+  }: Props = $props();
 </script>
 
 {#if open}
@@ -19,9 +26,11 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
     onkeydown={(e) => e.key === 'Escape' && oncancel()}
   >
-    <div class="w-full max-w-sm rounded-lg border border-surface-700 bg-surface-800 p-6 shadow-xl">
-      <h3 class="mb-2 text-lg font-semibold text-surface-100">{title}</h3>
-      <p class="mb-6 text-sm text-surface-400">{message}</p>
+    <div
+      class="border-surface-700 bg-surface-800 w-full max-w-sm rounded-lg border p-6 shadow-xl"
+    >
+      <h3 class="text-surface-100 mb-2 text-lg font-semibold">{title}</h3>
+      <p class="text-surface-400 mb-6 text-sm">{message}</p>
       <div class="flex justify-end gap-3">
         <Button variant="secondary" onclick={oncancel}>Cancel</Button>
         <Button variant="danger" onclick={onconfirm}>{confirmLabel}</Button>

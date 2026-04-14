@@ -9,7 +9,7 @@
   let { email }: Props = $props();
 </script>
 
-<div class="rounded-lg border border-surface-700 bg-surface-800/50 p-5">
+<div class="border-surface-700 bg-surface-800/50 rounded-lg border p-5">
   <h1 class="mb-4 text-xl font-semibold">{email.subject}</h1>
   <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
     <dt class="text-surface-400">From</dt>
@@ -28,7 +28,7 @@
     <dd>{formatDate(email.receivedAt)}</dd>
     {#if email.messageId}
       <dt class="text-surface-400">Message-ID</dt>
-      <dd class="break-all font-mono text-xs">{email.messageId}</dd>
+      <dd class="font-mono text-xs break-all">{email.messageId}</dd>
     {/if}
   </dl>
 </div>
