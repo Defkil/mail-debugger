@@ -1,12 +1,13 @@
 <script lang="ts">
   import type { EmailFilter } from '$lib/types';
+  import Button from './ui/Button.svelte';
+  import TextInput from './ui/TextInput.svelte';
 
   interface Props {
-    filter: EmailFilter;
     onchange: (filter: EmailFilter) => void;
   }
 
-  let { filter, onchange }: Props = $props();
+  let { onchange }: Props = $props();
 
   let from = $state('');
   let to = $state('');
@@ -36,30 +37,10 @@
 </script>
 
 <div class="flex flex-wrap items-center gap-3">
-  <input
-    type="text"
-    placeholder="From"
-    bind:value={from}
-    oninput={emit}
-    class="rounded border border-surface-700 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder:text-surface-500 focus:border-primary-500 focus:outline-none"
-  />
-  <input
-    type="text"
-    placeholder="To"
-    bind:value={to}
-    oninput={emit}
-    class="rounded border border-surface-700 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder:text-surface-500 focus:border-primary-500 focus:outline-none"
-  />
-  <input
-    type="text"
-    placeholder="Subject"
-    bind:value={subject}
-    oninput={emit}
-    class="flex-1 rounded border border-surface-700 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder:text-surface-500 focus:border-primary-500 focus:outline-none"
-  />
+  <TextInput placeholder="From" bind:value={from} oninput={emit} />
+  <TextInput placeholder="To" bind:value={to} oninput={emit} />
+  <TextInput placeholder="Subject" bind:value={subject} oninput={emit} class="flex-1" />
   {#if hasFilter}
-    <button onclick={clear} class="text-sm text-surface-400 hover:text-surface-200">
-      Clear
-    </button>
+    <Button variant="ghost" onclick={clear}>Clear</Button>
   {/if}
 </div>

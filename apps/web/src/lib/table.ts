@@ -17,7 +17,7 @@ export const { createAppTable, createAppColumnHelper } = createTableHook({
     columnVisibilityFeature,
   }),
   _rowModels: {
-    sortedRowModel: createSortedRowModel(),
+    sortedRowModel: createSortedRowModel({}),
     paginatedRowModel: createPaginatedRowModel(),
   },
 });

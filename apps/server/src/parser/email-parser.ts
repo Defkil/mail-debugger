@@ -38,7 +38,7 @@ export async function parseEmail(raw: string): Promise<ParsedEmail> {
     cc: extractAddresses(parsed.cc),
     bcc: extractAddresses(parsed.bcc),
     subject: parsed.subject ?? '',
-    textBody: parsed.text ?? null,
+    textBody: parsed.text || null,
     htmlBody: parsed.html || null,
     raw,
     headers,

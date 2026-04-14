@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Table, PaginationState } from '@tanstack/svelte-table';
+  import Button from './ui/Button.svelte';
 
   interface Props {
     table: Table<any, any>;
@@ -13,23 +14,25 @@
   <span>{table.getRowCount()} email{table.getRowCount() !== 1 ? 's' : ''}</span>
 
   <div class="flex items-center gap-2">
-    <button
+    <Button
+      variant="secondary"
       onclick={() => table.previousPage()}
       disabled={!table.getCanPreviousPage()}
-      class="rounded px-2 py-1 hover:bg-surface-700 disabled:opacity-30 disabled:hover:bg-transparent"
+      class="px-2 py-1 disabled:opacity-30 disabled:hover:bg-transparent"
     >
       &larr;
-    </button>
+    </Button>
     <span>
       {pagination.pageIndex + 1} / {Math.max(table.getPageCount(), 1)}
     </span>
-    <button
+    <Button
+      variant="secondary"
       onclick={() => table.nextPage()}
       disabled={!table.getCanNextPage()}
-      class="rounded px-2 py-1 hover:bg-surface-700 disabled:opacity-30 disabled:hover:bg-transparent"
+      class="px-2 py-1 disabled:opacity-30 disabled:hover:bg-transparent"
     >
       &rarr;
-    </button>
+    </Button>
 
     <select
       value={pagination.pageSize}

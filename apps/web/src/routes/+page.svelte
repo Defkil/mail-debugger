@@ -7,11 +7,11 @@
   import EmailTable from '../components/EmailTable.svelte';
   import FilterBar from '../components/FilterBar.svelte';
   import ConfirmDialog from '../components/ConfirmDialog.svelte';
+  import Button from '../components/ui/Button.svelte';
 
   let filter: EmailFilter = $state({});
   let showDeleteAll = $state(false);
 
-  // Bridge $state → Svelte store for createQuery compatibility
   const filterStore = writable<EmailFilter>({});
   $effect(() => {
     filterStore.set(filter);
@@ -31,15 +31,12 @@
 <div class="flex flex-col gap-4">
   <div class="flex items-center justify-between gap-4">
     <div class="flex-1">
-      <FilterBar {filter} onchange={(f) => (filter = f)} />
+      <FilterBar onchange={(f) => (filter = f)} />
     </div>
     {#if $emails.data?.length}
-      <button
-        onclick={() => (showDeleteAll = true)}
-        class="shrink-0 rounded bg-danger-600 px-4 py-1.5 text-sm text-white hover:bg-danger-500"
-      >
+      <Button variant="danger" class="shrink-0" onclick={() => (showDeleteAll = true)}>
         Delete All
-      </button>
+      </Button>
     {/if}
   </div>
 

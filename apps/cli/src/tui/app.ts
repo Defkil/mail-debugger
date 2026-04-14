@@ -379,7 +379,7 @@ export async function startTui(
             [
               ui.text(
                 email
-                  ? (email.textBody ?? email.htmlBody ?? '(no body)')
+                  ? (email.textBody || email.htmlBody || '(no body)')
                   : '',
                 { wrap: true },
               ),
