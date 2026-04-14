@@ -6,16 +6,5 @@
     "tsBuildInfoFile": "./out-tsc/vitest/tsconfig.spec.tsbuildinfo",
     "types": ["vitest/globals", "node"]
   },
-  "include": [
-    "vitest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.d.ts",
-    "src/**/test-fixtures.ts"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    }
-  ]
+  "include": ["vitest.config.ts", "src/**/*.ts"]
 }
