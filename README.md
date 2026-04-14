@@ -6,18 +6,21 @@ Lightweight fake SMTP server that catches emails during development. Inspect, fi
 
 ```bash
 # Run the server (no install needed)
-npx github:defkil/mail-debugger
+pnpx github:defkil/mail-debugger
+```
 
-# Or install as a dev dependency
+Or install it once as a dev dependency and run it by name:
+
+```bash
 pnpm add -D github:defkil/mail-debugger
-npx mail-debugger
+pnpx mail-debugger
 ```
 
 This starts an **SMTP server** on port `2525` and an **API server** on port `3000` with Swagger UI at `http://localhost:3000/swagger`.
 
 ```bash
 # Custom ports with persistent storage
-npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
+pnpx github:defkil/mail-debugger --smtp-port 1025 --api-port 8080 --persist
 ```
 
 ### TLS
@@ -31,17 +34,17 @@ TLS is disabled by default. Use `--tls` to enable it. A self-signed certificate 
 | **implicit** | `--tls implicit` | Encrypted from the start (SMTPS)                 |
 
 ```bash
-npx mail-debugger --tls starttls
-npx mail-debugger --tls implicit --smtp-port 4650
+pnpx github:defkil/mail-debugger --tls starttls
+pnpx github:defkil/mail-debugger --tls implicit --smtp-port 4650
 ```
 
 ## CLI Client
 
 ```bash
-mail-debugger-cli              # Interactive TUI
-mail-debugger-cli list         # List all emails
-mail-debugger-cli show 5       # Show email details
-mail-debugger-cli health       # Server status
+pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli              # Interactive TUI
+pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli list         # List all emails
+pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli show 5       # Show email details
+pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli health       # Server status
 ```
 
 See [apps/cli/README.md](apps/cli/README.md) for all commands and options.

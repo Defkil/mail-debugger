@@ -11,42 +11,42 @@ SMTP catch-all server with a REST API for inspecting captured emails during deve
 
 ## CLI Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--smtp-port <port>` | `2525` | SMTP server port |
-| `--api-port <port>` | `3000` | REST API server port |
-| `--persist` | `false` | Enable persistent SQLite storage (`mail-debugger.sqlite`) |
-| `--tls <mode>` | `none` | TLS mode: `none`, `starttls`, or `implicit` |
+| Option               | Default | Description                                               |
+| -------------------- | ------- | --------------------------------------------------------- |
+| `--smtp-port <port>` | `2525`  | SMTP server port                                          |
+| `--api-port <port>`  | `3000`  | REST API server port                                      |
+| `--persist`          | `false` | Enable persistent SQLite storage (`mail-debugger.sqlite`) |
+| `--tls <mode>`       | `none`  | TLS mode: `none`, `starttls`, or `implicit`               |
 
 ```bash
-npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
-npx mail-debugger --tls starttls
+pnpx github:defkil/mail-debugger --smtp-port 1025 --api-port 8080 --persist
+pnpx github:defkil/mail-debugger --tls starttls
 ```
 
 ## API Reference
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/emails` | List emails (supports filtering) |
-| `GET` | `/api/emails/:id` | Get full email details |
-| `DELETE` | `/api/emails/:id` | Delete a single email |
-| `DELETE` | `/api/emails` | Delete all emails |
-| `GET` | `/api/health` | Health check and server info |
-| `GET` | `/swagger` | OpenAPI/Swagger UI |
+| Method   | Endpoint          | Description                      |
+| -------- | ----------------- | -------------------------------- |
+| `GET`    | `/api/emails`     | List emails (supports filtering) |
+| `GET`    | `/api/emails/:id` | Get full email details           |
+| `DELETE` | `/api/emails/:id` | Delete a single email            |
+| `DELETE` | `/api/emails`     | Delete all emails                |
+| `GET`    | `/api/health`     | Health check and server info     |
+| `GET`    | `/swagger`        | OpenAPI/Swagger UI               |
 
 ### Query Parameters
 
 `GET /api/emails` supports filtering and pagination:
 
-| Parameter | Description |
-|-----------|-------------|
-| `from` | Filter by sender (partial match) |
-| `to` | Filter by recipient (partial match) |
-| `subject` | Filter by subject (partial match) |
-| `since` | Emails received after this datetime |
-| `until` | Emails received before this datetime |
-| `limit` | Max number of results |
-| `offset` | Skip first N results |
+| Parameter | Description                          |
+| --------- | ------------------------------------ |
+| `from`    | Filter by sender (partial match)     |
+| `to`      | Filter by recipient (partial match)  |
+| `subject` | Filter by subject (partial match)    |
+| `since`   | Emails received after this datetime  |
+| `until`   | Emails received before this datetime |
+| `limit`   | Max number of results                |
+| `offset`  | Skip first N results                 |
 
 Example: `GET /api/emails?from=alice&subject=welcome&limit=10&offset=0`
 
