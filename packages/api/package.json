@@ -32,7 +32,7 @@
     "mail-debugger-api": "./dist/main.mjs"
   },
   "scripts": {
-    "prepack": "pnpm -w exec nx run mail-debugger-api:build --skip-nx-cache"
+    "prepack": "pnpm -w exec nx build mail-debugger-api --skip-nx-cache"
   },
   "nx": {
     "targets": {

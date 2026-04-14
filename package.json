@@ -31,8 +31,8 @@
   },
   "scripts": {
     "setup": "husky",
-    "build": "nx run-many -t build -p server",
-    "prepack": "nx run -t build @mail-debugger/server --skip-nx-cache"
+    "build": "nx build @mail-debugger/server",
+    "prepack": "nx build @mail-debugger/server --skip-nx-cache"
   },
   "files": [
     "apps/server/dist"
