@@ -6,7 +6,7 @@
   },
   "nx": {
     "targets": {
-      "build": {
+      "compile": {
         "executor": "@nx/esbuild:esbuild",
         "outputs": [
           "{options.outputPath}"
@@ -51,6 +51,26 @@
           }
         }
       },
+      "copy-web": {
+        "executor": "nx:run-commands",
+        "dependsOn": [
+          "@mail-debugger/web:build",
+          "compile"
+        ],
+        "outputs": [
+          "{workspaceRoot}/apps/server/dist/web"
+        ],
+        "options": {
+          "command": "node -e \"const fs=require('fs');fs.cpSync('apps/web/build','apps/server/dist/web',{recursive:true})\""
+        }
+      },
+      "build": {
+        "dependsOn": [
+          "compile",
+          "copy-web"
+        ],
+        "executor": "nx:noop"
+      },
       "prune-lockfile": {
         "dependsOn": [
           "build"
@@ -62,7 +82,7 @@
           "{workspaceRoot}/apps/server/dist/pnpm-lock.yaml"
         ],
         "options": {
-          "buildTarget": "build"
+          "buildTarget": "compile"
         }
       },
       "copy-workspace-modules": {
@@ -75,7 +95,7 @@
         ],
         "executor": "@nx/js:copy-workspace-modules",
         "options": {
-          "buildTarget": "build"
+          "buildTarget": "compile"
         }
       },
       "prune": {
@@ -90,18 +110,18 @@
         "executor": "@nx/js:node",
         "defaultConfiguration": "development",
         "dependsOn": [
-          "build"
+          "compile"
         ],
         "options": {
-          "buildTarget": "@mail-debugger/server:build",
+          "buildTarget": "@mail-debugger/server:compile",
           "runBuildTargetDependencies": false
         },
         "configurations": {
           "development": {
-            "buildTarget": "@mail-debugger/server:build:development"
+            "buildTarget": "@mail-debugger/server:compile:development"
           },
           "production": {
-            "buildTarget": "@mail-debugger/server:build:production"
+            "buildTarget": "@mail-debugger/server:compile:production"
           }
         }
       },

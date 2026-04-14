@@ -1,9 +1,17 @@
 import pino from 'pino';
 import { createSmtpServer } from './smtp-server';
+import { generateSelfSignedCert } from './tls';
+import type { TlsCert } from './tls';
 import type { EmailRepository } from '../db/email-repository';
 import type { ParsedEmail } from '../types';
 
 const silentLogger = pino({ level: 'silent' });
+
+let testCert: TlsCert;
+
+beforeAll(async () => {
+  testCert = await generateSelfSignedCert();
+});
 
 function createMockRepository() {
   return {
@@ -17,9 +25,9 @@ function createMockRepository() {
 }
 
 describe('createSmtpServer', () => {
-  it('should create an SMTP server instance', () => {
+  it('should create an SMTP server instance without TLS', () => {
     const repo = createMockRepository();
-    const server = createSmtpServer(repo, silentLogger);
+    const server = createSmtpServer(repo, silentLogger, 'none');
     expect(server).toBeDefined();
     expect(typeof server.listen).toBe('function');
     expect(typeof server.close).toBe('function');
@@ -27,12 +35,11 @@ describe('createSmtpServer', () => {
 
   it('should accept connections and store emails', (done) => {
     const repo = createMockRepository();
-    const server = createSmtpServer(repo, silentLogger);
+    const server = createSmtpServer(repo, silentLogger, 'starttls', testCert);
 
     const port = 2599;
 
     server.listen(port, '127.0.0.1', () => {
-      // Use nodemailer to send a test email
       import('nodemailer').then(({ createTransport }) => {
         const transport = createTransport({
           host: '127.0.0.1',
@@ -51,7 +58,6 @@ describe('createSmtpServer', () => {
           (err) => {
             expect(err).toBeNull();
 
-            // Give a small delay for async processing
             setTimeout(() => {
               expect(repo.insert).toHaveBeenCalledTimes(1);
               const insertedEmail: ParsedEmail =

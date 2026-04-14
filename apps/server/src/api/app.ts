@@ -1,3 +1,5 @@
+import { readFileSync, existsSync } from 'fs';
+import { resolve, join, extname } from 'path';
 import { Elysia } from 'elysia';
 import { node } from '@elysiajs/node';
 import { swagger } from '@elysiajs/swagger';
@@ -6,6 +8,43 @@ import type { Logger } from '../logger.js';
 import type { Config } from '../types.js';
 import { emailRoutes } from './routes/emails.js';
 import { healthRoutes } from './routes/health.js';
+
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+  '.json': 'application/json',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
+
+function serveWeb() {
+  // @ts-expect-error esbuild outputs ESM where import.meta.dirname is available
+  const webDir = resolve(import.meta.dirname, 'web');
+  const indexPath = join(webDir, 'index.html');
+  const indexHtml = existsSync(indexPath)
+    ? readFileSync(indexPath, 'utf-8')
+    : null;
+
+  return new Elysia().get('/*', ({ params, set }) => {
+    if (!indexHtml) return set.status = 404;
+
+    const filePath = join(webDir, params['*'] || 'index.html');
+    if (!filePath.startsWith(webDir)) return set.status = 403;
+
+    if (existsSync(filePath)) {
+      const ext = extname(filePath);
+      set.headers['content-type'] = MIME_TYPES[ext] || 'application/octet-stream';
+      return readFileSync(filePath);
+    }
+
+    set.headers['content-type'] = 'text/html';
+    return indexHtml;
+  }, { detail: { hide: true } });
+}
 
 export function createApp(
   repository: EmailRepository,
@@ -47,7 +86,8 @@ export function createApp(
       })
     )
     .use(emailRoutes(repository))
-    .use(healthRoutes(repository, config));
+    .use(healthRoutes(repository, config))
+    .use(serveWeb());
 
   return app;
 }

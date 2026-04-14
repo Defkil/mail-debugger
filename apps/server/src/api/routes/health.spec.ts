@@ -11,6 +11,7 @@ function createMockRepo(emailCount = 0) {
 const testConfig: Config = {
   smtpPort: 2525,
   apiPort: 3000,
+  tls: 'none',
   persist: false,
 };
 

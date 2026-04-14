@@ -1,17 +1,26 @@
 import { SMTPServer } from 'smtp-server';
 import type { EmailRepository } from '../db/email-repository.js';
 import type { Logger } from '../logger.js';
+import type { TlsMode } from '../types.js';
 import { parseEmail } from '../parser/email-parser.js';
+import type { TlsCert } from './tls.js';
 
 export function createSmtpServer(
   repository: EmailRepository,
-  logger: Logger
+  logger: Logger,
+  tls: TlsMode,
+  cert?: TlsCert
 ): SMTPServer {
   const log = logger.child({ component: 'smtp' });
 
-  const server = new SMTPServer({
+  const useTls = tls !== 'none';
+  const tlsOptions = useTls ? { key: cert!.key, cert: cert!.cert } : {};
+
+  return new SMTPServer({
     authOptional: true,
-    disabledCommands: ['STARTTLS'],
+    secure: tls === 'implicit',
+    disabledCommands: useTls ? [] : ['STARTTLS'],
+    ...tlsOptions,
     logger: false,
     onData(stream, session, callback) {
       const chunks: Buffer[] = [];
@@ -44,6 +53,4 @@ export function createSmtpServer(
       callback(null, { user: 'anonymous' });
     },
   });
-
-  return server;
 }
