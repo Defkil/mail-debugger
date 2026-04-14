@@ -32,7 +32,11 @@ export class EmailRepository {
     return result.lastInsertRowid as number;
   }
 
-  findAll(filter?: EmailFilter): EmailSummary[] {
+  findAll(
+    filter?: EmailFilter,
+    limit?: number,
+    offset?: number
+  ): { data: EmailSummary[]; total: number } {
     const conditions: string[] = [];
     const params: unknown[] = [];
 
@@ -60,11 +64,17 @@ export class EmailRepository {
     const where =
       conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    const rows = this.db
-      .prepare(
-        `SELECT id, from_addr, to_addr, subject, received_at, attachments FROM emails ${where} ORDER BY received_at DESC`
-      )
-      .all(...params) as Array<{
+    const { total } = this.db
+      .prepare(`SELECT count(*) as total FROM emails ${where}`)
+      .get(...params) as { total: number };
+
+    let sql = `SELECT id, from_addr, to_addr, subject, received_at, attachments FROM emails ${where} ORDER BY received_at DESC`;
+    if (limit != null) {
+      sql += ` LIMIT ${limit}`;
+      if (offset != null) sql += ` OFFSET ${offset}`;
+    }
+
+    const rows = this.db.prepare(sql).all(...params) as Array<{
       id: number;
       from_addr: string;
       to_addr: string;
@@ -73,16 +83,19 @@ export class EmailRepository {
       attachments: string | null;
     }>;
 
-    return rows.map((row) => ({
-      id: row.id,
-      from: row.from_addr,
-      to: JSON.parse(row.to_addr) as string[],
-      subject: row.subject,
-      receivedAt: row.received_at,
-      hasAttachments:
-        row.attachments !== null &&
-        (JSON.parse(row.attachments) as unknown[]).length > 0,
-    }));
+    return {
+      total,
+      data: rows.map((row) => ({
+        id: row.id,
+        from: row.from_addr,
+        to: JSON.parse(row.to_addr) as string[],
+        subject: row.subject,
+        receivedAt: row.received_at,
+        hasAttachments:
+          row.attachments !== null &&
+          (JSON.parse(row.attachments) as unknown[]).length > 0,
+      })),
+    };
   }
 
   findById(id: number): Email | undefined {

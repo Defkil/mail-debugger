@@ -13,17 +13,21 @@ export function emailRoutes(repository: EmailRepository) {
         if (query.since) filter.since = query.since;
         if (query.until) filter.until = query.until;
 
-        const data = repository.findAll(
-          Object.keys(filter).length > 0 ? filter : undefined
+        const limit = query.limit ? Number(query.limit) : undefined;
+        const offset = query.offset ? Number(query.offset) : undefined;
+
+        return repository.findAll(
+          Object.keys(filter).length > 0 ? filter : undefined,
+          limit,
+          offset
         );
-        return { data };
       },
       {
         detail: {
           tags: ['Emails'],
           summary: 'List emails',
           description:
-            'Returns all caught emails, optionally filtered by from, to, subject, since, until.',
+            'Returns paginated emails, optionally filtered.',
         },
         query: t.Object({
           from: t.Optional(t.String()),
@@ -31,6 +35,8 @@ export function emailRoutes(repository: EmailRepository) {
           subject: t.Optional(t.String()),
           since: t.Optional(t.String()),
           until: t.Optional(t.String()),
+          limit: t.Optional(t.String()),
+          offset: t.Optional(t.String()),
         }),
       }
     )
