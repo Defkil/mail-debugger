@@ -1,18 +1,20 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #50a0ff;
-  --color-primary-600: #3b82f6;
-  --color-primary-700: #2563eb;
-  --color-primary-800: #1d4ed8;
-  --color-primary-900: #1e3a5f;
-  --color-primary-950: #172554;
+  /* Primary: neon green scale anchored on the CLI's NEON (#39ff14 = rgb(57,255,20)) */
+  --color-primary-50: #eeffe6;
+  --color-primary-100: #d2ffc2;
+  --color-primary-200: #a8ff8a;
+  --color-primary-300: #7dff5c;
+  --color-primary-400: #56ff30;
+  --color-primary-500: #39ff14;
+  --color-primary-600: #2ad600;
+  --color-primary-700: #1fa300;
+  --color-primary-800: #176e00;
+  --color-primary-900: #0d4100;
+  --color-primary-950: #052200;
 
+  /* Surface: cool slate — high-contrast neutral backdrop so neon green reads as the accent */
   --color-surface-50: #f8fafc;
   --color-surface-100: #f1f5f9;
   --color-surface-200: #e2e8f0;
@@ -25,10 +27,12 @@
   --color-surface-900: #0f172a;
   --color-surface-950: #020617;
 
-  --color-danger-500: #ef4444;
-  --color-danger-600: #dc2626;
-  --color-success-500: #22c55e;
-  --color-success-600: #16a34a;
+  /* Danger: matches the CLI ERROR_COLOR (rgb(255,80,80)) */
+  --color-danger-500: #ff5050;
+  --color-danger-600: #e63939;
+  /* Success: reuses the neon accent — in the CLI neon green is the "ok" signal */
+  --color-success-500: #39ff14;
+  --color-success-600: #2ad600;
   --color-warning-500: #f59e0b;
 }
 
@@ -44,8 +48,10 @@
   --color-surface-800: #f1f5f9;
   --color-surface-900: #f8fafc;
   --color-surface-950: #ffffff;
-  --color-primary-400: #3b82f6;
-  --color-primary-500: #2563eb;
+  /* Neon on white is illegible — shift primary two stops deeper for contrast */
+  --color-primary-400: #2ad600;
+  --color-primary-500: #1fa300;
+  --color-success-500: #1fa300;
 }
 
 body {
