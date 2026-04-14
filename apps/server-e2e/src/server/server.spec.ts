@@ -18,7 +18,7 @@ async function jsonBody(res: Response): Promise<any> {
 function createMailTransport() {
   return createTransport({
     host: '127.0.0.1',
-    port: SMTP_PORT,
+    port: 2525,
     secure: false,
     tls: { rejectUnauthorized: false },
   });

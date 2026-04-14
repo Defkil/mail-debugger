@@ -45,3 +45,7 @@ Thumbs.db
 
 .nx/polygraph
 test-output
+
+# SvelteKit
+.svelte-kit
+apps/web/build

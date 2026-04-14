@@ -20,6 +20,23 @@ This starts an **SMTP server** on port `2525` and an **API server** on port `300
 npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
 ```
 
+### TLS
+
+Standardmäßig läuft der SMTP-Server ohne Verschlüsselung. Über den `--tls` Parameter kann TLS aktiviert werden. Beim Start wird automatisch ein selbstsigniertes Zertifikat erzeugt - Zertifikatsvalidierung im Client muss daher deaktiviert werden.
+
+| Modus | Flag | Beschreibung |
+|-------|------|--------------|
+| **none** | `--tls none` | Keine Verschlüsselung (Standard) |
+| **starttls** | `--tls starttls` | Verbindung startet unverschlüsselt, der Client kann per STARTTLS-Befehl auf TLS upgraden |
+| **implicit** | `--tls implicit` | Verbindung ist sofort verschlüsselt (auch als SMTPS bekannt) |
+
+```bash
+npx mail-debugger --tls starttls
+npx mail-debugger --tls implicit --smtp-port 4650
+```
+
+Authentifizierung wird immer akzeptiert - beliebiger Benutzername und Passwort funktionieren.
+
 ## CLI Client
 
 ```bash
@@ -33,15 +50,31 @@ See [apps/cli/README.md](apps/cli/README.md) for all commands and options.
 
 ## SMTP Configuration
 
-Point any SMTP client to `localhost:2525` -- no authentication, no TLS.
+Point any SMTP client to `localhost:2525`. Authentication is optional -- any credentials are accepted.
 
 ```typescript
 import { createTransport } from 'nodemailer';
 
+// Ohne TLS (Standard)
 const transport = createTransport({
   host: 'localhost',
   port: 2525,
   secure: false,
+});
+
+// Mit STARTTLS (--tls starttls)
+const tlsTransport = createTransport({
+  host: 'localhost',
+  port: 2525,
+  secure: false,
+  tls: { rejectUnauthorized: false },
+});
+
+// Mit Implicit TLS (--tls implicit)
+const smtpsTransport = createTransport({
+  host: 'localhost',
+  port: 2525,
+  secure: true,
   tls: { rejectUnauthorized: false },
 });
 ```
@@ -66,7 +99,7 @@ pnpm nx run-many -t lint test build typecheck   # All checks
 
 - [ ] Web UI -- Browser-based inbox
 - [x] CLI UI -- Terminal-based inbox viewer
-- [ ] Full SMTP features -- SIZE, STARTTLS, authentication
+- [x] Full SMTP features -- SIZE, STARTTLS, authentication
 - [ ] IMAP server -- Email client support
 - [ ] MCP support -- Model Context Protocol for AI agents
 
