@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import type { ApiClient } from '../api/client';
-import type { Email, EmailSummary, HealthResponse } from '../types';
+import type { Email, EmailSummary, HealthResponse } from '@mail-debugger/types';
 
 export const mockSummary: EmailSummary = {
   id: 1,

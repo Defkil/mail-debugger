@@ -4,7 +4,7 @@ import { createSmtpServer } from './smtp-server';
 import { generateSelfSignedCert } from './tls';
 import type { TlsCert } from './tls';
 import type { EmailRepository } from '../db/email-repository';
-import type { ParsedEmail } from '../types';
+import type { ParsedEmail } from '@mail-debugger/types';
 
 const silentLogger = pino({ level: 'silent' });
 
@@ -78,7 +78,7 @@ describe('createSmtpServer', () => {
                   server.close(() => reject(error));
                 }
               }, 200);
-            }
+            },
           );
         });
       });

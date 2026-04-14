@@ -1,4 +1,4 @@
-import type { Email } from '../types.js';
+import type { Email } from '@mail-debugger/types';
 
 export function formatEmailDetail(email: Email): string {
   const lines: string[] = [
@@ -30,7 +30,7 @@ export function formatEmailDetail(email: Email): string {
     lines.push('', '--- Attachments ---');
     for (const att of email.attachments) {
       lines.push(
-        `  ${att.filename ?? '(unnamed)'}  ${att.contentType}  ${att.size} bytes`
+        `  ${att.filename ?? '(unnamed)'}  ${att.contentType}  ${att.size} bytes`,
       );
     }
   }

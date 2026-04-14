@@ -1,4 +1,4 @@
-import type { EmailFilter } from '../types.js';
+import type { EmailFilter } from '@mail-debugger/types';
 import type { TuiState } from './state.js';
 
 export function buildFilter(state: TuiState): EmailFilter | undefined {

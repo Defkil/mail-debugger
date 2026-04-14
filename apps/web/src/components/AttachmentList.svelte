@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AttachmentMeta } from '$lib/types';
+  import type { AttachmentMeta } from '@mail-debugger/types';
   import { formatBytes } from '$lib/format';
 
   interface Props {

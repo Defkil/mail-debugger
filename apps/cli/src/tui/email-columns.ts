@@ -1,6 +1,6 @@
 import { ui } from '@rezi-ui/core';
 import type { TableColumn } from '@rezi-ui/core';
-import type { EmailSummary } from '../types.js';
+import type { EmailSummary } from '@mail-debugger/types';
 
 export const emailColumns: TableColumn<EmailSummary>[] = [
   { key: 'id', header: 'ID', width: 5 },
@@ -10,8 +10,7 @@ export const emailColumns: TableColumn<EmailSummary>[] = [
     key: 'date',
     header: 'Date',
     width: 20,
-    render: (_value, row) =>
-      ui.text(new Date(row.receivedAt).toLocaleString()),
+    render: (_value, row) => ui.text(new Date(row.receivedAt).toLocaleString()),
   },
   {
     key: 'att',

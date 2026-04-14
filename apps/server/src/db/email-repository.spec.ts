@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { EmailRepository } from './email-repository';
 import { CREATE_EMAILS_TABLE, CREATE_INDEXES } from './schema';
-import type { EmailSummary, ParsedEmail } from '../types';
+import type { EmailSummary, ParsedEmail } from '@mail-debugger/types';
 
 function createTestDb(): Database.Database {
   const db = new Database(':memory:');
@@ -111,15 +111,15 @@ describe('EmailRepository', () => {
               content: 'aGVsbG8=',
             },
           ],
-        })
+        }),
       );
 
       const { data } = repo.findAll();
       const withAttachment = data.find(
-        (e: EmailSummary) => e.subject === 'With attachment'
+        (e: EmailSummary) => e.subject === 'With attachment',
       );
       const withoutAttachment = data.find(
-        (e: EmailSummary) => e.subject !== 'With attachment'
+        (e: EmailSummary) => e.subject !== 'With attachment',
       );
 
       expect(withAttachment?.hasAttachments).toBe(true);

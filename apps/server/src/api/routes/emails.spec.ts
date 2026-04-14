@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 import { emailRoutes } from './emails';
 import type { EmailRepository } from '../../db/email-repository';
-import type { EmailSummary, Email } from '../../types';
+import type { EmailSummary, Email } from '@mail-debugger/types';
 
 const mockSummary: EmailSummary = {
   id: 1,

@@ -3,7 +3,7 @@ import type {
   EmailFilter,
   EmailSummary,
   HealthResponse,
-} from '../types.js';
+} from '@mail-debugger/types';
 
 export function createApiClient(apiUrl: string) {
   async function request<T>(path: string, init?: RequestInit): Promise<T> {

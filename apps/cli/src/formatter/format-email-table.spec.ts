@@ -1,5 +1,5 @@
 import { formatEmailTable } from './format-email-table';
-import type { EmailSummary } from '../types';
+import type { EmailSummary } from '@mail-debugger/types';
 
 const mockSummary: EmailSummary = {
   id: 1,
@@ -38,10 +38,7 @@ describe('formatEmailTable', () => {
   });
 
   it('should render multiple rows', () => {
-    const emails = [
-      mockSummary,
-      { ...mockSummary, id: 2, subject: 'Another' },
-    ];
+    const emails = [mockSummary, { ...mockSummary, id: 2, subject: 'Another' }];
     const lines = formatEmailTable(emails).split('\n');
     expect(lines.length).toBe(4);
   });

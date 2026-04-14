@@ -1,5 +1,5 @@
 import { createAppColumnHelper } from './table';
-import type { EmailSummary } from './types';
+import type { EmailSummary } from '@mail-debugger/types';
 import { timeAgo } from './format';
 
 const col = createAppColumnHelper<EmailSummary>();

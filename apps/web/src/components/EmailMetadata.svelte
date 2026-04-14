@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Email } from '$lib/types';
+  import type { Email } from '@mail-debugger/types';
   import { formatDate } from '$lib/format';
 
   interface Props {

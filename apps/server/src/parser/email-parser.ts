@@ -1,14 +1,12 @@
 import { simpleParser, type AddressObject } from 'mailparser';
-import type { ParsedEmail, AttachmentMeta } from '../types.js';
+import type { ParsedEmail, AttachmentMeta } from '@mail-debugger/types';
 
 function extractAddresses(
-  value: AddressObject | AddressObject[] | undefined
+  value: AddressObject | AddressObject[] | undefined,
 ): string[] {
   if (!value) return [];
   const list = Array.isArray(value) ? value : [value];
-  return list.flatMap((group) =>
-    group.value.map((addr) => addr.address ?? '')
-  );
+  return list.flatMap((group) => group.value.map((addr) => addr.address ?? ''));
 }
 
 export async function parseEmail(raw: string): Promise<ParsedEmail> {
@@ -20,7 +18,7 @@ export async function parseEmail(raw: string): Promise<ParsedEmail> {
       size: att.size,
       contentType: att.contentType,
       content: att.content.toString('base64'),
-    })
+    }),
   );
 
   const headers: Record<string, string> = {};
@@ -28,8 +26,7 @@ export async function parseEmail(raw: string): Promise<ParsedEmail> {
     headers[key] = typeof value === 'string' ? value : String(value);
   }
 
-  const fromAddr =
-    parsed.from?.value?.[0]?.address ?? parsed.from?.text ?? '';
+  const fromAddr = parsed.from?.value?.[0]?.address ?? parsed.from?.text ?? '';
 
   return {
     messageId: parsed.messageId ?? null,

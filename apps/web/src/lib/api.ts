@@ -4,7 +4,7 @@ import type {
   EmailFilter,
   PaginatedResponse,
   HealthResponse,
-} from './types';
+} from '@mail-debugger/types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init);

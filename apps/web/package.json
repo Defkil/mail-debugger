@@ -41,5 +41,8 @@
         }
       }
     }
+  },
+  "dependencies": {
+    "@mail-debugger/types": "workspace:*"
   }
 }

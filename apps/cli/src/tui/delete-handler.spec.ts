@@ -2,7 +2,7 @@ import { handleDeleteKey } from './delete-handler';
 import type { DeleteHandlerDeps } from './delete-handler';
 import { createInitialState } from './state';
 import type { TuiState } from './state';
-import type { EmailSummary, Email } from '../types';
+import type { EmailSummary, Email } from '@mail-debugger/types';
 
 const mockSummary: EmailSummary = {
   id: 1,

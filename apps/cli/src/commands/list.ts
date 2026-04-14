@@ -1,11 +1,11 @@
 import type { ApiClient } from '../api/client.js';
-import type { EmailFilter } from '../types.js';
+import type { EmailFilter } from '@mail-debugger/types';
 import { formatEmailTable } from '../formatter/format-email-table.js';
 
 export async function listCommand(
   client: ApiClient,
   filter?: EmailFilter,
-  json?: boolean
+  json?: boolean,
 ): Promise<void> {
   const emails = await client.listEmails(filter);
 

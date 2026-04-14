@@ -4,7 +4,7 @@
   import type { PaginationState } from '@tanstack/svelte-table';
   import { emailListOptions, queryKeys } from '$lib/query';
   import { deleteAllEmails } from '$lib/api';
-  import type { EmailFilter } from '$lib/types';
+  import type { EmailFilter } from '@mail-debugger/types';
   import EmailTable from '../components/EmailTable.svelte';
   import FilterBar from '../components/FilterBar.svelte';
   import ConfirmDialog from '../components/ConfirmDialog.svelte';

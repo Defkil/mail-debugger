@@ -4,7 +4,7 @@ import type {
   Email,
   EmailSummary,
   EmailFilter,
-} from '../types.js';
+} from '@mail-debugger/types';
 
 export class EmailRepository {
   constructor(private db: Database.Database) {}
@@ -26,7 +26,7 @@ export class EmailRepository {
       email.htmlBody,
       email.raw,
       JSON.stringify(email.headers),
-      JSON.stringify(email.attachments)
+      JSON.stringify(email.attachments),
     );
 
     return result.lastInsertRowid as number;
@@ -35,7 +35,7 @@ export class EmailRepository {
   findAll(
     filter?: EmailFilter,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): { data: EmailSummary[]; total: number } {
     const conditions: string[] = [];
     const params: unknown[] = [];
@@ -99,9 +99,7 @@ export class EmailRepository {
   }
 
   findById(id: number): Email | undefined {
-    const row = this.db
-      .prepare('SELECT * FROM emails WHERE id = ?')
-      .get(id) as
+    const row = this.db.prepare('SELECT * FROM emails WHERE id = ?').get(id) as
       | {
           id: number;
           message_id: string | null;
@@ -139,9 +137,7 @@ export class EmailRepository {
   }
 
   deleteById(id: number): boolean {
-    const result = this.db
-      .prepare('DELETE FROM emails WHERE id = ?')
-      .run(id);
+    const result = this.db.prepare('DELETE FROM emails WHERE id = ?').run(id);
     return result.changes > 0;
   }
 

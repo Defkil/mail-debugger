@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { EmailFilter } from '$lib/types';
+  import type { EmailFilter } from '@mail-debugger/types';
   import Button from './ui/Button.svelte';
   import TextInput from './ui/TextInput.svelte';
 

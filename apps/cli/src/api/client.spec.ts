@@ -1,5 +1,5 @@
 import { createApiClient } from './client';
-import type { Email, EmailSummary, HealthResponse } from '../types';
+import type { Email, EmailSummary, HealthResponse } from '@mail-debugger/types';
 
 const mockSummary: EmailSummary = {
   id: 1,
@@ -151,15 +151,13 @@ describe('createApiClient', () => {
       mockFetch({ error: 'Something went wrong' }, 500);
       const client = createApiClient(API_URL);
 
-      await expect(client.listEmails()).rejects.toThrow(
-        'Something went wrong'
-      );
+      await expect(client.listEmails()).rejects.toThrow('Something went wrong');
     });
 
     it('should fall back to HTTP status when body has no error field', async () => {
-      vi
-        .spyOn(globalThis, 'fetch')
-        .mockResolvedValue(new Response('not json', { status: 502 }));
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response('not json', { status: 502 }),
+      );
       const client = createApiClient(API_URL);
 
       await expect(client.listEmails()).rejects.toThrow('HTTP 502');

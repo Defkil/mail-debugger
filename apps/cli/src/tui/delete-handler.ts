@@ -1,5 +1,5 @@
 import type { ApiClient } from '../api/client.js';
-import type { EmailSummary } from '../types.js';
+import type { EmailSummary } from '@mail-debugger/types';
 import type { TuiState } from './state.js';
 
 export interface DeleteHandlerDeps {
@@ -30,9 +30,7 @@ export function handleDeleteKey(
         deps.refreshEmails();
       })
       .catch((error) => {
-        deps.setError(
-          error instanceof Error ? error.message : 'Delete failed',
-        );
+        deps.setError(error instanceof Error ? error.message : 'Delete failed');
       });
     return;
   }

@@ -48,3 +48,8 @@ export interface HealthResponse {
   persistent: boolean;
   emailCount: number;
 }
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+}

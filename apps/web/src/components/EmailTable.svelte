@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { createAppTable } from '$lib/table';
   import { columns } from '$lib/columns';
-  import type { EmailSummary } from '$lib/types';
+  import type { EmailSummary } from '@mail-debugger/types';
   import Pagination from './Pagination.svelte';
 
   interface Props {

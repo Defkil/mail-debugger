@@ -1,4 +1,4 @@
-import type { EmailFilter } from '../types.js';
+import type { EmailFilter } from '@mail-debugger/types';
 import type { CliConfig, CommandName } from './types.js';
 import { COMMAND_NAMES } from './types.js';
 

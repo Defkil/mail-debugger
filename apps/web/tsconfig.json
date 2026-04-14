@@ -8,5 +8,10 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "types": ["node", "vitest/globals"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../libs/types"
+    }
+  ]
 }

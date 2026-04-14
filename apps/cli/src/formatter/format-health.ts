@@ -1,4 +1,4 @@
-import type { HealthResponse } from '../types.js';
+import type { HealthResponse } from '@mail-debugger/types';
 
 export function formatHealth(health: HealthResponse): string {
   return [

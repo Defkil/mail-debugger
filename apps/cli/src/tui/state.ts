@@ -1,4 +1,4 @@
-import type { EmailSummary, Email } from '../types.js';
+import type { EmailSummary, Email } from '@mail-debugger/types';
 
 export interface TuiState {
   emails: EmailSummary[];
