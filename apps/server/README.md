@@ -4,7 +4,7 @@ SMTP catch-all server with a REST API for inspecting captured emails during deve
 
 ## Features
 
-- **SMTP Server** -- Catches all emails (no authentication required)
+- **SMTP Server** -- Catches all emails, accepts any credentials
 - **REST API** -- List, filter, view, and delete caught emails
 - **SQLite Storage** -- In-memory by default, optional file persistence
 - **OpenAPI/Swagger** -- Interactive API docs at `/swagger`
@@ -16,9 +16,11 @@ SMTP catch-all server with a REST API for inspecting captured emails during deve
 | `--smtp-port <port>` | `2525` | SMTP server port |
 | `--api-port <port>` | `3000` | REST API server port |
 | `--persist` | `false` | Enable persistent SQLite storage (`mail-debugger.sqlite`) |
+| `--tls <mode>` | `none` | TLS mode: `none`, `starttls`, or `implicit` |
 
 ```bash
 npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
+npx mail-debugger --tls starttls
 ```
 
 ## API Reference
@@ -32,9 +34,9 @@ npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
 | `GET` | `/api/health` | Health check and server info |
 | `GET` | `/swagger` | OpenAPI/Swagger UI |
 
-### Filtering
+### Query Parameters
 
-`GET /api/emails` supports query parameters:
+`GET /api/emails` supports filtering and pagination:
 
 | Parameter | Description |
 |-----------|-------------|
@@ -43,29 +45,33 @@ npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
 | `subject` | Filter by subject (partial match) |
 | `since` | Emails received after this datetime |
 | `until` | Emails received before this datetime |
+| `limit` | Max number of results |
+| `offset` | Skip first N results |
 
-Example: `GET /api/emails?from=alice&subject=welcome`
+Example: `GET /api/emails?from=alice&subject=welcome&limit=10&offset=0`
 
 ## Architecture
 
 ```
 src/
-  main.ts              -- Entry point
-  config.ts            -- CLI argument parsing
-  types.ts             -- TypeScript interfaces
+  main.ts               -- Entry point
+  config.ts             -- CLI argument parsing
+  logger.ts             -- Logger setup
+  types.ts              -- TypeScript interfaces
   db/
-    schema.ts          -- SQLite table definitions
-    connection.ts      -- Database factory (in-memory / persistent)
+    schema.ts           -- SQLite table definitions
+    connection.ts       -- Database factory (in-memory / persistent)
     email-repository.ts -- CRUD operations
   smtp/
-    smtp-server.ts     -- SMTP server
+    smtp-server.ts      -- SMTP server
+    tls.ts              -- Self-signed certificate generation
   parser/
-    email-parser.ts    -- Raw email -> structured data
+    email-parser.ts     -- Raw email -> structured data
   api/
-    app.ts             -- Elysia application with Swagger
+    app.ts              -- Elysia application with Swagger
     routes/
-      emails.ts        -- Email endpoints
-      health.ts        -- Health check endpoint
+      emails.ts         -- Email endpoints
+      health.ts         -- Health check endpoint
 ```
 
 ## Development

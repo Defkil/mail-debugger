@@ -50,20 +50,36 @@ mail-debugger-cli health                                  # Server status
 
 ```
 src/
-  main.ts            -- Entry point, dispatches TUI or command mode
-  config.ts          -- CLI argument parsing
-  types.ts           -- API types (mirrored from server)
+  main.ts                   -- Entry point, dispatches TUI or command mode
+  types.ts                  -- API types (mirrored from server)
+  config/
+    parse-config.ts         -- CLI argument parsing
+    types.ts                -- Config types and command definitions
   api/
-    client.ts        -- HTTP client for all API endpoints
+    client.ts               -- HTTP client for all API endpoints
   commands/
-    list.ts          -- List emails command
-    show.ts          -- Show email details command
-    delete.ts        -- Delete single email command
-    delete-all.ts    -- Delete all emails command
-    health.ts        -- Health check command
-    formatter.ts     -- Text/JSON output formatting
+    list.ts                 -- List emails command
+    show.ts                 -- Show email details command
+    delete.ts               -- Delete single email command
+    delete-all.ts           -- Delete all emails command
+    health.ts               -- Health check command
+  formatter/
+    format-email-table.ts   -- Table output for email list
+    format-email-detail.ts  -- Detailed single email output
+    format-health.ts        -- Health check output
+    text.ts                 -- Text formatting utilities
   tui/
-    app.ts           -- Rezi TUI application
+    app.ts                  -- Rezi TUI application
+    state.ts                -- TUI state management
+    navigation.ts           -- Screen navigation
+    build-filter.ts         -- Filter input builder
+    delete-handler.ts       -- Delete confirmation flow
+    email-columns.ts        -- Table column definitions
+    key-codes.ts            -- Keyboard input handling
+    theme.ts                -- Colors and styling
+    screens/
+      list-screen.ts        -- Email list view
+      detail-screen.ts      -- Email detail view
 ```
 
 ## Development

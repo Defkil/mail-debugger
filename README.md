@@ -22,20 +22,18 @@ npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
 
 ### TLS
 
-Standardmäßig läuft der SMTP-Server ohne Verschlüsselung. Über den `--tls` Parameter kann TLS aktiviert werden. Beim Start wird automatisch ein selbstsigniertes Zertifikat erzeugt - Zertifikatsvalidierung im Client muss daher deaktiviert werden.
+TLS is disabled by default. Use `--tls` to enable it. A self-signed certificate is generated on startup -- disable certificate validation in your client.
 
-| Modus | Flag | Beschreibung |
-|-------|------|--------------|
-| **none** | `--tls none` | Keine Verschlüsselung (Standard) |
-| **starttls** | `--tls starttls` | Verbindung startet unverschlüsselt, der Client kann per STARTTLS-Befehl auf TLS upgraden |
-| **implicit** | `--tls implicit` | Verbindung ist sofort verschlüsselt (auch als SMTPS bekannt) |
+| Mode | Flag | Description |
+|------|------|-------------|
+| **none** | `--tls none` | No encryption (default) |
+| **starttls** | `--tls starttls` | Starts unencrypted, client upgrades via STARTTLS |
+| **implicit** | `--tls implicit` | Encrypted from the start (SMTPS) |
 
 ```bash
 npx mail-debugger --tls starttls
 npx mail-debugger --tls implicit --smtp-port 4650
 ```
-
-Authentifizierung wird immer akzeptiert - beliebiger Benutzername und Passwort funktionieren.
 
 ## CLI Client
 
@@ -55,14 +53,14 @@ Point any SMTP client to `localhost:2525`. Authentication is optional -- any cre
 ```typescript
 import { createTransport } from 'nodemailer';
 
-// Ohne TLS (Standard)
+// No TLS (default)
 const transport = createTransport({
   host: 'localhost',
   port: 2525,
   secure: false,
 });
 
-// Mit STARTTLS (--tls starttls)
+// STARTTLS (--tls starttls)
 const tlsTransport = createTransport({
   host: 'localhost',
   port: 2525,
@@ -70,7 +68,7 @@ const tlsTransport = createTransport({
   tls: { rejectUnauthorized: false },
 });
 
-// Mit Implicit TLS (--tls implicit)
+// Implicit TLS (--tls implicit)
 const smtpsTransport = createTransport({
   host: 'localhost',
   port: 2525,
