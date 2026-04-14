@@ -1,4 +1,4 @@
-import { parseConfig } from './config';
+import { parseConfig } from './parse-config';
 
 describe('parseConfig', () => {
   it('should default to TUI mode with no args', () => {

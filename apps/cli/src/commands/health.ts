@@ -1,5 +1,5 @@
 import type { ApiClient } from '../api/client.js';
-import { formatHealth } from './formatter.js';
+import { formatHealth } from '../formatter/format-health.js';
 
 export async function healthCommand(
   client: ApiClient,

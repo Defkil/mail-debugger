@@ -1,20 +1,6 @@
-import type { EmailFilter } from './types.js';
-
-const COMMANDS = ['list', 'show', 'delete', 'delete-all', 'health'] as const;
-type CommandName = (typeof COMMANDS)[number];
-
-export interface CliCommand {
-  name: CommandName;
-  id?: number;
-  filter?: EmailFilter;
-}
-
-export interface CliConfig {
-  apiUrl: string;
-  jsonOutput: boolean;
-  mode: 'tui' | 'command';
-  command?: CliCommand;
-}
+import type { EmailFilter } from '../types.js';
+import type { CliConfig, CommandName } from './types.js';
+import { COMMAND_NAMES } from './types.js';
 
 export function parseConfig(argv: string[]): CliConfig {
   const config: CliConfig = {
@@ -30,11 +16,10 @@ export function parseConfig(argv: string[]): CliConfig {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
 
-    if (COMMANDS.includes(arg as CommandName)) {
+    if (COMMAND_NAMES.includes(arg)) {
       commandName = arg as CommandName;
       config.mode = 'command';
 
-      // Positional arg after show/delete is the email id
       if (
         (commandName === 'show' || commandName === 'delete') &&
         i + 1 < argv.length &&

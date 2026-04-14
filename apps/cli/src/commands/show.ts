@@ -1,5 +1,5 @@
 import type { ApiClient } from '../api/client.js';
-import { formatEmailDetail } from './formatter.js';
+import { formatEmailDetail } from '../formatter/format-email-detail.js';
 
 export async function showCommand(
   client: ApiClient,

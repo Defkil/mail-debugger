@@ -1,0 +1,9 @@
+export const ZR_KEY_UP = 20;
+export const ZR_KEY_DOWN = 21;
+export const ZR_KEY_HOME = 12;
+export const ZR_KEY_END = 13;
+export const ZR_KEY_PAGE_UP = 14;
+export const ZR_KEY_PAGE_DOWN = 15;
+export const ZR_KEY_D = 68;
+export const ZR_MOD_SHIFT = 1;
+export const PAGE_SIZE = 10;

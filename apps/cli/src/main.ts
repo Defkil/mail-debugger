@@ -1,4 +1,4 @@
-import { parseConfig } from './config.js';
+import { parseConfig } from './config/parse-config.js';
 import { createApiClient } from './api/client.js';
 import { listCommand } from './commands/list.js';
 import { showCommand } from './commands/show.js';
@@ -39,7 +39,6 @@ async function main(): Promise<void> {
         break;
     }
   } else {
-    // TUI mode - dynamic import to avoid loading Rezi for command mode
     const { startTui } = await import('./tui/app.js');
     await startTui(client, config.apiUrl);
   }
