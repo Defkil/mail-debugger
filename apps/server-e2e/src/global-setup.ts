@@ -1,5 +1,6 @@
-import { spawn, type ChildProcess } from 'child_process';
-import { join } from 'path';
+import { spawn, type ChildProcess } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const SMTP_PORT = 2526;
 const API_PORT = 3001;
@@ -7,7 +8,7 @@ const HEALTH_URL = `http://localhost:${API_PORT}/api/health`;
 
 async function waitForHealth(
   url: string,
-  timeoutMs = 15000
+  timeoutMs = 15_000
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -24,8 +25,9 @@ async function waitForHealth(
 
 let serverProcess: ChildProcess | undefined;
 
-export default async function globalSetup() {
-  const serverPath = join(process.cwd(), 'apps/server/dist/main.mjs');
+export async function setup() {
+  const thisDir = path.dirname(fileURLToPath(import.meta.url));
+  const serverPath = path.resolve(thisDir, '../../server/dist/main.mjs');
 
   serverProcess = spawn(
     'node',
@@ -53,7 +55,7 @@ export default async function globalSetup() {
     serverProcess;
 }
 
-export async function globalTeardown() {
+export async function teardown() {
   const proc = (globalThis as Record<string, unknown>)
     .__SERVER_PROCESS__ as ChildProcess | undefined;
   if (proc) {

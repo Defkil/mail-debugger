@@ -19,7 +19,7 @@ const TLS_LABELS: Record<string, string> = {
 
 async function main() {
   const cert =
-    config.tls !== 'none' ? await generateSelfSignedCert() : undefined;
+    config.tls === 'none' ? undefined : await generateSelfSignedCert();
 
   if (cert) {
     logger.info('Selbstsigniertes TLS-Zertifikat generiert');

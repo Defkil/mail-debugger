@@ -24,9 +24,9 @@ export async function parseEmail(raw: string): Promise<ParsedEmail> {
   );
 
   const headers: Record<string, string> = {};
-  parsed.headers.forEach((value, key) => {
+  for (const [key, value] of parsed.headers.entries()) {
     headers[key] = typeof value === 'string' ? value : String(value);
-  });
+  }
 
   const fromAddr =
     parsed.from?.value?.[0]?.address ?? parsed.from?.text ?? '';

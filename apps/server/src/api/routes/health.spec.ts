@@ -4,7 +4,7 @@ import type { Config } from '../../types';
 
 function createMockRepo(emailCount = 0) {
   return {
-    count: jest.fn().mockReturnValue(emailCount),
+    count: vi.fn().mockReturnValue(emailCount),
   } as unknown as EmailRepository;
 }
 

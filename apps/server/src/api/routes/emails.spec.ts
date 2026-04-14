@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { emailRoutes } from './emails';
 import type { EmailRepository } from '../../db/email-repository';
 import type { EmailSummary, Email } from '../../types';
@@ -29,17 +30,17 @@ const mockEmail: Email = {
 
 function createMockRepo() {
   return {
-    findAll: jest.fn().mockReturnValue([mockSummary]),
-    findById: jest.fn().mockReturnValue(mockEmail),
-    deleteById: jest.fn().mockReturnValue(true),
-    deleteAll: jest.fn().mockReturnValue(1),
-    insert: jest.fn(),
-    count: jest.fn().mockReturnValue(1),
+    findAll: vi.fn().mockReturnValue({ data: [mockSummary], total: 1 }),
+    findById: vi.fn().mockReturnValue(mockEmail),
+    deleteById: vi.fn().mockReturnValue(true),
+    deleteAll: vi.fn().mockReturnValue(1),
+    insert: vi.fn(),
+    count: vi.fn().mockReturnValue(1),
   } as unknown as EmailRepository & {
-    findAll: jest.Mock;
-    findById: jest.Mock;
-    deleteById: jest.Mock;
-    deleteAll: jest.Mock;
+    findAll: Mock;
+    findById: Mock;
+    deleteById: Mock;
+    deleteAll: Mock;
   };
 }
 
@@ -74,10 +75,11 @@ describe('email routes', () => {
         )
       );
 
-      expect(repo.findAll).toHaveBeenCalledWith({
-        from: 'test',
-        subject: 'hello',
-      });
+      expect(repo.findAll).toHaveBeenCalledWith(
+        { from: 'test', subject: 'hello' },
+        undefined,
+        undefined
+      );
     });
   });
 
@@ -98,7 +100,7 @@ describe('email routes', () => {
 
     it('should return 404 for non-existent email', async () => {
       const repo = createMockRepo();
-      repo.findById.mockReturnValue(undefined);
+      repo.findById.mockReturnValue();
       const app = emailRoutes(repo);
 
       const res = await app.handle(

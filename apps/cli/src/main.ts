@@ -14,29 +14,34 @@ async function main(): Promise<void> {
     const { command, jsonOutput } = config;
 
     switch (command.name) {
-      case 'list':
+      case 'list': {
         await listCommand(client, command.filter, jsonOutput);
         break;
-      case 'show':
+      }
+      case 'show': {
         if (command.id === undefined) {
           console.error('Usage: mail-debugger-cli show <id>');
           process.exit(1);
         }
         await showCommand(client, command.id, jsonOutput);
         break;
-      case 'delete':
+      }
+      case 'delete': {
         if (command.id === undefined) {
           console.error('Usage: mail-debugger-cli delete <id>');
           process.exit(1);
         }
         await deleteCommand(client, command.id, jsonOutput);
         break;
-      case 'delete-all':
+      }
+      case 'delete-all': {
         await deleteAllCommand(client, jsonOutput);
         break;
-      case 'health':
+      }
+      case 'health': {
         await healthCommand(client, jsonOutput);
         break;
+      }
     }
   } else {
     const { startTui } = await import('./tui/app.js');
@@ -44,7 +49,7 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });

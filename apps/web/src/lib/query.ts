@@ -42,6 +42,6 @@ export function healthOptions() {
   return {
     queryKey: queryKeys.health,
     queryFn: getHealth,
-    refetchInterval: 10000,
+    refetchInterval: 10_000,
   };
 }

@@ -34,18 +34,18 @@ const mockHealth: HealthResponse = {
   emailCount: 5,
 };
 
+function mockFetch(body: unknown, status = 200) {
+  return vi
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValue(Response.json(body, { status }));
+}
+
 beforeEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe('createApiClient', () => {
   const API_URL = 'http://localhost:3000';
-
-  function mockFetch(body: unknown, status = 200) {
-    return jest
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(new Response(JSON.stringify(body), { status }));
-  }
 
   describe('listEmails', () => {
     it('should fetch emails without filter', async () => {
@@ -157,7 +157,7 @@ describe('createApiClient', () => {
     });
 
     it('should fall back to HTTP status when body has no error field', async () => {
-      jest
+      vi
         .spyOn(globalThis, 'fetch')
         .mockResolvedValue(new Response('not json', { status: 502 }));
       const client = createApiClient(API_URL);

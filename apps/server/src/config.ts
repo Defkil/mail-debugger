@@ -14,7 +14,7 @@ export function parseConfig(argv: string[]): Config {
     switch (argv[i]) {
       case '--smtp-port': {
         const port = Number(argv[++i]);
-        if (isNaN(port) || port < 1 || port > 65535) {
+        if (Number.isNaN(port) || port < 1 || port > 65_535) {
           throw new Error(`Invalid SMTP port: ${argv[i]}`);
         }
         config.smtpPort = port;
@@ -22,7 +22,7 @@ export function parseConfig(argv: string[]): Config {
       }
       case '--api-port': {
         const port = Number(argv[++i]);
-        if (isNaN(port) || port < 1 || port > 65535) {
+        if (Number.isNaN(port) || port < 1 || port > 65_535) {
           throw new Error(`Invalid API port: ${argv[i]}`);
         }
         config.apiPort = port;
@@ -38,9 +38,10 @@ export function parseConfig(argv: string[]): Config {
         config.tls = mode;
         break;
       }
-      case '--persist':
+      case '--persist': {
         config.persist = true;
         break;
+      }
     }
   }
 

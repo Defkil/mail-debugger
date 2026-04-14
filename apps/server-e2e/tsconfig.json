@@ -2,10 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "out-tsc/@mail-debugger/server-e2e",
+    "types": ["vitest/globals", "node"],
     "esModuleInterop": true,
     "noUnusedLocals": false,
     "noImplicitAny": false
   },
-  "include": ["jest.config.ts", "src/**/*.ts"],
+  "include": ["vitest.config.ts", "src/**/*.ts"],
   "references": []
 }

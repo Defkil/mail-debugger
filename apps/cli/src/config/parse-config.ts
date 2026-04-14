@@ -26,8 +26,8 @@ export function parseConfig(argv: string[]): CliConfig {
         !argv[i + 1].startsWith('--')
       ) {
         id = Number(argv[++i]);
-        if (isNaN(id)) {
-          throw new Error(`Invalid email ID: ${argv[i]}`);
+        if (Number.isNaN(id)) {
+          throw new TypeError(`Invalid email ID: ${argv[i]}`);
         }
       }
       continue;
@@ -40,9 +40,10 @@ export function parseConfig(argv: string[]): CliConfig {
         config.apiUrl = url;
         break;
       }
-      case '--json':
+      case '--json': {
         config.jsonOutput = true;
         break;
+      }
       case '--from': {
         const val = argv[++i];
         if (!val) throw new Error('Missing value for --from');

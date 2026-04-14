@@ -40,15 +40,15 @@ function createDeps(
     isInputFocused: () => false,
     getFocusedEmail: () => state.emails[state.focusedEmailIndex],
     client: {
-      listEmails: jest.fn(),
-      getEmail: jest.fn(),
-      deleteEmail: jest.fn().mockResolvedValue(true),
-      deleteAllEmails: jest.fn().mockResolvedValue(1),
-      health: jest.fn(),
+      listEmails: vi.fn(),
+      getEmail: vi.fn(),
+      deleteEmail: vi.fn().mockResolvedValue(true),
+      deleteAllEmails: vi.fn().mockResolvedValue(1),
+      health: vi.fn(),
     },
-    navigateBack: jest.fn(),
-    refreshEmails: jest.fn().mockResolvedValue(undefined),
-    setError: jest.fn(),
+    navigateBack: vi.fn(),
+    refreshEmails: vi.fn().mockResolvedValue(),
+    setError: vi.fn(),
     ...overrides,
   };
 }

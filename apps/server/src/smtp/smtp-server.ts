@@ -30,7 +30,7 @@ export function createSmtpServer(
       });
 
       stream.on('end', () => {
-        const raw = Buffer.concat(chunks).toString('utf-8');
+        const raw = Buffer.concat(chunks).toString('utf8');
 
         parseEmail(raw)
           .then((parsed) => {
@@ -41,10 +41,10 @@ export function createSmtpServer(
             );
             callback();
           })
-          .catch((err) => {
-            log.error({ err }, 'Failed to process email');
+          .catch((error) => {
+            log.error({ err: error }, 'Failed to process email');
             callback(
-              err instanceof Error ? err : new Error(String(err))
+              error instanceof Error ? error : new Error(String(error))
             );
           });
       });

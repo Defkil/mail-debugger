@@ -1,5 +1,5 @@
-import { readFileSync, existsSync } from 'fs';
-import { resolve, join, extname } from 'path';
+import { readFileSync, existsSync } from 'node:fs';
+import path from 'node:path';
 import { Elysia } from 'elysia';
 import { node } from '@elysiajs/node';
 import { swagger } from '@elysiajs/swagger';
@@ -23,20 +23,20 @@ const MIME_TYPES: Record<string, string> = {
 
 function serveWeb() {
   // @ts-expect-error esbuild outputs ESM where import.meta.dirname is available
-  const webDir = resolve(import.meta.dirname, 'web');
-  const indexPath = join(webDir, 'index.html');
+  const webDir = path.resolve(import.meta.dirname, 'web');
+  const indexPath = path.join(webDir, 'index.html');
   const indexHtml = existsSync(indexPath)
-    ? readFileSync(indexPath, 'utf-8')
+    ? readFileSync(indexPath, 'utf8')
     : null;
 
   return new Elysia().get('/*', ({ params, set }) => {
     if (!indexHtml) return set.status = 404;
 
-    const filePath = join(webDir, params['*'] || 'index.html');
+    const filePath = path.join(webDir, params['*'] || 'index.html');
     if (!filePath.startsWith(webDir)) return set.status = 403;
 
     if (existsSync(filePath)) {
-      const ext = extname(filePath);
+      const ext = path.extname(filePath);
       set.headers['content-type'] = MIME_TYPES[ext] || 'application/octet-stream';
       return readFileSync(filePath);
     }

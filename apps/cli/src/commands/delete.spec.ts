@@ -1,10 +1,11 @@
+import type { MockInstance } from 'vitest';
 import { deleteCommand } from './delete';
 import { createMockClient } from './test-fixtures';
 
-let consoleSpy: jest.SpyInstance;
+let consoleSpy: MockInstance;
 
 beforeEach(() => {
-  consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { /* noop */ });
 });
 
 afterEach(() => {
@@ -23,7 +24,7 @@ describe('deleteCommand', () => {
 
   it('should print "not found" when delete returns false', async () => {
     const client = createMockClient({
-      deleteEmail: jest.fn().mockResolvedValue(false),
+      deleteEmail: vi.fn().mockResolvedValue(false),
     });
     await deleteCommand(client, 999);
 

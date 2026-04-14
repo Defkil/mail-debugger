@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import pino from 'pino';
 import { createSmtpServer } from './smtp-server';
 import { generateSelfSignedCert } from './tls';
@@ -15,13 +16,13 @@ beforeAll(async () => {
 
 function createMockRepository() {
   return {
-    insert: jest.fn().mockReturnValue(1),
-    findAll: jest.fn().mockReturnValue([]),
-    findById: jest.fn(),
-    deleteById: jest.fn(),
-    deleteAll: jest.fn(),
-    count: jest.fn().mockReturnValue(0),
-  } as unknown as EmailRepository & { insert: jest.Mock };
+    insert: vi.fn().mockReturnValue(1),
+    findAll: vi.fn().mockReturnValue([]),
+    findById: vi.fn(),
+    deleteById: vi.fn(),
+    deleteAll: vi.fn(),
+    count: vi.fn().mockReturnValue(0),
+  } as unknown as EmailRepository & { insert: Mock };
 }
 
 describe('createSmtpServer', () => {
@@ -33,44 +34,54 @@ describe('createSmtpServer', () => {
     expect(typeof server.close).toBe('function');
   });
 
-  it('should accept connections and store emails', (done) => {
-    const repo = createMockRepository();
-    const server = createSmtpServer(repo, silentLogger, 'starttls', testCert);
+  it('should accept connections and store emails', () => {
+    return new Promise<void>((resolve, reject) => {
+      const repo = createMockRepository();
+      const server = createSmtpServer(repo, silentLogger, 'starttls', testCert);
 
-    const port = 2599;
+      const port = 2599;
 
-    server.listen(port, '127.0.0.1', () => {
-      import('nodemailer').then(({ createTransport }) => {
-        const transport = createTransport({
-          host: '127.0.0.1',
-          port,
-          secure: false,
-          tls: { rejectUnauthorized: false },
+      server.listen(port, '127.0.0.1', () => {
+        import('nodemailer').then(({ createTransport }) => {
+          const transport = createTransport({
+            host: '127.0.0.1',
+            port,
+            secure: false,
+            tls: { rejectUnauthorized: false },
+          });
+
+          transport.sendMail(
+            {
+              from: 'test@example.com',
+              to: 'dest@example.com',
+              subject: 'SMTP Test',
+              text: 'Test body',
+            },
+            (err) => {
+              try {
+                expect(err).toBeNull();
+              } catch (error) {
+                server.close(() => reject(error));
+                return;
+              }
+
+              setTimeout(() => {
+                try {
+                  expect(repo.insert).toHaveBeenCalledTimes(1);
+                  const insertedEmail: ParsedEmail =
+                    repo.insert.mock.calls[0][0];
+                  expect(insertedEmail.from).toBe('test@example.com');
+                  expect(insertedEmail.to).toContain('dest@example.com');
+                  expect(insertedEmail.subject).toBe('SMTP Test');
+                  server.close(() => resolve());
+                } catch (error) {
+                  server.close(() => reject(error));
+                }
+              }, 200);
+            }
+          );
         });
-
-        transport.sendMail(
-          {
-            from: 'test@example.com',
-            to: 'dest@example.com',
-            subject: 'SMTP Test',
-            text: 'Test body',
-          },
-          (err) => {
-            expect(err).toBeNull();
-
-            setTimeout(() => {
-              expect(repo.insert).toHaveBeenCalledTimes(1);
-              const insertedEmail: ParsedEmail =
-                repo.insert.mock.calls[0][0];
-              expect(insertedEmail.from).toBe('test@example.com');
-              expect(insertedEmail.to).toContain('dest@example.com');
-              expect(insertedEmail.subject).toBe('SMTP Test');
-
-              server.close(() => done());
-            }, 200);
-          }
-        );
       });
     });
-  }, 10000);
+  }, 10_000);
 });

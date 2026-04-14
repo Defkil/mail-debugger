@@ -1,10 +1,11 @@
+import type { MockInstance } from 'vitest';
 import { deleteAllCommand } from './delete-all';
 import { createMockClient } from './test-fixtures';
 
-let consoleSpy: jest.SpyInstance;
+let consoleSpy: MockInstance;
 
 beforeEach(() => {
-  consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { /* noop */ });
 });
 
 afterEach(() => {

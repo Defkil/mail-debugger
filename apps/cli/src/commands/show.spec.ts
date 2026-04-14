@@ -1,10 +1,11 @@
+import type { MockInstance } from 'vitest';
 import { showCommand } from './show';
 import { createMockClient } from './test-fixtures';
 
-let consoleSpy: jest.SpyInstance;
+let consoleSpy: MockInstance;
 
 beforeEach(() => {
-  consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { /* noop */ });
 });
 
 afterEach(() => {
@@ -34,7 +35,7 @@ describe('showCommand', () => {
 
   it('should propagate error when email not found', async () => {
     const client = createMockClient({
-      getEmail: jest.fn().mockRejectedValue(new Error('Email not found')),
+      getEmail: vi.fn().mockRejectedValue(new Error('Email not found')),
     });
 
     await expect(showCommand(client, 999)).rejects.toThrow('Email not found');

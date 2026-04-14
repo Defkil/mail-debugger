@@ -60,8 +60,8 @@ export async function startTui(
       return actions.loadEmailDetail;
     },
     get navigateToDetail() {
-      return (id: string) =>
-        app.router?.navigate('detail', { id });
+      // eslint-disable-next-line unicorn/consistent-function-scoping -- deferred access to `app`
+      return (id: string) => app.router?.navigate('detail', { id });
     },
     get refreshEmails() {
       return actions.refreshEmails;
@@ -74,6 +74,7 @@ export async function startTui(
     setCurrentState,
     quit,
     get navigateBack() {
+      // eslint-disable-next-line unicorn/consistent-function-scoping -- deferred access to `app`
       return () => app.router?.back();
     },
     get refreshEmails() {
@@ -107,12 +108,12 @@ export async function startTui(
         isLoading: false,
         lastRefresh: Date.now(),
       }));
-    } catch (err) {
+    } catch (error) {
       app.update((prev) => ({
         ...prev,
         isLoading: false,
         error:
-          err instanceof Error ? err.message : 'Failed to fetch emails',
+          error instanceof Error ? error.message : 'Failed to fetch emails',
       }));
     }
   };
@@ -122,11 +123,11 @@ export async function startTui(
     try {
       const email = await client.getEmail(id);
       app.update((prev) => ({ ...prev, selectedEmail: email }));
-    } catch (err) {
+    } catch (error) {
       app.update((prev) => ({
         ...prev,
         error:
-          err instanceof Error ? err.message : 'Failed to load email',
+          error instanceof Error ? error.message : 'Failed to load email',
       }));
       app.router?.back();
     }

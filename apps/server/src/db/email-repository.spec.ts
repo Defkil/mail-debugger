@@ -56,45 +56,46 @@ describe('EmailRepository', () => {
   });
 
   describe('findAll', () => {
-    it('should return empty array when no emails exist', () => {
-      expect(repo.findAll()).toEqual([]);
+    it('should return empty result when no emails exist', () => {
+      expect(repo.findAll()).toEqual({ data: [], total: 0 });
     });
 
     it('should return all emails ordered by received_at desc', () => {
       repo.insert(makeParsedEmail({ subject: 'First' }));
       repo.insert(makeParsedEmail({ subject: 'Second' }));
 
-      const results = repo.findAll();
-      expect(results).toHaveLength(2);
-      expect(results[0].subject).toBe('Second');
-      expect(results[1].subject).toBe('First');
+      const { data, total } = repo.findAll();
+      expect(total).toBe(2);
+      expect(data).toHaveLength(2);
+      expect(data[0].subject).toBe('Second');
+      expect(data[1].subject).toBe('First');
     });
 
     it('should filter by from address', () => {
       repo.insert(makeParsedEmail({ from: 'alice@example.com' }));
       repo.insert(makeParsedEmail({ from: 'bob@example.com' }));
 
-      const results = repo.findAll({ from: 'alice' });
-      expect(results).toHaveLength(1);
-      expect(results[0].from).toBe('alice@example.com');
+      const { data } = repo.findAll({ from: 'alice' });
+      expect(data).toHaveLength(1);
+      expect(data[0].from).toBe('alice@example.com');
     });
 
     it('should filter by to address', () => {
       repo.insert(makeParsedEmail({ to: ['alice@example.com'] }));
       repo.insert(makeParsedEmail({ to: ['bob@example.com'] }));
 
-      const results = repo.findAll({ to: 'bob' });
-      expect(results).toHaveLength(1);
-      expect(results[0].to).toEqual(['bob@example.com']);
+      const { data } = repo.findAll({ to: 'bob' });
+      expect(data).toHaveLength(1);
+      expect(data[0].to).toEqual(['bob@example.com']);
     });
 
     it('should filter by subject', () => {
       repo.insert(makeParsedEmail({ subject: 'Welcome aboard' }));
       repo.insert(makeParsedEmail({ subject: 'Password reset' }));
 
-      const results = repo.findAll({ subject: 'Welcome' });
-      expect(results).toHaveLength(1);
-      expect(results[0].subject).toBe('Welcome aboard');
+      const { data } = repo.findAll({ subject: 'Welcome' });
+      expect(data).toHaveLength(1);
+      expect(data[0].subject).toBe('Welcome aboard');
     });
 
     it('should indicate hasAttachments correctly', () => {
@@ -113,11 +114,11 @@ describe('EmailRepository', () => {
         })
       );
 
-      const results = repo.findAll();
-      const withAttachment = results.find(
+      const { data } = repo.findAll();
+      const withAttachment = data.find(
         (e: EmailSummary) => e.subject === 'With attachment'
       );
-      const withoutAttachment = results.find(
+      const withoutAttachment = data.find(
         (e: EmailSummary) => e.subject !== 'With attachment'
       );
 
@@ -171,7 +172,7 @@ describe('EmailRepository', () => {
       repo.insert(makeParsedEmail());
 
       expect(repo.deleteAll()).toBe(3);
-      expect(repo.findAll()).toEqual([]);
+      expect(repo.findAll()).toEqual({ data: [], total: 0 });
     });
   });
 

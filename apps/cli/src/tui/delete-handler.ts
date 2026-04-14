@@ -29,9 +29,9 @@ export function handleDeleteKey(
         deps.navigateBack();
         deps.refreshEmails();
       })
-      .catch((err) => {
+      .catch((error) => {
         deps.setError(
-          err instanceof Error ? err.message : 'Delete failed',
+          error instanceof Error ? error.message : 'Delete failed',
         );
       });
     return;
@@ -42,9 +42,9 @@ export function handleDeleteKey(
       deps.client
         .deleteAllEmails()
         .then(() => deps.refreshEmails())
-        .catch((err) => {
+        .catch((error) => {
           deps.setError(
-            err instanceof Error ? err.message : 'Delete all failed',
+            error instanceof Error ? error.message : 'Delete all failed',
           );
         });
     } else if (!hasShift) {
@@ -53,9 +53,9 @@ export function handleDeleteKey(
         deps.client
           .deleteEmail(email.id)
           .then(() => deps.refreshEmails())
-          .catch((err) => {
+          .catch((error) => {
             deps.setError(
-              err instanceof Error ? err.message : 'Delete failed',
+              error instanceof Error ? error.message : 'Delete failed',
             );
           });
       }

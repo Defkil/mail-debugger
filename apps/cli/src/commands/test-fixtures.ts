@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import type { ApiClient } from '../api/client';
 import type { Email, EmailSummary, HealthResponse } from '../types';
 
@@ -36,11 +37,11 @@ export const mockHealth: HealthResponse = {
 
 export function createMockClient(overrides?: Partial<ApiClient>): ApiClient {
   return {
-    listEmails: jest.fn().mockResolvedValue([mockSummary]),
-    getEmail: jest.fn().mockResolvedValue(mockEmail),
-    deleteEmail: jest.fn().mockResolvedValue(true),
-    deleteAllEmails: jest.fn().mockResolvedValue(3),
-    health: jest.fn().mockResolvedValue(mockHealth),
+    listEmails: vi.fn().mockResolvedValue([mockSummary]),
+    getEmail: vi.fn().mockResolvedValue(mockEmail),
+    deleteEmail: vi.fn().mockResolvedValue(true),
+    deleteAllEmails: vi.fn().mockResolvedValue(3),
+    health: vi.fn().mockResolvedValue(mockHealth),
     ...overrides,
   };
 }

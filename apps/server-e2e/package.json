@@ -8,13 +8,9 @@
     ],
     "targets": {
       "e2e": {
-        "executor": "@nx/jest:jest",
-        "outputs": [
-          "{projectRoot}/test-output/jest/coverage"
-        ],
+        "command": "vitest run",
         "options": {
-          "jestConfig": "apps/server-e2e/jest.config.cts",
-          "passWithNoTests": true
+          "cwd": "apps/server-e2e"
         },
         "dependsOn": [
           "@mail-debugger/server:build"
