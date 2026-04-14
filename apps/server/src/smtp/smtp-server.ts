@@ -9,12 +9,12 @@ export function createSmtpServer(
   repository: EmailRepository,
   logger: Logger,
   tls: TlsMode,
-  cert?: TlsCert
+  cert?: TlsCert,
 ): SMTPServer {
   const log = logger.child({ component: 'smtp' });
 
   const useTls = tls !== 'none';
-  const tlsOptions = useTls ? { key: cert!.key, cert: cert!.cert } : {};
+  const tlsOptions = useTls && cert ? { key: cert.key, cert: cert.cert } : {};
 
   return new SMTPServer({
     authOptional: true,
@@ -37,15 +37,13 @@ export function createSmtpServer(
             const id = repository.insert(parsed);
             log.info(
               { id, from: parsed.from, to: parsed.to, subject: parsed.subject },
-              'Email received'
+              'Email received',
             );
             callback();
           })
           .catch((error) => {
             log.error({ err: error }, 'Failed to process email');
-            callback(
-              error instanceof Error ? error : new Error(String(error))
-            );
+            callback(error instanceof Error ? error : new Error(String(error)));
           });
       });
     },

@@ -3,14 +3,12 @@ import type { ApiClient } from '../api/client.js';
 import type { TuiState } from './state.js';
 import { createInitialState } from './state.js';
 import { buildFilter } from './build-filter.js';
-import { calculateNextIndex } from './navigation.js';
-import { handleDeleteKey } from './delete-handler.js';
 import type { DeleteHandlerDeps } from './delete-handler.js';
-import { ZR_KEY_D, ZR_MOD_SHIFT } from './key-codes.js';
 import { createListScreen } from './screens/list-screen.js';
 import type { ListScreenDeps } from './screens/list-screen.js';
 import { createDetailScreen } from './screens/detail-screen.js';
 import type { DetailScreenDeps } from './screens/detail-screen.js';
+import { setupInputHandling } from './input-handler.js';
 
 export async function startTui(
   client: ApiClient,
@@ -82,10 +80,7 @@ export async function startTui(
     },
   };
 
-  const routes = [
-    createListScreen(listDeps),
-    createDetailScreen(detailDeps),
-  ];
+  const routes = [createListScreen(listDeps), createDetailScreen(detailDeps)];
 
   const app = createNodeApp<TuiState>({
     initialState: createInitialState(),
@@ -126,8 +121,7 @@ export async function startTui(
     } catch (error) {
       app.update((prev) => ({
         ...prev,
-        error:
-          error instanceof Error ? error.message : 'Failed to load email',
+        error: error instanceof Error ? error.message : 'Failed to load email',
       }));
       app.router?.back();
     }
@@ -141,62 +135,18 @@ export async function startTui(
     client,
     navigateBack: () => app.router?.back(),
     refreshEmails: () => actions.refreshEmails(),
-    setError: (message) =>
-      app.update((prev) => ({ ...prev, error: message })),
+    setError: (message) => app.update((prev) => ({ ...prev, error: message })),
   };
 
-  app.keys({
-    q: () => quit(),
-    f: ({ update }) => {
-      if (app.router?.currentRoute().id === 'list') {
-        update((prev) => ({ ...prev, filterVisible: !prev.filterVisible }));
-      }
+  setupInputHandling({
+    app,
+    getCurrentState: () => currentState,
+    actions,
+    deleteDeps,
+    quit,
+    setCurrentFocusedId: (id) => {
+      currentFocusedId = id;
     },
-    r: () => {
-      if (app.router?.currentRoute().id === 'list') {
-        actions.refreshEmails();
-      }
-    },
-    Escape: () => {
-      if (app.router?.currentRoute().id === 'detail') {
-        app.router.back();
-      }
-    },
-  });
-
-  app.onFocusChange((info) => {
-    currentFocusedId = info.id;
-  });
-
-  app.onEvent((ev) => {
-    if (ev.kind !== 'engine') return;
-    const event = ev.event;
-
-    if (event.kind === 'key' && event.action === 'down') {
-      if (app.router?.currentRoute().id === 'list') {
-        const count = currentState.emails.length;
-        if (count > 0) {
-          const next = calculateNextIndex(
-            currentState.focusedEmailIndex,
-            count,
-            event.key,
-          );
-          if (next !== currentState.focusedEmailIndex) {
-            app.update((prev) => ({ ...prev, focusedEmailIndex: next }));
-          }
-        }
-      }
-
-      if (event.key === ZR_KEY_D) {
-        handleDeleteKey(deleteDeps, (event.mods & ZR_MOD_SHIFT) !== 0);
-      }
-    }
-
-    if (event.kind === 'text') {
-      const cp = event.codepoint;
-      if (cp === 100) handleDeleteKey(deleteDeps, false);
-      if (cp === 68) handleDeleteKey(deleteDeps, true);
-    }
   });
 
   const pollInterval = setInterval(() => {
