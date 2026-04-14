@@ -8,7 +8,7 @@
     "mail-debugger-cli": "./apps/cli/dist/main.mjs"
   },
   "scripts": {
-    "prepare": "nx build server --skip-nx-cache"
+    "prepare": "husky && nx build server --skip-nx-cache"
   },
   "files": [
     "apps/server/dist"
@@ -55,6 +55,8 @@
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-unicorn": "^64.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "nodemailer": "^8.0.5",
     "nx": "22.6.5",
     "pino-pretty": "^13.1.3",
