@@ -97,25 +97,6 @@ const smtpsTransport = createTransport({
 | **server** | SMTP server + REST API + web UI  | [apps/server/README.md](apps/server/README.md) |
 | **cli**    | Terminal client (TUI + commands) | [apps/cli/README.md](apps/cli/README.md)       |
 
-## Development
-
-```bash
-pnpm install
-pnpm run setup                    # One-time: install husky git hooks
-pnpm nx serve server              # Dev server with watch
-pnpm nx serve cli                 # Dev CLI with watch
-pnpm nx run-many -t lint test build typecheck   # All checks
-```
-
-## Releasing
-
-Publishing is fully automated via GitHub Actions with npm [Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, no tokens).
-
-```bash
-npm version patch          # bumps version + tags commit
-git push --follow-tags     # CI builds + publishes to npm
-```
-
 ## Roadmap
 
 - [x] Web UI -- Browser-based inbox
