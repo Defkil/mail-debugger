@@ -1,5 +1,5 @@
 import { parseConfig } from './config.js';
-import { createDatabase } from './db/connection.js';
+import { createDatabase, persistDatabase } from './db/connection.js';
 import { EmailRepository } from './db/email-repository.js';
 import { createLogger } from './logger.js';
 import { createSmtpServer } from './smtp/smtp-server.js';
@@ -46,7 +46,7 @@ async function main() {
 
   const config = parseConfig(process.argv.slice(2));
   const logger = createLogger();
-  const db = createDatabase(config);
+  const db = await createDatabase(config);
   const repository = new EmailRepository(db);
 
   const cert =
@@ -82,6 +82,7 @@ async function main() {
   function shutdown() {
     logger.info('Shutting down...');
     smtpServer.close(() => {
+      if (config.persist) persistDatabase(db);
       db.close();
       process.exit(0);
     });

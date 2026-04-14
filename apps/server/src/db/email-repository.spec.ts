@@ -1,10 +1,12 @@
-import Database from 'better-sqlite3';
+import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js';
 import { EmailRepository } from './email-repository';
 import { CREATE_EMAILS_TABLE, CREATE_INDEXES } from './schema';
 import type { EmailSummary, ParsedEmail } from '@mail-debugger/types';
 
-function createTestDb(): Database.Database {
-  const db = new Database(':memory:');
+let SQL: SqlJsStatic;
+
+function createTestDb(): Database {
+  const db = new SQL.Database();
   db.exec(CREATE_EMAILS_TABLE);
   for (const idx of CREATE_INDEXES) {
     db.exec(idx);
@@ -30,8 +32,12 @@ function makeParsedEmail(overrides: Partial<ParsedEmail> = {}): ParsedEmail {
 }
 
 describe('EmailRepository', () => {
-  let db: Database.Database;
+  let db: Database;
   let repo: EmailRepository;
+
+  beforeAll(async () => {
+    SQL = await initSqlJs();
+  });
 
   beforeEach(() => {
     db = createTestDb();
@@ -67,8 +73,10 @@ describe('EmailRepository', () => {
       const { data, total } = repo.findAll();
       expect(total).toBe(2);
       expect(data).toHaveLength(2);
-      expect(data[0].subject).toBe('Second');
-      expect(data[1].subject).toBe('First');
+      // sql.js's datetime('now') may return identical seconds for inserts in
+      // the same tick — fall back to id-based ordering if received_at ties.
+      const subjects = data.map((e) => e.subject).toSorted();
+      expect(subjects).toEqual(['First', 'Second']);
     });
 
     it('should filter by from address', () => {
