@@ -84,6 +84,7 @@
             "esm"
           ],
           "bundle": true,
+          "thirdParty": true,
           "main": "apps/server/src/main-api.ts",
           "outputFileName": "main.js",
           "tsConfig": "apps/server/tsconfig.app.json",
@@ -94,7 +95,7 @@
               ".js": ".mjs"
             },
             "banner": {
-              "js": "#!/usr/bin/env node"
+              "js": "#!/usr/bin/env node\nimport { createRequire as __mdCreateRequire } from 'node:module';\nconst require = __mdCreateRequire(import.meta.url);"
             },
             "conditions": [
               "mail-debugger"
@@ -115,7 +116,7 @@
                 ".js": ".mjs"
               },
               "banner": {
-                "js": "#!/usr/bin/env node"
+                "js": "#!/usr/bin/env node\nimport { createRequire as __mdCreateRequire } from 'node:module';\nconst require = __mdCreateRequire(import.meta.url);"
               },
               "conditions": [
                 "mail-debugger"
