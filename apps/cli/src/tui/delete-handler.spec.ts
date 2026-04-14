@@ -47,7 +47,8 @@ function createDeps(
       health: vi.fn(),
     },
     navigateBack: vi.fn(),
-    refreshEmails: vi.fn().mockResolvedValue(),
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    refreshEmails: vi.fn().mockResolvedValue(undefined),
     setError: vi.fn(),
     ...overrides,
   };

@@ -55,9 +55,7 @@ describe('email routes', () => {
       const repo = createMockRepo();
       const app = emailRoutes(repo);
 
-      const res = await app.handle(
-        new Request('http://localhost/api/emails')
-      );
+      const res = await app.handle(new Request('http://localhost/api/emails'));
       const body = await jsonBody(res);
 
       expect(res.status).toBe(200);
@@ -70,15 +68,13 @@ describe('email routes', () => {
       const app = emailRoutes(repo);
 
       await app.handle(
-        new Request(
-          'http://localhost/api/emails?from=test&subject=hello'
-        )
+        new Request('http://localhost/api/emails?from=test&subject=hello'),
       );
 
       expect(repo.findAll).toHaveBeenCalledWith(
         { from: 'test', subject: 'hello' },
         undefined,
-        undefined
+        undefined,
       );
     });
   });
@@ -89,7 +85,7 @@ describe('email routes', () => {
       const app = emailRoutes(repo);
 
       const res = await app.handle(
-        new Request('http://localhost/api/emails/1')
+        new Request('http://localhost/api/emails/1'),
       );
       const body = await jsonBody(res);
 
@@ -100,11 +96,12 @@ describe('email routes', () => {
 
     it('should return 404 for non-existent email', async () => {
       const repo = createMockRepo();
-      repo.findById.mockReturnValue();
+      // eslint-disable-next-line unicorn/no-useless-undefined
+      repo.findById.mockReturnValue(undefined);
       const app = emailRoutes(repo);
 
       const res = await app.handle(
-        new Request('http://localhost/api/emails/999')
+        new Request('http://localhost/api/emails/999'),
       );
 
       expect(res.status).toBe(404);
@@ -121,7 +118,7 @@ describe('email routes', () => {
       const res = await app.handle(
         new Request('http://localhost/api/emails/1', {
           method: 'DELETE',
-        })
+        }),
       );
 
       expect(res.status).toBe(200);
@@ -137,7 +134,7 @@ describe('email routes', () => {
       const res = await app.handle(
         new Request('http://localhost/api/emails/999', {
           method: 'DELETE',
-        })
+        }),
       );
 
       expect(res.status).toBe(404);
@@ -153,7 +150,7 @@ describe('email routes', () => {
       const res = await app.handle(
         new Request('http://localhost/api/emails', {
           method: 'DELETE',
-        })
+        }),
       );
       const body = await jsonBody(res);
 

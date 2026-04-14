@@ -2,13 +2,16 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/vitest",
+    "rootDir": ".",
+    "tsBuildInfoFile": "./out-tsc/vitest/tsconfig.spec.tsbuildinfo",
     "types": ["vitest/globals", "node"]
   },
   "include": [
     "vitest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "src/**/test-fixtures.ts"
   ],
   "references": [
     {
