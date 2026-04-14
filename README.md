@@ -24,11 +24,11 @@ npx mail-debugger --smtp-port 1025 --api-port 8080 --persist
 
 TLS is disabled by default. Use `--tls` to enable it. A self-signed certificate is generated on startup -- disable certificate validation in your client.
 
-| Mode | Flag | Description |
-|------|------|-------------|
-| **none** | `--tls none` | No encryption (default) |
+| Mode         | Flag             | Description                                      |
+| ------------ | ---------------- | ------------------------------------------------ |
+| **none**     | `--tls none`     | No encryption (default)                          |
 | **starttls** | `--tls starttls` | Starts unencrypted, client upgrades via STARTTLS |
-| **implicit** | `--tls implicit` | Encrypted from the start (SMTPS) |
+| **implicit** | `--tls implicit` | Encrypted from the start (SMTPS)                 |
 
 ```bash
 npx mail-debugger --tls starttls
@@ -79,10 +79,10 @@ const smtpsTransport = createTransport({
 
 ## Apps
 
-| App | Description | Docs |
-|-----|-------------|------|
-| **server** | SMTP server + REST API | [apps/server/README.md](apps/server/README.md) |
-| **cli** | Terminal client (TUI + commands) | [apps/cli/README.md](apps/cli/README.md) |
+| App        | Description                      | Docs                                           |
+| ---------- | -------------------------------- | ---------------------------------------------- |
+| **server** | SMTP server + REST API           | [apps/server/README.md](apps/server/README.md) |
+| **cli**    | Terminal client (TUI + commands) | [apps/cli/README.md](apps/cli/README.md)       |
 
 ## Development
 
@@ -95,7 +95,7 @@ pnpm nx run-many -t lint test build typecheck   # All checks
 
 ## Roadmap
 
-- [ ] Web UI -- Browser-based inbox
+- [x] Web UI -- Browser-based inbox
 - [x] CLI UI -- Terminal-based inbox viewer
 - [x] Full SMTP features -- SIZE, STARTTLS, authentication
 - [ ] IMAP server -- Email client support
