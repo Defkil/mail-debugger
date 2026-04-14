@@ -76,7 +76,7 @@ Reihenfolge ist nach Abhängigkeiten und Risiko sortiert. Phasen 1–4 sind rein
 
 ---
 
-## Phase 5 — TUI-Screens splitten
+## Phase 5 — TUI-Screens splitten _(deferred)_
 
 **Problem:** TUI-Dateien vermischen Rendering, State-Management und Side-Effects.
 
@@ -84,16 +84,9 @@ Reihenfolge ist nach Abhängigkeiten und Risiko sortiert. Phasen 1–4 sind rein
 - `apps/cli/src/tui/screens/detail-screen.ts` — 158 Zeilen
 - `apps/cli/src/tui/app.ts` — 165 Zeilen (Setup + State + Polling + Actions)
 
-**Scope (inkrementell):**
+**Entscheidung nach Analyse:** Bei näherer Untersuchung ist die Annahme "vermischt State-Logik und Rendering" für `list-screen.ts` und `detail-screen.ts` nicht haltbar — sie enthalten fast ausschließlich deklarative UI-Beschreibungen und triviale `update((prev) => ({ ...prev, flag: value }))`-Calls. Eine Extraktion wäre reine UI-Segmentierung (Header/Filter/Footer-Renderer), nicht der geplante Logic/Rendering-Split. `app.ts` enthält async side-effect-actions (refreshEmails, loadEmailDetail), die durch Verschieben nicht leichter testbar werden.
 
-- [ ] `app.ts`: Polling-Logik in `hooks/useRefresh.ts` extrahieren
-- [ ] `app.ts`: Fetch-Actions in `actions/email-actions.ts` extrahieren
-- [ ] `list-screen.ts`: State-Updates und Filter-Logik nach `list-logic.ts`, Rendering bleibt in `list-screen.ts`
-- [ ] `detail-screen.ts`: analog splitten wenn sich Muster wiederholt
-- [ ] Tests für neue Logic-Module (reine Funktionen = gut testbar)
-- [ ] `pnpm nx run-many -t typecheck test lint` grün
-
-**Hinweis:** Das ist das einzige Refactoring mit inhaltlichem Risiko. Nicht am Stück machen, sondern pro Datei einzeln committen.
+Die Länge der Dateien kommt von der Struktur der UI, nicht von vermischten Concerns. Ein Split würde Cosmetic-Wert liefern, aber Risiko einführen. Phase 5 wird deferred, bis es einen konkreten Auslöser gibt (z.B. wenn ein weiteres Feature die Screens tatsächlich komplexer macht).
 
 ---
 
