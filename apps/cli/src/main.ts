@@ -41,7 +41,7 @@ async function main(): Promise<void> {
   } else {
     // TUI mode - dynamic import to avoid loading Rezi for command mode
     const { startTui } = await import('./tui/app.js');
-    await startTui(client);
+    await startTui(client, config.apiUrl);
   }
 }
 
