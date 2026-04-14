@@ -1,0 +1,75 @@
+{
+  "name": "@mail-debugger/cli",
+  "version": "0.0.1",
+  "bin": {
+    "mail-debugger-cli": "./dist/main.mjs"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "apps/cli/dist",
+          "format": [
+            "esm"
+          ],
+          "bundle": true,
+          "main": "apps/cli/src/main.ts",
+          "tsConfig": "apps/cli/tsconfig.app.json",
+          "assets": [],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".mjs"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".mjs"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "continuous": true,
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "@mail-debugger/cli:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "@mail-debugger/cli:build:development"
+          },
+          "production": {
+            "buildTarget": "@mail-debugger/cli:build:production"
+          }
+        }
+      },
+      "test": {
+        "options": {
+          "passWithNoTests": true
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "@rezi-ui/core": "^0.1.0-alpha.0",
+    "@rezi-ui/node": "^0.1.0-alpha.0"
+  }
+}
