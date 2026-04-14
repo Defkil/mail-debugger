@@ -6,10 +6,7 @@ const SMTP_PORT = 2526;
 const API_PORT = 3001;
 const HEALTH_URL = `http://localhost:${API_PORT}/api/health`;
 
-async function waitForHealth(
-  url: string,
-  timeoutMs = 15_000
-): Promise<void> {
+async function waitForHealth(url: string, timeoutMs = 15_000): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
@@ -38,7 +35,7 @@ export async function setup() {
       '--api-port',
       String(API_PORT),
     ],
-    { stdio: 'pipe' }
+    { stdio: 'pipe' },
   );
 
   serverProcess.stderr?.on('data', (data: Buffer) => {
@@ -47,17 +44,14 @@ export async function setup() {
 
   await waitForHealth(HEALTH_URL);
 
-  // Store the process PID so globalTeardown can kill it
   process.env['__SERVER_PID__'] = String(serverProcess.pid);
-
-  // Store the reference for teardown
-  (globalThis as Record<string, unknown>).__SERVER_PROCESS__ =
-    serverProcess;
+  (globalThis as Record<string, unknown>).__SERVER_PROCESS__ = serverProcess;
 }
 
 export async function teardown() {
-  const proc = (globalThis as Record<string, unknown>)
-    .__SERVER_PROCESS__ as ChildProcess | undefined;
+  const proc = (globalThis as Record<string, unknown>).__SERVER_PROCESS__ as
+    | ChildProcess
+    | undefined;
   if (proc) {
     proc.kill('SIGTERM');
   }

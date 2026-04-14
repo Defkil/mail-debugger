@@ -2,8 +2,7 @@ import { createTransport } from 'nodemailer';
 
 const SMTP_PORT = (globalThis as Record<string, unknown>)
   .__SMTP_PORT__ as number;
-const API_PORT = (globalThis as Record<string, unknown>)
-  .__API_PORT__ as number;
+const API_PORT = (globalThis as Record<string, unknown>).__API_PORT__ as number;
 const API_BASE = `http://localhost:${API_PORT}`;
 
 function api(path: string, init?: RequestInit) {
@@ -37,7 +36,6 @@ async function sendTestEmail(overrides: Record<string, string> = {}) {
 
 describe('Mail Debugger E2E', () => {
   beforeEach(async () => {
-    // Clean up all emails before each test
     await api('/api/emails', { method: 'DELETE' });
   });
 
@@ -86,10 +84,10 @@ describe('Mail Debugger E2E', () => {
       expect(detailBody.data.from).toBe('e2e-sender@example.com');
       expect(detailBody.data.subject).toBe('E2E Test Email');
       expect(detailBody.data.textBody).toContain(
-        'This is an e2e test email body.'
+        'This is an e2e test email body.',
       );
       expect(detailBody.data.htmlBody).toContain(
-        '<p>This is an e2e test email body.</p>'
+        '<p>This is an e2e test email body.</p>',
       );
       expect(detailBody.data.raw).toBeDefined();
     });

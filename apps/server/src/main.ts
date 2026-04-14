@@ -7,9 +7,9 @@ import { generateSelfSignedCert } from './smtp/tls.js';
 import { createApp } from './api/app.js';
 
 const TLS_LABELS: Record<string, string> = {
-  none: 'Unverschlüsselt',
-  starttls: 'STARTTLS (Upgrade auf TLS nach Verbindungsaufbau)',
-  implicit: 'Implicit TLS (verschlüsselt ab Verbindungsaufbau)',
+  none: 'Unencrypted',
+  starttls: 'STARTTLS (upgrade to TLS after connection)',
+  implicit: 'Implicit TLS (encrypted from connection start)',
 };
 
 /**
@@ -53,7 +53,7 @@ async function main() {
     config.tls === 'none' ? undefined : await generateSelfSignedCert();
 
   if (cert) {
-    logger.info('Selbstsigniertes TLS-Zertifikat generiert');
+    logger.info('Self-signed TLS certificate generated');
   }
 
   const smtpServer = createSmtpServer(repository, logger, config.tls, cert);
@@ -62,7 +62,7 @@ async function main() {
   smtpServer.listen(config.smtpPort, '0.0.0.0', () => {
     logger.info(
       { port: config.smtpPort, tls: TLS_LABELS[config.tls] },
-      'SMTP-Server gestartet',
+      'SMTP server listening',
     );
   });
 
