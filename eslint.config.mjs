@@ -16,7 +16,10 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: [String.raw`^.*/eslint(\.base)?\.config\.[cm]?[jt]s$`],
+          allow: [
+            String.raw`^.*/eslint(\.base)?\.config\.[cm]?[jt]s$`,
+            String.raw`^.*/vitest\.config\.base(\.[jt]s)?$`,
+          ],
           depConstraints: [
             {
               sourceTag: '*',
