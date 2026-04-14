@@ -9,33 +9,39 @@
 
   interface Props {
     data: EmailSummary[];
+    total: number;
+    pagination: PaginationState;
+    onpaginationchange: (pagination: PaginationState) => void;
   }
 
-  let { data }: Props = $props();
+  let { data, total, pagination, onpaginationchange }: Props = $props();
 
   const [sorting, setSorting] = createTableState<SortingState>([
     { id: 'receivedAt', desc: true },
   ]);
-  const [pagination, setPagination] = createTableState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 25,
-  });
 
   const table = createAppTable({
     get data() {
       return data;
     },
     columns,
+    manualPagination: true,
+    get rowCount() {
+      return total;
+    },
     state: {
       get sorting() {
         return sorting();
       },
       get pagination() {
-        return pagination();
+        return pagination;
       },
     },
     onSortingChange: setSorting,
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater;
+      onpaginationchange(next);
+    },
   });
 </script>
 
@@ -94,5 +100,5 @@
     </table>
   </div>
 
-  <Pagination {table} pagination={pagination()} />
+  <Pagination {table} {pagination} />
 </div>

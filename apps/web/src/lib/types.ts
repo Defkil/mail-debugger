@@ -38,6 +38,11 @@ export interface EmailFilter {
   until?: string;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+}
+
 export interface HealthResponse {
   status: 'ok';
   smtpPort: number;

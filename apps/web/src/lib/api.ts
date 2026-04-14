@@ -1,4 +1,4 @@
-import type { Email, EmailSummary, EmailFilter, HealthResponse } from './types';
+import type { Email, EmailSummary, EmailFilter, PaginatedResponse, HealthResponse } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init);
@@ -13,16 +13,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function listEmails(filter?: EmailFilter): Promise<EmailSummary[]> {
+export async function listEmails(
+  filter?: EmailFilter,
+  limit?: number,
+  offset?: number
+): Promise<PaginatedResponse<EmailSummary>> {
   const params = new URLSearchParams();
   if (filter?.from) params.set('from', filter.from);
   if (filter?.to) params.set('to', filter.to);
   if (filter?.subject) params.set('subject', filter.subject);
   if (filter?.since) params.set('since', filter.since);
   if (filter?.until) params.set('until', filter.until);
+  if (limit != null) params.set('limit', String(limit));
+  if (offset != null) params.set('offset', String(offset));
   const query = params.toString();
-  const res = await request<{ data: EmailSummary[] }>(query ? `/api/emails?${query}` : '/api/emails');
-  return res.data;
+  return request<PaginatedResponse<EmailSummary>>(query ? `/api/emails?${query}` : '/api/emails');
 }
 
 export async function getEmail(id: number): Promise<Email> {

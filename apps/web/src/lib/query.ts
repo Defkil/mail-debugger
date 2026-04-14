@@ -16,16 +16,17 @@ export const queryClient = new QueryClient({
 export const queryKeys = {
   emails: {
     all: ['emails'] as const,
-    list: (filter?: EmailFilter) => ['emails', 'list', filter ?? {}] as const,
+    list: (filter?: EmailFilter, limit?: number, offset?: number) =>
+      ['emails', 'list', filter ?? {}, limit, offset] as const,
     detail: (id: number) => ['emails', 'detail', id] as const,
   },
   health: ['health'] as const,
 };
 
-export function emailListOptions(filter?: EmailFilter) {
+export function emailListOptions(filter?: EmailFilter, limit?: number, offset?: number) {
   return {
-    queryKey: queryKeys.emails.list(filter),
-    queryFn: () => listEmails(filter),
+    queryKey: queryKeys.emails.list(filter, limit, offset),
+    queryFn: () => listEmails(filter, limit, offset),
   };
 }
 
