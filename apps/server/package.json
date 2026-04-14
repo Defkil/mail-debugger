@@ -29,10 +29,19 @@
             "outExtension": {
               ".js": ".mjs"
             },
+            "banner": {
+              "js": "#!/usr/bin/env node"
+            },
+            "conditions": [
+              "mail-debugger"
+            ],
             "external": [
               "better-sqlite3",
               "pino",
-              "pino-pretty"
+              "pino-pretty",
+              "@rezi-ui/core",
+              "@rezi-ui/node",
+              "@rezi-ui/native"
             ]
           }
         },
@@ -44,6 +53,74 @@
               "outExtension": {
                 ".js": ".mjs"
               },
+              "banner": {
+                "js": "#!/usr/bin/env node"
+              },
+              "conditions": [
+                "mail-debugger"
+              ],
+              "external": [
+                "better-sqlite3",
+                "@rezi-ui/core",
+                "@rezi-ui/node",
+                "@rezi-ui/native"
+              ]
+            }
+          }
+        }
+      },
+      "compile-api": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "apps/server/dist-api",
+          "format": [
+            "esm"
+          ],
+          "bundle": true,
+          "main": "apps/server/src/main-api.ts",
+          "outputFileName": "main.js",
+          "tsConfig": "apps/server/tsconfig.app.json",
+          "assets": [],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".mjs"
+            },
+            "banner": {
+              "js": "#!/usr/bin/env node"
+            },
+            "conditions": [
+              "mail-debugger"
+            ],
+            "external": [
+              "better-sqlite3",
+              "pino",
+              "pino-pretty",
+              "@rezi-ui/core",
+              "@rezi-ui/node",
+              "@rezi-ui/native"
+            ]
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".mjs"
+              },
+              "banner": {
+                "js": "#!/usr/bin/env node"
+              },
+              "conditions": [
+                "mail-debugger"
+              ],
               "external": [
                 "better-sqlite3"
               ]
@@ -68,6 +145,12 @@
         "dependsOn": [
           "compile",
           "copy-web"
+        ],
+        "executor": "nx:noop"
+      },
+      "build-api": {
+        "dependsOn": [
+          "compile-api"
         ],
         "executor": "nx:noop"
       },
@@ -133,6 +216,7 @@
     }
   },
   "dependencies": {
+    "@mail-debugger/cli": "workspace:*",
     "@mail-debugger/types": "workspace:*",
     "better-sqlite3": "^12.9.0",
     "pino": "^10.3.1",

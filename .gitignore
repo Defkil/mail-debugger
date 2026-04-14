@@ -2,6 +2,7 @@
 
 # compiled output
 dist
+dist-api
 tmp
 out-tsc
 

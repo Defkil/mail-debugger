@@ -1,8 +1,19 @@
 {
   "name": "@mail-debugger/cli",
   "version": "0.0.1",
-  "bin": {
-    "mail-debugger-cli": "./dist/main.mjs"
+  "exports": {
+    "./run-cli": {
+      "mail-debugger": "./src/run-cli.ts",
+      "types": "./dist/apps/cli/src/run-cli.d.ts",
+      "import": "./dist/run-cli.mjs",
+      "default": "./dist/run-cli.mjs"
+    },
+    "./error": {
+      "mail-debugger": "./src/error.ts",
+      "types": "./dist/apps/cli/src/error.d.ts",
+      "import": "./dist/error.mjs",
+      "default": "./dist/error.mjs"
+    }
   },
   "nx": {
     "targets": {
@@ -26,6 +37,9 @@
             "sourcemap": true,
             "outExtension": {
               ".js": ".mjs"
+            },
+            "banner": {
+              "js": "#!/usr/bin/env node"
             }
           }
         },
@@ -36,6 +50,9 @@
               "sourcemap": false,
               "outExtension": {
                 ".js": ".mjs"
+              },
+              "banner": {
+                "js": "#!/usr/bin/env node"
               }
             }
           }

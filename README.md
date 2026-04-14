@@ -1,26 +1,26 @@
 # Mail Debugger
 
-Lightweight fake SMTP server that catches emails during development. Inspect, filter, and manage caught emails through a REST API or interactive terminal UI.
+Lightweight fake SMTP server that catches emails during development. Inspect, filter, and manage caught emails through a REST API, web UI, or interactive terminal client.
 
 ## Quick Start
 
 ```bash
 # Run the server (no install needed)
-pnpx github:defkil/mail-debugger
-```
-
-Or install it once as a dev dependency and run it by name:
-
-```bash
-pnpm add -D github:defkil/mail-debugger
 pnpx mail-debugger
 ```
 
-This starts an **SMTP server** on port `2525` and an **API server** on port `3000` with Swagger UI at `http://localhost:3000/swagger`.
+Or install it once as a dev dependency:
+
+```bash
+pnpm add -D mail-debugger
+pnpx mail-debugger
+```
+
+This starts an **SMTP server** on port `2525` and an **API server** on port `3000` with Swagger UI at `http://localhost:3000/swagger` and a web inbox at `http://localhost:3000`.
 
 ```bash
 # Custom ports with persistent storage
-pnpx github:defkil/mail-debugger --smtp-port 1025 --api-port 8080 --persist
+pnpx mail-debugger --smtp-port 1025 --api-port 8080 --persist
 ```
 
 ### TLS
@@ -34,20 +34,30 @@ TLS is disabled by default. Use `--tls` to enable it. A self-signed certificate 
 | **implicit** | `--tls implicit` | Encrypted from the start (SMTPS)                 |
 
 ```bash
-pnpx github:defkil/mail-debugger --tls starttls
-pnpx github:defkil/mail-debugger --tls implicit --smtp-port 4650
+pnpx mail-debugger --tls starttls
+pnpx mail-debugger --tls implicit --smtp-port 4650
 ```
 
 ## CLI Client
 
+The same `mail-debugger` binary also ships the terminal client -- pass `--cli` and everything after it is handed to the CLI parser:
+
 ```bash
-pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli              # Interactive TUI
-pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli list         # List all emails
-pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli show 5       # Show email details
-pnpm dlx -p github:defkil/mail-debugger mail-debugger-cli health       # Server status
+pnpx mail-debugger --cli                 # Interactive TUI
+pnpx mail-debugger --cli list            # List all emails
+pnpx mail-debugger --cli show 5          # Show email details
+pnpx mail-debugger --cli health          # Server status
 ```
 
 See [apps/cli/README.md](apps/cli/README.md) for all commands and options.
+
+## Slim API build for CI / E2E
+
+Need only the SMTP + REST API without the bundled web UI? Install [`mail-debugger-api`](https://www.npmjs.com/package/mail-debugger-api) -- same wire protocol, smaller footprint:
+
+```bash
+pnpx mail-debugger-api --smtp-port 1025 --api-port 8080
+```
 
 ## SMTP Configuration
 
@@ -84,16 +94,26 @@ const smtpsTransport = createTransport({
 
 | App        | Description                      | Docs                                           |
 | ---------- | -------------------------------- | ---------------------------------------------- |
-| **server** | SMTP server + REST API           | [apps/server/README.md](apps/server/README.md) |
+| **server** | SMTP server + REST API + web UI  | [apps/server/README.md](apps/server/README.md) |
 | **cli**    | Terminal client (TUI + commands) | [apps/cli/README.md](apps/cli/README.md)       |
 
 ## Development
 
 ```bash
 pnpm install
+pnpm run setup                    # One-time: install husky git hooks
 pnpm nx serve server              # Dev server with watch
 pnpm nx serve cli                 # Dev CLI with watch
 pnpm nx run-many -t lint test build typecheck   # All checks
+```
+
+## Releasing
+
+Publishing is fully automated via GitHub Actions with npm [Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, no tokens).
+
+```bash
+npm version patch          # bumps version + tags commit
+git push --follow-tags     # CI builds + publishes to npm
 ```
 
 ## Roadmap

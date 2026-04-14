@@ -7,7 +7,13 @@ export default [
   ...nx.configs['flat/javascript'],
   eslintPluginUnicorn.configs['flat/recommended'],
   {
-    ignores: ['**/dist', '**/out-tsc', '**/.svelte-kit', '**/build'],
+    ignores: [
+      '**/dist',
+      '**/dist-api',
+      '**/out-tsc',
+      '**/.svelte-kit',
+      '**/build',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],

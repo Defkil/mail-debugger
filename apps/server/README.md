@@ -19,8 +19,8 @@ SMTP catch-all server with a REST API for inspecting captured emails during deve
 | `--tls <mode>`       | `none`  | TLS mode: `none`, `starttls`, or `implicit`               |
 
 ```bash
-pnpx github:defkil/mail-debugger --smtp-port 1025 --api-port 8080 --persist
-pnpx github:defkil/mail-debugger --tls starttls
+pnpx mail-debugger --smtp-port 1025 --api-port 8080 --persist
+pnpx mail-debugger --tls starttls
 ```
 
 ## API Reference
