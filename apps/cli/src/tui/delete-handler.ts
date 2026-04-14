@@ -1,4 +1,4 @@
-import type { ApiClient } from '../api/client.js';
+import type { ApiClient } from '@mail-debugger/api-client';
 import type { EmailSummary } from '@mail-debugger/types';
 import type { TuiState } from './state.js';
 

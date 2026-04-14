@@ -1,9 +1,9 @@
-import type { ApiClient } from '../api/client.js';
+import type { ApiClient } from '@mail-debugger/api-client';
 import { formatHealth } from '../formatter/format-health.js';
 
 export async function healthCommand(
   client: ApiClient,
-  json?: boolean
+  json?: boolean,
 ): Promise<void> {
   const data = await client.health();
 

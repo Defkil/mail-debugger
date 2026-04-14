@@ -3,7 +3,7 @@
   import { writable, derived } from 'svelte/store';
   import type { PaginationState } from '@tanstack/svelte-table';
   import { emailListOptions, queryKeys } from '$lib/query';
-  import { deleteAllEmails } from '$lib/api';
+  import { api } from '$lib/api';
   import type { EmailFilter } from '@mail-debugger/types';
   import EmailTable from '../components/EmailTable.svelte';
   import FilterBar from '../components/FilterBar.svelte';
@@ -36,7 +36,7 @@
 
   async function handleDeleteAll() {
     showDeleteAll = false;
-    await deleteAllEmails();
+    await api.deleteAllEmails();
     pagination = { ...pagination, pageIndex: 0 };
     qc.invalidateQueries({ queryKey: queryKeys.emails.all });
     qc.invalidateQueries({ queryKey: queryKeys.health });

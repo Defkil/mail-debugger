@@ -69,6 +69,7 @@
     }
   },
   "dependencies": {
+    "@mail-debugger/api-client": "workspace:*",
     "@mail-debugger/types": "workspace:*",
     "@rezi-ui/core": "^0.1.0-alpha.0",
     "@rezi-ui/node": "^0.1.0-alpha.0"

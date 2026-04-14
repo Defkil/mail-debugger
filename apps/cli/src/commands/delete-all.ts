@@ -1,8 +1,8 @@
-import type { ApiClient } from '../api/client.js';
+import type { ApiClient } from '@mail-debugger/api-client';
 
 export async function deleteAllCommand(
   client: ApiClient,
-  json?: boolean
+  json?: boolean,
 ): Promise<void> {
   const count = await client.deleteAllEmails();
 

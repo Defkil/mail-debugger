@@ -1,10 +1,10 @@
-import type { ApiClient } from '../api/client.js';
+import type { ApiClient } from '@mail-debugger/api-client';
 import { formatEmailDetail } from '../formatter/format-email-detail.js';
 
 export async function showCommand(
   client: ApiClient,
   id: number,
-  json?: boolean
+  json?: boolean,
 ): Promise<void> {
   const email = await client.getEmail(id);
 

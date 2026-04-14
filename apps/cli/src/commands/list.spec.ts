@@ -5,7 +5,9 @@ import { createMockClient, mockSummary } from './test-fixtures';
 let consoleSpy: MockInstance;
 
 beforeEach(() => {
-  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { /* noop */ });
+  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+    /* noop */
+  });
 });
 
 afterEach(() => {
@@ -43,7 +45,7 @@ describe('listCommand', () => {
 
   it('should show "No emails found." for empty list', async () => {
     const client = createMockClient({
-      listEmails: vi.fn().mockResolvedValue([]),
+      listEmails: vi.fn().mockResolvedValue({ data: [], total: 0 }),
     });
     await listCommand(client);
 

@@ -4,7 +4,7 @@
   import { createQuery, useQueryClient } from '@tanstack/svelte-query';
   import { derived } from 'svelte/store';
   import { emailDetailOptions, queryKeys } from '$lib/query';
-  import { deleteEmail } from '$lib/api';
+  import { api } from '$lib/api';
   import EmailMetadata from '../../../components/EmailMetadata.svelte';
   import EmailBodyTabs from '../../../components/EmailBodyTabs.svelte';
   import AttachmentList from '../../../components/AttachmentList.svelte';
@@ -21,7 +21,7 @@
 
   async function handleDelete() {
     showDelete = false;
-    await deleteEmail(id);
+    await api.deleteEmail(id);
     qc.invalidateQueries({ queryKey: queryKeys.emails.all });
     qc.invalidateQueries({ queryKey: queryKeys.health });
     goto('/');

@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { ApiClient } from '../api/client';
+import type { ApiClient } from '@mail-debugger/api-client';
 import type { Email, EmailSummary, HealthResponse } from '@mail-debugger/types';
 
 export const mockSummary: EmailSummary = {
@@ -37,7 +37,7 @@ export const mockHealth: HealthResponse = {
 
 export function createMockClient(overrides?: Partial<ApiClient>): ApiClient {
   return {
-    listEmails: vi.fn().mockResolvedValue([mockSummary]),
+    listEmails: vi.fn().mockResolvedValue({ data: [mockSummary], total: 1 }),
     getEmail: vi.fn().mockResolvedValue(mockEmail),
     deleteEmail: vi.fn().mockResolvedValue(true),
     deleteAllEmails: vi.fn().mockResolvedValue(3),

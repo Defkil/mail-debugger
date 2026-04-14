@@ -1,5 +1,7 @@
-import { createApiClient } from './client';
 import type { Email, EmailSummary, HealthResponse } from '@mail-debugger/types';
+import { createApiClient } from './api-client.js';
+
+const API_URL = 'http://localhost:3000';
 
 const mockSummary: EmailSummary = {
   id: 1,
@@ -45,42 +47,47 @@ beforeEach(() => {
 });
 
 describe('createApiClient', () => {
-  const API_URL = 'http://localhost:3000';
-
   describe('listEmails', () => {
-    it('should fetch emails without filter', async () => {
-      const spy = mockFetch({ data: [mockSummary] });
+    it('should fetch emails without filter and return PaginatedResponse', async () => {
+      const payload = { data: [mockSummary], total: 1 };
+      const spy = mockFetch(payload);
       const client = createApiClient(API_URL);
 
       const result = await client.listEmails();
 
       expect(spy).toHaveBeenCalledWith(`${API_URL}/api/emails`, undefined);
-      expect(result).toEqual([mockSummary]);
+      expect(result).toEqual(payload);
     });
 
-    it('should pass filter params as query string', async () => {
-      const spy = mockFetch({ data: [mockSummary] });
+    it('should pass filter and pagination params as query string', async () => {
+      const spy = mockFetch({ data: [], total: 0 });
       const client = createApiClient(API_URL);
 
-      await client.listEmails({ from: 'alice@test.com', subject: 'hello' });
+      await client.listEmails(
+        { from: 'alice@test.com', subject: 'hello' },
+        10,
+        20,
+      );
 
       const url = spy.mock.calls[0][0] as string;
       expect(url).toContain('from=alice%40test.com');
       expect(url).toContain('subject=hello');
+      expect(url).toContain('limit=10');
+      expect(url).toContain('offset=20');
     });
 
-    it('should return empty array when no emails', async () => {
-      mockFetch({ data: [] });
+    it('should return empty paginated response when no emails', async () => {
+      mockFetch({ data: [], total: 0 });
       const client = createApiClient(API_URL);
 
       const result = await client.listEmails();
 
-      expect(result).toEqual([]);
+      expect(result).toEqual({ data: [], total: 0 });
     });
   });
 
   describe('getEmail', () => {
-    it('should fetch email by id', async () => {
+    it('should fetch email by id and unwrap data field', async () => {
       const spy = mockFetch({ data: mockEmail });
       const client = createApiClient(API_URL);
 
@@ -161,6 +168,15 @@ describe('createApiClient', () => {
       const client = createApiClient(API_URL);
 
       await expect(client.listEmails()).rejects.toThrow('HTTP 502');
+    });
+
+    it('should use empty base URL for relative requests', async () => {
+      const spy = mockFetch({ data: [], total: 0 });
+      const client = createApiClient('');
+
+      await client.listEmails();
+
+      expect(spy).toHaveBeenCalledWith('/api/emails', undefined);
     });
   });
 });

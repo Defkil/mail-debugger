@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/svelte-query';
-import { listEmails, getEmail, getHealth } from './api';
+import { api } from './api';
 import type { EmailFilter } from '@mail-debugger/types';
 
 export const queryClient = new QueryClient({
@@ -30,14 +30,14 @@ export function emailListOptions(
 ) {
   return {
     queryKey: queryKeys.emails.list(filter, limit, offset),
-    queryFn: () => listEmails(filter, limit, offset),
+    queryFn: () => api.listEmails(filter, limit, offset),
   };
 }
 
 export function emailDetailOptions(id: number) {
   return {
     queryKey: queryKeys.emails.detail(id),
-    queryFn: () => getEmail(id),
+    queryFn: () => api.getEmail(id),
     refetchInterval: false as const,
   };
 }
@@ -45,7 +45,7 @@ export function emailDetailOptions(id: number) {
 export function healthOptions() {
   return {
     queryKey: queryKeys.health,
-    queryFn: getHealth,
+    queryFn: api.health,
     refetchInterval: 10_000,
   };
 }

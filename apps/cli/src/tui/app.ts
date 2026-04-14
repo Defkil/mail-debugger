@@ -1,5 +1,5 @@
 import { createNodeApp } from '@rezi-ui/node';
-import type { ApiClient } from '../api/client.js';
+import type { ApiClient } from '@mail-debugger/api-client';
 import type { TuiState } from './state.js';
 import { createInitialState } from './state.js';
 import { buildFilter } from './build-filter.js';
@@ -92,7 +92,7 @@ export async function startTui(
     app.update((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       const filter = buildFilter(currentState);
-      const emails = await client.listEmails(filter);
+      const { data: emails } = await client.listEmails(filter);
       app.update((prev) => ({
         ...prev,
         emails,

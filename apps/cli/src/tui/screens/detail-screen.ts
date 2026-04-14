@@ -1,6 +1,6 @@
 import { ui } from '@rezi-ui/core';
 import type { RouteDefinition } from '@rezi-ui/core';
-import type { ApiClient } from '../../api/client.js';
+import type { ApiClient } from '@mail-debugger/api-client';
 import type { TuiState } from '../state.js';
 import { BOX_DEFAULTS, DIM } from '../theme.js';
 
@@ -117,9 +117,7 @@ export function createDetailScreen(
           },
           [
             ui.text(
-              email
-                ? (email.textBody || email.htmlBody || '(no body)')
-                : '',
+              email ? email.textBody || email.htmlBody || '(no body)' : '',
               { wrap: true },
             ),
           ],
