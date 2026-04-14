@@ -74,9 +74,11 @@ describe('EmailRepository', () => {
       expect(total).toBe(2);
       expect(data).toHaveLength(2);
       // sql.js's datetime('now') may return identical seconds for inserts in
-      // the same tick — fall back to id-based ordering if received_at ties.
-      const subjects = data.map((e) => e.subject).toSorted();
-      expect(subjects).toEqual(['First', 'Second']);
+      // the same tick, so we can't assert a strict order here — just that
+      // both rows are present.
+      const subjects = data.map((e) => e.subject);
+      expect(subjects).toContain('First');
+      expect(subjects).toContain('Second');
     });
 
     it('should filter by from address', () => {
