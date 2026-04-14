@@ -1,11 +1,25 @@
 {
-  "name": "@mail-debugger/source",
-  "version": "0.0.0",
+  "name": "mail-debugger",
+  "version": "0.1.0",
   "license": "MIT",
-  "scripts": {},
-  "private": true,
+  "description": "Lightweight fake SMTP server that catches emails during development",
+  "bin": {
+    "mail-debugger": "./apps/server/dist/main.mjs"
+  },
+  "scripts": {
+    "prepare": "nx build server --skip-nx-cache"
+  },
+  "files": [
+    "apps/server/dist"
+  ],
   "dependencies": {
-    "axios": "^1.6.0"
+    "@elysiajs/node": "^1.4.5",
+    "@elysiajs/swagger": "^1.3.1",
+    "better-sqlite3": "^12.9.0",
+    "elysia": "^1.4.28",
+    "mailparser": "^3.9.8",
+    "pino": "^10.3.1",
+    "smtp-server": "^3.18.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
@@ -20,20 +34,35 @@
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
     "@swc/jest": "~0.2.38",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/jest": "^30.0.0",
+    "@types/mailparser": "^3.4.6",
     "@types/node": "20.19.9",
+    "@types/nodemailer": "^8.0.0",
+    "@types/smtp-server": "^3.5.13",
     "esbuild": "^0.27.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "jest": "^30.0.2",
     "jest-environment-node": "^30.0.2",
     "jest-util": "^30.0.2",
+    "nodemailer": "^8.0.5",
     "nx": "22.6.5",
+    "pino-pretty": "^13.1.3",
     "prettier": "~3.6.2",
     "ts-jest": "^29.4.0",
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.40.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "better-sqlite3",
+      "esbuild",
+      "nx",
+      "unrs-resolver"
+    ]
   }
 }

@@ -12,6 +12,8 @@ swcJestConfig.swcrc = false;
 export default {
   displayName: '@mail-debugger/server-e2e',
   preset: '../../jest.preset.js',
+  globalSetup: '<rootDir>/src/global-setup.ts',
+  globalTeardown: '<rootDir>/src/global-teardown.ts',
   setupFiles: ['<rootDir>/src/test-setup.ts'],
   testEnvironment: 'node',
   transform: {

@@ -1,0 +1,49 @@
+import { SMTPServer } from 'smtp-server';
+import type { EmailRepository } from '../db/email-repository.js';
+import type { Logger } from '../logger.js';
+import { parseEmail } from '../parser/email-parser.js';
+
+export function createSmtpServer(
+  repository: EmailRepository,
+  logger: Logger
+): SMTPServer {
+  const log = logger.child({ component: 'smtp' });
+
+  const server = new SMTPServer({
+    authOptional: true,
+    disabledCommands: ['STARTTLS'],
+    logger: false,
+    onData(stream, session, callback) {
+      const chunks: Buffer[] = [];
+
+      stream.on('data', (chunk: Buffer) => {
+        chunks.push(chunk);
+      });
+
+      stream.on('end', () => {
+        const raw = Buffer.concat(chunks).toString('utf-8');
+
+        parseEmail(raw)
+          .then((parsed) => {
+            const id = repository.insert(parsed);
+            log.info(
+              { id, from: parsed.from, to: parsed.to, subject: parsed.subject },
+              'Email received'
+            );
+            callback();
+          })
+          .catch((err) => {
+            log.error({ err }, 'Failed to process email');
+            callback(
+              err instanceof Error ? err : new Error(String(err))
+            );
+          });
+      });
+    },
+    onAuth(_auth, _session, callback) {
+      callback(null, { user: 'anonymous' });
+    },
+  });
+
+  return server;
+}

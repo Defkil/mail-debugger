@@ -1,101 +1,223 @@
-# MailDebugger
+# Mail Debugger
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A lightweight fake SMTP server that catches emails during development. Inspect, filter, and manage caught emails through a REST API with OpenAPI/Swagger documentation.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Features
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+- **SMTP Server** -- Catches all emails sent to it (no authentication required)
+- **REST API** -- List, filter, view, and delete caught emails
+- **SQLite Storage** -- In-memory by default, optional file persistence
+- **OpenAPI/Swagger** -- Interactive API documentation at `/swagger`
+- **Zero Config** -- Works out of the box with sensible defaults
 
-## Run tasks
+## Installation
 
-To run the dev server for your app, use:
+Install as a dev dependency in your project directly from GitHub:
 
-```sh
-npx nx serve server
+```bash
+# npm
+npm install --save-dev github:defkil/mail-debugger
+
+# pnpm
+pnpm add -D github:defkil/mail-debugger
+
+# yarn
+yarn add -D github:defkil/mail-debugger
 ```
 
-To create a production bundle:
+## Quick Start
 
-```sh
-npx nx build server
+```bash
+# Run directly with npx (no install needed)
+npx github:defkil/mail-debugger
+
+# Or if installed as a dependency
+npx mail-debugger
 ```
 
-To see all available targets to run for a project, run:
+This starts:
+- **SMTP server** on port `2525`
+- **API server** on port `3000`
+- **Swagger UI** at `http://localhost:3000/swagger`
 
-```sh
-npx nx show project server
+### CLI Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--smtp-port <port>` | `2525` | SMTP server port |
+| `--api-port <port>` | `3000` | REST API server port |
+| `--persist` | `false` | Enable persistent SQLite storage (file: `mail-debugger.sqlite`) |
+
+```bash
+# Custom ports with persistent storage
+npx github:defkil/mail-debugger --smtp-port 1025 --api-port 8080 --persist
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## API Reference
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/emails` | List all emails (supports filtering) |
+| `GET` | `/api/emails/:id` | Get full email details |
+| `DELETE` | `/api/emails/:id` | Delete a single email |
+| `DELETE` | `/api/emails` | Delete all emails |
+| `GET` | `/api/health` | Health check and server info |
+| `GET` | `/swagger` | OpenAPI/Swagger UI |
 
-## Add new projects
+### Filtering Emails
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+`GET /api/emails` supports the following query parameters:
 
-Use the plugin's generator to create new projects.
+| Parameter | Description |
+|-----------|-------------|
+| `from` | Filter by sender address (partial match) |
+| `to` | Filter by recipient address (partial match) |
+| `subject` | Filter by subject (partial match) |
+| `since` | Filter emails received after this datetime |
+| `until` | Filter emails received before this datetime |
 
-To generate a new application, use:
+Example: `GET /api/emails?from=alice&subject=welcome`
 
-```sh
-npx nx g @nx/node:app demo
+## Usage in Local Development
+
+Configure your application to send emails to the Mail Debugger SMTP server:
+
+### Node.js (Nodemailer)
+
+```typescript
+import { createTransport } from 'nodemailer';
+
+const transport = createTransport({
+  host: 'localhost',
+  port: 2525,
+  secure: false,
+  tls: { rejectUnauthorized: false },
+});
+
+await transport.sendMail({
+  from: 'app@example.com',
+  to: 'user@example.com',
+  subject: 'Welcome!',
+  html: '<h1>Welcome to our app</h1>',
+});
 ```
 
-To generate a new library, use:
+### Generic SMTP Configuration
 
-```sh
-npx nx g @nx/node:lib mylib
+Point any SMTP client to:
+- **Host:** `localhost`
+- **Port:** `2525` (or your custom port)
+- **Authentication:** None required
+- **TLS/SSL:** Disabled
+
+## Usage in E2E Tests
+
+### Setup Pattern
+
+```typescript
+import { spawn, type ChildProcess } from 'child_process';
+
+let serverProcess: ChildProcess;
+
+// Start server before tests
+beforeAll(async () => {
+  serverProcess = spawn('npx', [
+    'mail-debugger',
+    '--smtp-port', '2526',
+    '--api-port', '3001',
+  ], { stdio: 'pipe', shell: true });
+
+  // Wait for server to be ready
+  await waitForHealth('http://localhost:3001/api/health');
+});
+
+// Clean up after tests
+afterAll(() => {
+  serverProcess.kill('SIGTERM');
+});
+
+// Clear emails between tests
+beforeEach(async () => {
+  await fetch('http://localhost:3001/api/emails', { method: 'DELETE' });
+});
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+### Test Example
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```typescript
+import { createTransport } from 'nodemailer';
 
-## Set up CI!
+it('should send a welcome email', async () => {
+  // Trigger your application logic that sends an email
+  await myApp.registerUser('user@example.com');
 
-### Step 1
+  // Verify the email was sent
+  const res = await fetch('http://localhost:3001/api/emails?subject=Welcome');
+  const { data } = await res.json();
 
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+  expect(data).toHaveLength(1);
+  expect(data[0].to).toContain('user@example.com');
+});
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+## Development
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Install dependencies
+pnpm install
 
-### Step 2
+# Start development server (with watch mode)
+pnpm nx serve server
 
-Use the following command to configure a CI workflow for your workspace:
+# Run unit tests
+pnpm nx test server
 
-```sh
-npx nx g ci-workflow
+# Run e2e tests
+pnpm nx e2e server-e2e
+
+# Build for production
+pnpm nx build server
+
+# Lint
+pnpm nx lint server
+
+# Type check
+pnpm nx typecheck server
+
+# Run all checks
+pnpm nx run-many -t lint test build typecheck
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Architecture
 
-## Install Nx Console
+```
+apps/server/src/
+  main.ts              -- Entry point, wires all components
+  config.ts            -- CLI argument parsing
+  types.ts             -- Shared TypeScript interfaces
+  db/
+    schema.ts          -- SQLite table definitions
+    connection.ts      -- Database factory (in-memory / persistent)
+    email-repository.ts -- CRUD operations for emails
+  smtp/
+    smtp-server.ts     -- SMTP server (catches incoming emails)
+  parser/
+    email-parser.ts    -- Raw email -> structured data
+  api/
+    app.ts             -- ElysiaJS application with Swagger
+    routes/
+      emails.ts        -- Email management endpoints
+      health.ts        -- Health check endpoint
+```
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## Roadmap
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [ ] **Web UI** -- Browser-based inbox for viewing caught emails
+- [ ] **CLI UI** -- Terminal-based inbox viewer
+- [ ] **Full SMTP features** -- SIZE, STARTTLS, authentication
+- [ ] **IMAP server** -- Allow email clients to connect and read caught emails
+- [ ] **MCP support** -- Model Context Protocol server for AI agent integration
 
-## Useful links
+## License
 
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+MIT

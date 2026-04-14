@@ -17,8 +17,7 @@
           "passWithNoTests": true
         },
         "dependsOn": [
-          "@mail-debugger/server:build",
-          "@mail-debugger/server:serve"
+          "@mail-debugger/server:build"
         ]
       }
     }

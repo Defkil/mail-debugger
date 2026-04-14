@@ -1,7 +1,9 @@
 {
   "name": "@mail-debugger/server",
   "version": "0.0.1",
-  "private": true,
+  "bin": {
+    "mail-debugger": "./dist/main.mjs"
+  },
   "nx": {
     "targets": {
       "build": {
@@ -14,9 +16,9 @@
           "platform": "node",
           "outputPath": "apps/server/dist",
           "format": [
-            "cjs"
+            "esm"
           ],
-          "bundle": false,
+          "bundle": true,
           "main": "apps/server/src/main.ts",
           "tsConfig": "apps/server/tsconfig.app.json",
           "assets": [
@@ -25,8 +27,13 @@
           "esbuildOptions": {
             "sourcemap": true,
             "outExtension": {
-              ".js": ".js"
-            }
+              ".js": ".mjs"
+            },
+            "external": [
+              "better-sqlite3",
+              "pino",
+              "pino-pretty"
+            ]
           }
         },
         "configurations": {
@@ -35,8 +42,11 @@
             "esbuildOptions": {
               "sourcemap": false,
               "outExtension": {
-                ".js": ".js"
-              }
+                ".js": ".mjs"
+              },
+              "external": [
+                "better-sqlite3"
+              ]
             }
           }
         }
@@ -102,5 +112,9 @@
       }
     }
   },
-  "dependencies": {}
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "pino": "^10.3.1",
+    "pino-pretty": "^13.1.3"
+  }
 }
