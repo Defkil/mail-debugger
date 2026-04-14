@@ -1,5 +1,6 @@
 import { parseConfig } from './config/parse-config.js';
 import { createApiClient } from '@mail-debugger/api-client';
+import { getErrorMessage } from './error.js';
 import { listCommand } from './commands/list.js';
 import { showCommand } from './commands/show.js';
 import { deleteCommand } from './commands/delete.js';
@@ -50,6 +51,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(getErrorMessage(error));
   process.exit(1);
 });

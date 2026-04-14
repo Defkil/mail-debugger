@@ -9,6 +9,7 @@ import type { ListScreenDeps } from './screens/list-screen.js';
 import { createDetailScreen } from './screens/detail-screen.js';
 import type { DetailScreenDeps } from './screens/detail-screen.js';
 import { setupInputHandling } from './input-handler.js';
+import { getErrorMessage } from '../error.js';
 
 export async function startTui(
   client: ApiClient,
@@ -107,8 +108,7 @@ export async function startTui(
       app.update((prev) => ({
         ...prev,
         isLoading: false,
-        error:
-          error instanceof Error ? error.message : 'Failed to fetch emails',
+        error: getErrorMessage(error, 'Failed to fetch emails'),
       }));
     }
   };
@@ -121,7 +121,7 @@ export async function startTui(
     } catch (error) {
       app.update((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Failed to load email',
+        error: getErrorMessage(error, 'Failed to load email'),
       }));
       app.router?.back();
     }

@@ -1,6 +1,7 @@
 import type { ApiClient } from '@mail-debugger/api-client';
 import type { EmailSummary } from '@mail-debugger/types';
 import type { TuiState } from './state.js';
+import { getErrorMessage } from '../error.js';
 
 export interface DeleteHandlerDeps {
   getCurrentState: () => TuiState;
@@ -30,7 +31,7 @@ export function handleDeleteKey(
         deps.refreshEmails();
       })
       .catch((error) => {
-        deps.setError(error instanceof Error ? error.message : 'Delete failed');
+        deps.setError(getErrorMessage(error, 'Delete failed'));
       });
     return;
   }
@@ -41,9 +42,7 @@ export function handleDeleteKey(
         .deleteAllEmails()
         .then(() => deps.refreshEmails())
         .catch((error) => {
-          deps.setError(
-            error instanceof Error ? error.message : 'Delete all failed',
-          );
+          deps.setError(getErrorMessage(error, 'Delete all failed'));
         });
     } else if (!hasShift) {
       const email = deps.getFocusedEmail();
@@ -52,9 +51,7 @@ export function handleDeleteKey(
           .deleteEmail(email.id)
           .then(() => deps.refreshEmails())
           .catch((error) => {
-            deps.setError(
-              error instanceof Error ? error.message : 'Delete failed',
-            );
+            deps.setError(getErrorMessage(error, 'Delete failed'));
           });
       }
     }
