@@ -36,8 +36,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint, test, typecheck (publishable projects)
-        run: pnpm exec nx run-many -t lint test typecheck -p @mail-debugger/server @mail-debugger/cli mail-debugger-api mail-debugger-cli types api-client
+      - name: Lint and test (publishable projects)
+        run: pnpm exec nx run-many -t lint test -p @mail-debugger/server @mail-debugger/cli mail-debugger-api mail-debugger-cli types api-client
+
+      - name: Typecheck (publishable projects)
+        run: pnpm exec nx run-many -t typecheck -p @mail-debugger/server @mail-debugger/cli mail-debugger-api mail-debugger-cli types api-client
 
       - name: Build publishable artifacts
         run: pnpm exec nx run-many -t build -p @mail-debugger/server mail-debugger-api mail-debugger-cli --skip-nx-cache
