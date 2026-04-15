@@ -1,6 +1,6 @@
 {
   "name": "mail-debugger-cli",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "license": "MIT",
   "description": "Interactive terminal client for Mail Debugger. Browse, filter, and manage caught emails from the command line via TUI or direct commands.",
   "type": "module",
