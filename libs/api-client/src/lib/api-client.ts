@@ -1,9 +1,10 @@
-import type {
-  Email,
-  EmailFilter,
-  EmailSummary,
-  HealthResponse,
-  PaginatedResponse,
+import {
+  type Email,
+  type EmailFilter,
+  emailFilterToEntries,
+  type EmailSummary,
+  type HealthResponse,
+  type PaginatedResponse,
 } from '@mail-debugger/types';
 
 async function request<T>(
@@ -30,12 +31,7 @@ function buildEmailsQuery(
   limit?: number,
   offset?: number,
 ): string {
-  const params = new URLSearchParams();
-  if (filter?.from) params.set('from', filter.from);
-  if (filter?.to) params.set('to', filter.to);
-  if (filter?.subject) params.set('subject', filter.subject);
-  if (filter?.since) params.set('since', filter.since);
-  if (filter?.until) params.set('until', filter.until);
+  const params = new URLSearchParams(emailFilterToEntries(filter));
   if (limit != null) params.set('limit', String(limit));
   if (offset != null) params.set('offset', String(offset));
   return params.toString();
