@@ -7,12 +7,6 @@
       "types": "./dist/apps/cli/src/run-cli.d.ts",
       "import": "./dist/run-cli.mjs",
       "default": "./dist/run-cli.mjs"
-    },
-    "./error": {
-      "mail-debugger": "./src/error.ts",
-      "types": "./dist/apps/cli/src/error.d.ts",
-      "import": "./dist/error.mjs",
-      "default": "./dist/error.mjs"
     }
   },
   "nx": {
