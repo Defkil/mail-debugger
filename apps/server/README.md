@@ -50,30 +50,6 @@ pnpx mail-debugger --tls starttls
 
 Example: `GET /api/emails?from=alice&subject=welcome&limit=10&offset=0`
 
-## Architecture
-
-```
-src/
-  main.ts               -- Entry point
-  config.ts             -- CLI argument parsing
-  logger.ts             -- Logger setup
-  types.ts              -- TypeScript interfaces
-  db/
-    schema.ts           -- SQLite table definitions
-    connection.ts       -- Database factory (in-memory / persistent)
-    email-repository.ts -- CRUD operations
-  smtp/
-    smtp-server.ts      -- SMTP server
-    tls.ts              -- Self-signed certificate generation
-  parser/
-    email-parser.ts     -- Raw email -> structured data
-  api/
-    app.ts              -- Elysia application with Swagger
-    routes/
-      emails.ts         -- Email endpoints
-      health.ts         -- Health check endpoint
-```
-
 ## Development
 
 ```bash

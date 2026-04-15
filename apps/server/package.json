@@ -38,10 +38,7 @@
             "external": [
               "sql.js",
               "pino",
-              "pino-pretty",
-              "@rezi-ui/core",
-              "@rezi-ui/node",
-              "@rezi-ui/native"
+              "pino-pretty"
             ]
           }
         },
@@ -62,10 +59,7 @@
               "external": [
                 "sql.js",
                 "pino",
-                "pino-pretty",
-                "@rezi-ui/core",
-                "@rezi-ui/node",
-                "@rezi-ui/native"
+                "pino-pretty"
               ]
             }
           }
@@ -218,7 +212,6 @@
     }
   },
   "dependencies": {
-    "@mail-debugger/cli": "workspace:*",
     "@mail-debugger/types": "workspace:*",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",

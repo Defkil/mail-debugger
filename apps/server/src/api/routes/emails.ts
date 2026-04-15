@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia';
+import { pickEmailFilter } from '@mail-debugger/types';
 import type { EmailRepository } from '../../db/email-repository.js';
 
 export function emailRoutes(repository: EmailRepository) {
@@ -6,28 +7,17 @@ export function emailRoutes(repository: EmailRepository) {
     .get(
       '/api/emails',
       ({ query }) => {
-        const filter: Record<string, string | undefined> = {};
-        if (query.from) filter.from = query.from;
-        if (query.to) filter.to = query.to;
-        if (query.subject) filter.subject = query.subject;
-        if (query.since) filter.since = query.since;
-        if (query.until) filter.until = query.until;
-
+        const filter = pickEmailFilter(query);
         const limit = query.limit ? Number(query.limit) : undefined;
         const offset = query.offset ? Number(query.offset) : undefined;
 
-        return repository.findAll(
-          Object.keys(filter).length > 0 ? filter : undefined,
-          limit,
-          offset
-        );
+        return repository.findAll(filter, limit, offset);
       },
       {
         detail: {
           tags: ['Emails'],
           summary: 'List emails',
-          description:
-            'Returns paginated emails, optionally filtered.',
+          description: 'Returns paginated emails, optionally filtered.',
         },
         query: t.Object({
           from: t.Optional(t.String()),
@@ -38,7 +28,7 @@ export function emailRoutes(repository: EmailRepository) {
           limit: t.Optional(t.String()),
           offset: t.Optional(t.String()),
         }),
-      }
+      },
     )
     .get(
       '/api/emails/:id',
@@ -60,7 +50,7 @@ export function emailRoutes(repository: EmailRepository) {
         params: t.Object({
           id: t.String(),
         }),
-      }
+      },
     )
     .delete(
       '/api/emails/:id',
@@ -81,7 +71,7 @@ export function emailRoutes(repository: EmailRepository) {
         params: t.Object({
           id: t.String(),
         }),
-      }
+      },
     )
     .delete(
       '/api/emails',
@@ -96,6 +86,6 @@ export function emailRoutes(repository: EmailRepository) {
           description:
             'Deletes all caught emails and returns the count of deleted emails.',
         },
-      }
+      },
     );
 }
