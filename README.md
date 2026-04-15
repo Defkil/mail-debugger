@@ -40,16 +40,16 @@ pnpx mail-debugger --tls implicit --smtp-port 4650
 
 ## CLI Client
 
-The same `mail-debugger` binary also ships the terminal client -- pass `--cli` and everything after it is handed to the CLI parser:
+The terminal client is available as a separate package [`mail-debugger-cli`](https://www.npmjs.com/package/mail-debugger-cli):
 
 ```bash
-pnpx mail-debugger --cli                 # Interactive TUI
-pnpx mail-debugger --cli list            # List all emails
-pnpx mail-debugger --cli show 5          # Show email details
-pnpx mail-debugger --cli health          # Server status
+pnpx mail-debugger-cli                   # Interactive TUI
+pnpx mail-debugger-cli list              # List all emails
+pnpx mail-debugger-cli show 5            # Show email details
+pnpx mail-debugger-cli health            # Server status
 ```
 
-See [apps/cli/README.md](apps/cli/README.md) for all commands and options.
+See [packages/cli/README.md](packages/cli/README.md) for all commands and options.
 
 ## Slim API build for CI / E2E
 
@@ -90,12 +90,13 @@ const smtpsTransport = createTransport({
 });
 ```
 
-## Apps
+## Packages
 
-| App        | Description                      | Docs                                           |
-| ---------- | -------------------------------- | ---------------------------------------------- |
-| **server** | SMTP server + REST API + web UI  | [apps/server/README.md](apps/server/README.md) |
-| **cli**    | Terminal client (TUI + commands) | [apps/cli/README.md](apps/cli/README.md)       |
+| Package               | Description                      | Docs                                             |
+| --------------------- | -------------------------------- | ------------------------------------------------ |
+| **mail-debugger**     | SMTP server + REST API + web UI  | [apps/server/README.md](apps/server/README.md)   |
+| **mail-debugger-cli** | Terminal client (TUI + commands) | [packages/cli/README.md](packages/cli/README.md) |
+| **mail-debugger-api** | Slim API build for CI/E2E        | [packages/api/README.md](packages/api/README.md) |
 
 ## Roadmap
 
