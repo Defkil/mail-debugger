@@ -14,12 +14,6 @@ importers:
       '@elysiajs/swagger':
         specifier: ^1.3.1
         version: 1.3.1(elysia@1.4.28(@sinclair/typebox@0.34.49)(exact-mirror@1.0.0)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3))
-      '@rezi-ui/core':
-        specifier: ^0.1.0-alpha.0
-        version: 0.1.0-alpha.60
-      '@rezi-ui/node':
-        specifier: ^0.1.0-alpha.0
-        version: 0.1.0-alpha.60
       elysia:
         specifier: ^1.4.28
         version: 1.4.28(@sinclair/typebox@0.34.49)(exact-mirror@1.0.0)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3)
@@ -189,9 +183,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@mail-debugger/cli':
-        specifier: workspace:*
-        version: link:../cli
       '@mail-debugger/types':
         specifier: workspace:*
         version: link:../../libs/types
@@ -242,6 +233,8 @@ importers:
       sql.js:
         specifier: ^1.14.1
         version: 1.14.1
+
+  packages/cli: {}
 
 packages:
 
