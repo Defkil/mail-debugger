@@ -8,6 +8,13 @@
       "@mail-debugger/server"
     ],
     "targets": {
+      "typecheck": {
+        "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+        "options": {
+          "cwd": "apps/server-e2e"
+        },
+        "dependsOn": []
+      },
       "e2e": {
         "command": "vitest run",
         "options": {
