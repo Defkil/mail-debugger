@@ -35,7 +35,7 @@ pnpx mail-debugger-api --smtp-port 1025 --api-port 8080 --persist
 | `GET`    | `/api/health`     | Health check and server info     |
 | `GET`    | `/swagger`        | OpenAPI/Swagger UI               |
 
-Need the web UI or the interactive CLI client? Install the full [`mail-debugger`](https://www.npmjs.com/package/mail-debugger) package instead — `pnpx mail-debugger --cli` drops you into a terminal inbox.
+Need the web UI? Install the full [`mail-debugger`](https://www.npmjs.com/package/mail-debugger) package. Want the interactive terminal client? Install [`mail-debugger-cli`](https://www.npmjs.com/package/mail-debugger-cli).
 
 ## License
 
