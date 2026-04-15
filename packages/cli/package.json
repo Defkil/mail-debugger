@@ -1,0 +1,72 @@
+{
+  "name": "mail-debugger-cli",
+  "version": "0.2.3",
+  "license": "MIT",
+  "description": "Interactive terminal client for Mail Debugger. Browse, filter, and manage caught emails from the command line via TUI or direct commands.",
+  "type": "module",
+  "homepage": "https://github.com/Defkil/mail-debugger#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Defkil/mail-debugger.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Defkil/mail-debugger/issues"
+  },
+  "keywords": [
+    "smtp",
+    "email",
+    "mail",
+    "debugger",
+    "cli",
+    "tui",
+    "terminal",
+    "testing",
+    "development"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "mail-debugger-cli": "./dist/main.mjs"
+  },
+  "scripts": {
+    "prepack": "pnpm -w exec nx build mail-debugger-cli --skip-nx-cache"
+  },
+  "nx": {
+    "targets": {
+      "sync-dist": {
+        "dependsOn": [
+          "@mail-debugger/cli:build"
+        ],
+        "cache": true,
+        "outputs": [
+          "{projectRoot}/dist"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node -e \"const fs=require('fs'),path=require('path');const src='apps/cli/dist',dst='packages/cli/dist';fs.rmSync(dst,{recursive:true,force:true});fs.mkdirSync(dst,{recursive:true});for(const f of fs.readdirSync(src)){const s=path.join(src,f);if(fs.statSync(s).isFile())fs.copyFileSync(s,path.join(dst,f))}\""
+        }
+      },
+      "build": {
+        "dependsOn": [
+          "sync-dist"
+        ],
+        "executor": "nx:noop"
+      },
+      "test": {
+        "options": {
+          "passWithNoTests": true
+        }
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
