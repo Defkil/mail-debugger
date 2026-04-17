@@ -234,7 +234,14 @@ importers:
         specifier: ^1.14.1
         version: 1.14.1
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      '@rezi-ui/core':
+        specifier: ^0.1.0-alpha.60
+        version: 0.1.0-alpha.60
+      '@rezi-ui/node':
+        specifier: ^0.1.0-alpha.60
+        version: 0.1.0-alpha.60
 
 packages:
 

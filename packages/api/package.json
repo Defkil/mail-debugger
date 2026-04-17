@@ -1,6 +1,6 @@
 {
   "name": "mail-debugger-api",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "description": "Slim SMTP + REST API build of Mail Debugger. Same wire protocol as mail-debugger, without the web UI — meant for CI/E2E where a small footprint matters.",
   "type": "module",

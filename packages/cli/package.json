@@ -1,6 +1,6 @@
 {
   "name": "mail-debugger-cli",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "description": "Interactive terminal client for Mail Debugger. Browse, filter, and manage caught emails from the command line via TUI or direct commands.",
   "type": "module",
@@ -69,5 +69,9 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "dependencies": {
+    "@rezi-ui/core": "^0.1.0-alpha.60",
+    "@rezi-ui/node": "^0.1.0-alpha.60"
   }
 }
