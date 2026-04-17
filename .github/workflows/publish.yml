@@ -42,10 +42,12 @@ jobs:
       - run: pnpm exec nx run "@mail-debugger/server:lint"
       - run: pnpm exec nx run "@mail-debugger/cli:lint"
 
-      # Build dependencies explicitly — web:build (triggered by server:build via
-      # copy-web) depends on api-client but does not declare ^build.
-      - run: pnpm exec nx run types:build --skip-nx-cache
-      - run: pnpm exec nx run api-client:build --skip-nx-cache
+      # Build dependencies — web:build (triggered by server:build via copy-web)
+      # depends on api-client but does not declare ^build. Cache-enabled so the
+      # test dependency graph can reuse the result instead of re-triggering the
+      # TypeScript sync generator, which hangs on CI runners.
+      - run: pnpm exec nx run types:build
+      - run: pnpm exec nx run api-client:build
 
       # Build publishable artifacts
       - run: pnpm exec nx run "@mail-debugger/server:build" --skip-nx-cache
