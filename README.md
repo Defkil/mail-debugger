@@ -103,6 +103,7 @@ const smtpsTransport = createTransport({
 - [x] Web UI -- Browser-based inbox
 - [x] CLI UI -- Terminal-based inbox viewer
 - [x] Full SMTP features -- SIZE, STARTTLS, authentication
+- [ ] JS/TS API client -- Interact with the REST API programmatically
 - [ ] IMAP server -- Email client support
 - [ ] MCP support -- Model Context Protocol for AI agents
 
