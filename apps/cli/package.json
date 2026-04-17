@@ -73,8 +73,9 @@
         }
       },
       "test": {
+        "command": "vitest run --passWithNoTests",
         "options": {
-          "passWithNoTests": true
+          "cwd": "apps/cli"
         }
       }
     }

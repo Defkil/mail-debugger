@@ -16,7 +16,15 @@
     }
   },
   "nx": {
-    "name": "api-client"
+    "name": "api-client",
+    "targets": {
+      "test": {
+        "command": "vitest run",
+        "options": {
+          "cwd": "libs/api-client"
+        }
+      }
+    }
   },
   "dependencies": {
     "@mail-debugger/types": "workspace:*",

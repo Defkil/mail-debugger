@@ -55,8 +55,9 @@
         "executor": "nx:noop"
       },
       "test": {
+        "command": "vitest run --passWithNoTests",
         "options": {
-          "passWithNoTests": true
+          "cwd": "packages/cli"
         }
       }
     }
