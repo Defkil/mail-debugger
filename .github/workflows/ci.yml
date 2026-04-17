@@ -39,7 +39,38 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm exec nx run-many -t lint test build typecheck --parallel=1
+      # Lint
+      - run: pnpm exec nx run types:lint
+      - run: pnpm exec nx run api-client:lint
+      - run: pnpm exec nx run "@mail-debugger/server:lint"
+      - run: pnpm exec nx run "@mail-debugger/cli:lint"
+      - run: pnpm exec nx run "@mail-debugger/web:lint"
+      - run: pnpm exec nx run "@mail-debugger/server-e2e:lint"
+
+      # Test
+      - run: pnpm exec nx run api-client:test
+      - run: pnpm exec nx run "@mail-debugger/server:test"
+      - run: pnpm exec nx run "@mail-debugger/cli:test"
+      - run: pnpm exec nx run "@mail-debugger/web:test"
+      - run: pnpm exec nx run mail-debugger-api:test
+      - run: pnpm exec nx run mail-debugger-cli:test
+
+      # Build
+      - run: pnpm exec nx run types:build
+      - run: pnpm exec nx run api-client:build
+      - run: pnpm exec nx run "@mail-debugger/server:build"
+      - run: pnpm exec nx run "@mail-debugger/cli:build"
+      - run: pnpm exec nx run "@mail-debugger/web:build"
+      - run: pnpm exec nx run mail-debugger-api:build
+      - run: pnpm exec nx run mail-debugger-cli:build
+
+      # Typecheck
+      - run: pnpm exec nx run types:typecheck
+      - run: pnpm exec nx run api-client:typecheck
+      - run: pnpm exec nx run "@mail-debugger/server:typecheck"
+      - run: pnpm exec nx run "@mail-debugger/cli:typecheck"
+      - run: pnpm exec nx run "@mail-debugger/web:typecheck"
+      - run: pnpm exec nx run "@mail-debugger/server-e2e:typecheck"
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
         if: always()

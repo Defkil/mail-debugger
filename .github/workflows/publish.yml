@@ -36,11 +36,29 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint, test, typecheck
-        run: pnpm exec nx run-many -t lint test typecheck -p @mail-debugger/server @mail-debugger/cli mail-debugger-api mail-debugger-cli types api-client --parallel=1
+      # Lint
+      - run: pnpm exec nx run types:lint
+      - run: pnpm exec nx run api-client:lint
+      - run: pnpm exec nx run "@mail-debugger/server:lint"
+      - run: pnpm exec nx run "@mail-debugger/cli:lint"
 
-      - name: Build publishable artifacts
-        run: pnpm exec nx run-many -t build -p @mail-debugger/server mail-debugger-api mail-debugger-cli --skip-nx-cache --parallel=1
+      # Test
+      - run: pnpm exec nx run api-client:test
+      - run: pnpm exec nx run "@mail-debugger/server:test"
+      - run: pnpm exec nx run "@mail-debugger/cli:test"
+      - run: pnpm exec nx run mail-debugger-api:test
+      - run: pnpm exec nx run mail-debugger-cli:test
+
+      # Typecheck
+      - run: pnpm exec nx run types:typecheck
+      - run: pnpm exec nx run api-client:typecheck
+      - run: pnpm exec nx run "@mail-debugger/server:typecheck"
+      - run: pnpm exec nx run "@mail-debugger/cli:typecheck"
+
+      # Build publishable artifacts
+      - run: pnpm exec nx run "@mail-debugger/server:build" --skip-nx-cache
+      - run: pnpm exec nx run mail-debugger-api:build --skip-nx-cache
+      - run: pnpm exec nx run mail-debugger-cli:build --skip-nx-cache
 
       - name: Publish mail-debugger
         run: npm publish
