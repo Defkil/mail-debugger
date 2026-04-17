@@ -42,7 +42,12 @@ jobs:
       - run: pnpm exec nx run "@mail-debugger/server:lint"
       - run: pnpm exec nx run "@mail-debugger/cli:lint"
 
-      # Build publishable artifacts (must run before test for consistency with CI)
+      # Build dependencies explicitly — web:build (triggered by server:build via
+      # copy-web) depends on api-client but does not declare ^build.
+      - run: pnpm exec nx run types:build --skip-nx-cache
+      - run: pnpm exec nx run api-client:build --skip-nx-cache
+
+      # Build publishable artifacts
       - run: pnpm exec nx run "@mail-debugger/server:build" --skip-nx-cache
       - run: pnpm exec nx run "@mail-debugger/cli:build" --skip-nx-cache
       - run: pnpm exec nx run mail-debugger-api:build --skip-nx-cache
