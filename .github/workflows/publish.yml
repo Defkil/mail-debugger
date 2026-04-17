@@ -42,6 +42,12 @@ jobs:
       - run: pnpm exec nx run "@mail-debugger/server:lint"
       - run: pnpm exec nx run "@mail-debugger/cli:lint"
 
+      # Build publishable artifacts (must run before test for consistency with CI)
+      - run: pnpm exec nx run "@mail-debugger/server:build" --skip-nx-cache
+      - run: pnpm exec nx run "@mail-debugger/cli:build" --skip-nx-cache
+      - run: pnpm exec nx run mail-debugger-api:build --skip-nx-cache
+      - run: pnpm exec nx run mail-debugger-cli:build --skip-nx-cache
+
       # Test
       - run: pnpm exec nx run api-client:test
       - run: pnpm exec nx run "@mail-debugger/server:test"
@@ -54,11 +60,6 @@ jobs:
       - run: pnpm exec nx run api-client:typecheck
       - run: pnpm exec nx run "@mail-debugger/server:typecheck"
       - run: pnpm exec nx run "@mail-debugger/cli:typecheck"
-
-      # Build publishable artifacts
-      - run: pnpm exec nx run "@mail-debugger/server:build" --skip-nx-cache
-      - run: pnpm exec nx run mail-debugger-api:build --skip-nx-cache
-      - run: pnpm exec nx run mail-debugger-cli:build --skip-nx-cache
 
       - name: Publish mail-debugger
         run: npm publish

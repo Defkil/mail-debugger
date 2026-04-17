@@ -47,6 +47,15 @@ jobs:
       - run: pnpm exec nx run "@mail-debugger/web:lint"
       - run: pnpm exec nx run "@mail-debugger/server-e2e:lint"
 
+      # Build (must run before test — web tests need .svelte-kit/ from svelte-kit sync)
+      - run: pnpm exec nx run types:build
+      - run: pnpm exec nx run api-client:build
+      - run: pnpm exec nx run "@mail-debugger/web:build"
+      - run: pnpm exec nx run "@mail-debugger/server:build"
+      - run: pnpm exec nx run "@mail-debugger/cli:build"
+      - run: pnpm exec nx run mail-debugger-api:build
+      - run: pnpm exec nx run mail-debugger-cli:build
+
       # Test
       - run: pnpm exec nx run api-client:test
       - run: pnpm exec nx run "@mail-debugger/server:test"
@@ -54,15 +63,6 @@ jobs:
       - run: pnpm exec nx run "@mail-debugger/web:test"
       - run: pnpm exec nx run mail-debugger-api:test
       - run: pnpm exec nx run mail-debugger-cli:test
-
-      # Build
-      - run: pnpm exec nx run types:build
-      - run: pnpm exec nx run api-client:build
-      - run: pnpm exec nx run "@mail-debugger/server:build"
-      - run: pnpm exec nx run "@mail-debugger/cli:build"
-      - run: pnpm exec nx run "@mail-debugger/web:build"
-      - run: pnpm exec nx run mail-debugger-api:build
-      - run: pnpm exec nx run mail-debugger-cli:build
 
       # Typecheck
       - run: pnpm exec nx run types:typecheck
