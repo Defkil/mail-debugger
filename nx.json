@@ -54,5 +54,9 @@
       "dependsOn": ["^build"]
     }
   },
+  "sync": {
+    "applyChanges": false,
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+  },
   "nxCloudId": "69dd8c557e885481c55e12fb"
 }
