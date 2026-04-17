@@ -1,6 +1,6 @@
 {
   "name": "mail-debugger",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "Lightweight fake SMTP server that catches emails during development. Inspect, filter, and manage caught emails through a REST API, web UI, or terminal client.",
   "type": "module",
@@ -27,7 +27,7 @@
     "node": ">=20"
   },
   "bin": {
-    "mail-debugger": "./apps/server/dist/main.mjs"
+    "mail-debugger": "apps/server/dist/main.mjs"
   },
   "scripts": {
     "setup": "husky",

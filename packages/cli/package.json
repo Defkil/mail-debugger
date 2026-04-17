@@ -1,6 +1,6 @@
 {
   "name": "mail-debugger-cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "Interactive terminal client for Mail Debugger. Browse, filter, and manage caught emails from the command line via TUI or direct commands.",
   "type": "module",
@@ -28,7 +28,7 @@
     "node": ">=20"
   },
   "bin": {
-    "mail-debugger-cli": "./dist/main.mjs"
+    "mail-debugger-cli": "dist/main.mjs"
   },
   "scripts": {
     "prepack": "pnpm -w exec nx build mail-debugger-cli --skip-nx-cache"
