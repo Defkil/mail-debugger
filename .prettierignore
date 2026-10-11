@@ -4,3 +4,5 @@
 /.nx/cache
 /.nx/workspace-data
 .nx/self-healing
+# pnpm writes the lockfile in its own format.
+pnpm-lock.yaml

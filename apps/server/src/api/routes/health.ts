@@ -16,8 +16,7 @@ export function healthRoutes(repository: EmailRepository, config: Config) {
       detail: {
         tags: ['Health'],
         summary: 'Health check',
-        description:
-          'Returns server status, configuration, and email count.',
+        description: 'Returns server status, configuration, and email count.',
       },
       response: t.Object({
         status: t.Literal('ok'),
@@ -26,6 +25,6 @@ export function healthRoutes(repository: EmailRepository, config: Config) {
         persistent: t.Boolean(),
         emailCount: t.Number(),
       }),
-    }
+    },
   );
 }
