@@ -34,7 +34,9 @@ const META_REFRESH = /<meta\b[^>]*\bhttp-equiv\s*=\s*(["']?)refresh\1[^>]*>/gi;
  * Turns untrusted email HTML into the `srcdoc` of a sandboxed preview. The
  * policy is the very first element after an optional doctype, so the
  * parser applies it before anything the email contains can load; meta
- * refreshes are removed because a policy cannot block them.
+ * literal meta refreshes are removed as an extra precaution. The iframe
+ * must also be sandboxed without allow-scripts: its automatic-features
+ * restriction blocks refresh variants that HTML entity decoding obscures.
  */
 export function buildPreviewDocument(
   html: string,

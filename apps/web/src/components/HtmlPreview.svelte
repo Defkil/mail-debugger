@@ -8,7 +8,8 @@
 
   let { html }: Props = $props();
   let iframe: HTMLIFrameElement | undefined = $state();
-  let allowRemoteImages = $state(false);
+  let approvedHtml: string | undefined = $state();
+  const allowRemoteImages = $derived(approvedHtml === html);
 
   const remoteImages = $derived(hasRemoteImages(html));
   // Captured mail is untrusted: the sandbox runs no scripts, forms or
@@ -28,7 +29,7 @@
     class="border-surface-700 text-surface-400 mb-2 flex items-center justify-between rounded border px-3 py-2 text-sm"
   >
     <span>Remote images are blocked.</span>
-    <Button variant="ghost" onclick={() => (allowRemoteImages = true)}>
+    <Button variant="ghost" onclick={() => (approvedHtml = html)}>
       Load remote images
     </Button>
   </div>
