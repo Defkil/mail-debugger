@@ -42,7 +42,7 @@
     "build": "nx run-many -t build",
     "lint": "nx run-many -t lint",
     "typecheck": "nx run-many -t typecheck",
-    "test": "nx run-many -t test -- --coverage",
+    "test": "nx run-many -t test --output-style=static -- --coverage",
     "e2e": "nx run @mail-debugger/server-e2e:e2e",
     "smoke": "nx run @mail-debugger/server-e2e:smoke",
     "format:check": "prettier --check .",
