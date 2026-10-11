@@ -1,6 +1,7 @@
 {
   "name": "@mail-debugger/cli",
   "version": "0.0.1",
+  "private": true,
   "exports": {
     "./run-cli": {
       "mail-debugger": "./src/run-cli.ts",
@@ -83,7 +84,7 @@
   "dependencies": {
     "@mail-debugger/api-client": "workspace:*",
     "@mail-debugger/types": "workspace:*",
-    "@rezi-ui/core": "^0.1.0-alpha.0",
-    "@rezi-ui/node": "^0.1.0-alpha.0"
+    "@rezi-ui/core": "0.1.0-beta.2",
+    "@rezi-ui/node": "0.1.0-beta.2"
   }
 }

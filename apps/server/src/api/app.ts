@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia';
 import { node } from '@elysiajs/node';
-import { swagger } from '@elysiajs/swagger';
+import { openapi } from '@elysiajs/openapi';
 import type { EmailRepository } from '../db/email-repository.js';
 import type { Logger } from '../logger.js';
 import type { Config } from '../types.js';
@@ -32,7 +32,9 @@ export function createApp(
       );
     })
     .use(
-      swagger({
+      openapi({
+        // Keep the documentation at the paths of the former swagger plugin.
+        path: '/swagger',
         documentation: {
           info: {
             title: 'Mail Debugger API',
