@@ -25,7 +25,7 @@ Point the SMTP settings of the application you develop at mail-debugger. Every m
 
 - It is a development catcher, not a mail server: no delivery, relaying, mailboxes per user, spam or DKIM checks.
 - IMAP is a restricted RFC 3501 profile with exactly one mailbox, `INBOX`. Clients can read, flag and delete; they cannot create folders, upload, copy or move messages. It is tested with [ImapFlow](https://github.com/postalsys/imapflow); desktop clients are documented setup targets, not GUI-tested. Details in [docs/imap.md](docs/imap.md).
-- MCP is stateless streamable HTTP with a bearer token, no OAuth. Results are capped at 1 MiB and attachments are read in chunks of up to 64 KiB. Clients of the 2025 protocol revisions cannot cancel a running wait over HTTP; it ends at its timeout (at most 30 seconds). Details in [docs/mcp.md](docs/mcp.md).
+- MCP is stateless streamable HTTP with optional bearer-token authentication on loopback and no OAuth. Results are capped at 1 MiB and attachments are read in chunks of up to 64 KiB. Clients of the 2025 protocol revisions cannot cancel a running wait over HTTP; it ends at its timeout (at most 30 seconds). Details in [docs/mcp.md](docs/mcp.md).
 - Storage is one process per data directory. Persistent mail is snapshotted to disk 250 ms after each change, so a killed process can lose the last moments.
 
 ## Quick start
@@ -110,16 +110,17 @@ import { createApiClient } from 'mail-debugger/client';
 const mail = createApiClient('http://127.0.0.1:3000');
 
 // Remember where the inbox stands before the test acts.
-const { highWatermark = 0 } = await mail.listEmails({ limit: 1 });
+const { highWatermark = 0, mailboxId } = await mail.listEmails({ limit: 1 });
 
 // ... let your application send the email under test ...
 
 const { data, timedOut } = await mail.waitForEmail({
   afterId: highWatermark,
+  mailboxId,
   filter: { to: 'user@example.test' },
   timeoutMs: 10_000,
 });
-if (timedOut) throw new Error('No email arrived');
+if (timedOut || !data) throw new Error('No email arrived');
 
 const email = await mail.getEmail(data.id);
 console.log(email.subject, email.textBody);
@@ -268,7 +269,7 @@ All three are built from this repository and released together with the same ver
 - **403 from the API or the web inbox**: the `Host` or `Origin` header is not allowed, typically behind a proxy or a custom hostname. Add it with `--http-allowed-host` or `--http-allowed-origin`.
 - **401 from the API**: the server runs with `MAIL_DEBUGGER_API_TOKEN`. Send `Authorization: Bearer <token>` (the client's `token` option, the CLI reads the variable).
 - **SMTP answers 452 or 552**: a limit is reached. Delete mail or raise `--max-messages`, `--max-storage-bytes` or `--max-message-bytes`.
-- **`The data directory is in use`** on startup: another server uses the same `--data-dir`. If that process no longer runs, delete `mail-debugger.lock` in the directory.
+- **`The data directory is in use`** on startup: `mail-debugger.lock` already exists. The server preserves live, stale and malformed locks. Check that no process uses the directory before manually removing this file; never remove a running server's lock.
 - **The interactive inbox does not start**: it needs a terminal and a supported platform; use the commands (`list`, `show`, `wait`) or the web inbox.
 
 ## Contributing and security
