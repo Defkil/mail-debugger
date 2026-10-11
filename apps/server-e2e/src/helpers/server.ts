@@ -18,6 +18,8 @@ export interface ServerProcess {
   readonly child: ChildProcess;
   readonly smtpPort: number;
   readonly apiPort: number;
+  /** Bound IMAP port when the server runs with --imap. */
+  readonly imapPort?: number;
   /** Base URL of the HTTP server, e.g. http://127.0.0.1:41234 */
   readonly baseUrl: string;
   /** Everything the process wrote so far. */
@@ -47,6 +49,9 @@ export async function startServerProcess(
   const args = [...(options.args ?? [])];
   if (!args.includes('--smtp-port')) args.push('--smtp-port', '0');
   if (!args.includes('--api-port')) args.push('--api-port', '0');
+  if (args.includes('--imap') && !args.includes('--imap-port')) {
+    args.push('--imap-port', '0');
+  }
 
   const child = spawn(
     process.execPath,
@@ -70,42 +75,49 @@ export async function startServerProcess(
   );
 
   const timeoutMs = options.timeoutMs ?? 20_000;
-  const ready = await new Promise<{ smtpPort: number; apiPort: number }>(
-    (resolve, reject) => {
-      const timer = setTimeout(() => {
-        child.kill();
-        reject(
-          new Error(
-            `Server did not become ready within ${timeoutMs} ms:\n${output}`,
-          ),
-        );
-      }, timeoutMs);
-      const check = () => {
-        const lines = output.split('\n');
-        lines.pop(); // the last segment may be an incomplete line
-        for (const line of lines) {
-          if (!line.includes('mail-debugger is ready')) continue;
-          const entry = JSON.parse(line) as {
-            smtpPort: number;
-            apiPort: number;
-          };
-          clearTimeout(timer);
-          child.stdout?.off('data', check);
-          resolve(entry);
-          return;
-        }
-      };
-      child.stdout?.on('data', check);
-      void exited.then((code) => {
+  const ready = await new Promise<{
+    smtpPort: number;
+    apiPort: number;
+    imapPort?: number;
+  }>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(
+        new Error(
+          `Server did not become ready within ${timeoutMs} ms:\n${output}`,
+        ),
+      );
+    }, timeoutMs);
+    const check = () => {
+      const lines = output.split('\n');
+      lines.pop(); // the last segment may be an incomplete line
+      for (const line of lines) {
+        if (!line.includes('mail-debugger is ready')) continue;
+        const entry = JSON.parse(line) as {
+          smtpPort: number;
+          apiPort: number;
+          imapPort?: number;
+        };
         clearTimeout(timer);
-        reject(
-          new Error(
-            `Server exited with code ${code} before it was ready:\n${output}`,
-          ),
-        );
-      });
-    },
-  );
+        child.stdout?.off('data', check);
+        resolve({
+          smtpPort: entry.smtpPort,
+          apiPort: entry.apiPort,
+          ...(entry.imapPort !== undefined && { imapPort: entry.imapPort }),
+        });
+        return;
+      }
+    };
+    child.stdout?.on('data', check);
+    void exited.then((code) => {
+      clearTimeout(timer);
+      reject(
+        new Error(
+          `Server exited with code ${code} before it was ready:\n${output}`,
+        ),
+      );
+    });
+  });
 
   const server: ServerProcess = {
     child,
