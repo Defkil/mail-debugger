@@ -80,10 +80,14 @@ export function limitOutput(
     }, limits.drainTimeoutMs);
     timer.unref();
     drainTimer = timer;
-    socket.once('drain', () => {
+    const clearDrainTimer = () => {
       clearTimeout(timer);
       if (drainTimer === timer) drainTimer = undefined;
-    });
+      socket.off('drain', clearDrainTimer);
+      socket.off('close', clearDrainTimer);
+    };
+    socket.once('drain', clearDrainTimer);
+    socket.once('close', clearDrainTimer);
   };
 }
 
@@ -126,8 +130,7 @@ const MACROS: Readonly<Record<string, readonly string[]>> = {
 };
 
 const CONTENT_ITEMS = new Set(['RFC822', 'RFC822.HEADER', 'RFC822.TEXT']);
-const STRUCTURE_ITEMS = new Set(['BODYSTRUCTURE', 'ENVELOPE', 'BODY']);
-const STRUCTURE_BOUND = MiB;
+const STRUCTURE_ITEMS = new Set(['BODYSTRUCTURE', 'BODY']);
 const SMALL_ITEM = 64;
 
 /**
@@ -368,8 +371,14 @@ function estimate(message: Message, items: readonly FetchItem[]): number {
     if (item.section || CONTENT_ITEMS.has(item.name)) {
       const size = item.header ? headerOctets : octets;
       bytes += Math.min(item.partial ?? size, size) + SMALL_ITEM;
+    } else if (item.name === 'ENVELOPE') {
+      // Quoted strings can double in size when quotes/backslashes escape.
+      // An envelope can include arbitrarily large captured headers.
+      bytes += 2 * headerOctets + SMALL_ITEM;
     } else if (STRUCTURE_ITEMS.has(item.name)) {
-      bytes += Math.min(octets, STRUCTURE_BOUND);
+      // MIME metadata and nested envelopes scale with the message source;
+      // a fixed cap would underestimate repeated large structures.
+      bytes += 2 * octets + SMALL_ITEM;
     } else {
       bytes += SMALL_ITEM;
     }

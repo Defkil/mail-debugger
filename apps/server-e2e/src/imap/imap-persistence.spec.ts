@@ -24,14 +24,6 @@ afterAll(async () => {
   removeTempDirs();
 });
 
-/** Waits for the next second: UIDVALIDITY counts seconds. */
-async function nextSecond(): Promise<void> {
-  const start = Math.floor(Date.now() / 1000);
-  while (Math.floor(Date.now() / 1000) === start) {
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
-}
-
 describe('IMAP persistence', () => {
   it('keeps UIDVALIDITY, UIDNEXT, flags and the subscription across a restart', async () => {
     const dataDir = makeTempDir();
@@ -95,12 +87,11 @@ describe('IMAP persistence', () => {
     await one.logout();
     await first.stop();
 
-    await nextSecond();
     const second = await startServerProcess({ args: ['--imap'] });
     const two = imapClient(imapPort(second));
     await two.connect();
     const { uidValidity: secondValidity } = await two.mailboxOpen('INBOX');
-    expect(secondValidity).toBeGreaterThan(firstValidity);
+    expect(secondValidity).not.toBe(firstValidity);
     await two.logout();
     await second.stop();
   }, 60_000);

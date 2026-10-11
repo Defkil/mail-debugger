@@ -62,28 +62,36 @@ Capabilities: `IMAP4rev1 ID IDLE NAMESPACE UNSELECT UIDPLUS LITERAL-`, plus `AUT
 
 ### Identity and persistence
 
-UIDs never change and are never reused, not even after the inbox is cleared: the next message always gets a higher UID. The `UIDVALIDITY` value belongs to the mailbox data set. With `--persist` or `--data-dir`, UIDs, `UIDVALIDITY`, `UIDNEXT`, flags and the INBOX subscription survive restarts; an in-memory server starts a new data set, with a new `UIDVALIDITY`, every time. `UIDVALIDITY` counts seconds, so two data sets created within the same second share the value; restart an in-memory server more slowly than once a second if a client stays connected to it. A data set that ever used up the 32-bit UID range refuses new mail rather than reusing UIDs.
+UIDs never change and are never reused, not even after the inbox is cleared: the next message always gets a higher UID. The `UIDVALIDITY` value belongs to the mailbox data set. With `--persist` or `--data-dir`, UIDs, `UIDVALIDITY`, `UIDNEXT`, flags and the INBOX subscription survive restarts; an in-memory server starts a new data set every time. A new data set receives a random nonzero 32-bit `UIDVALIDITY`, independent of the restart time. A data set that ever used up the 32-bit UID range refuses new mail rather than reusing UIDs.
+
+Replacing a data set does not guarantee a greater `UIDVALIDITY`, and random 32-bit values can theoretically collide. This restricted development profile does not preserve the identity history of discarded data sets. Use `--data-dir` when reconnecting clients need persistent mailbox identity and cache continuity.
 
 The `\Recent` flag is session state: after a restart the first session that selects `INBOX` sees every message as recent.
 
 ## Limits
 
-| Limit                                   | Value                                                  | Answer                                     |
-| --------------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
-| Sessions at once                        | 20                                                     | `* BYE [UNAVAILABLE] Too many connections` |
-| Time to log in after connecting         | 30 seconds (also the TLS handshake)                    | `* BYE Autologout; idle for too long`      |
-| Inactivity of a logged-in session       | 30 minutes (clients re-issue `IDLE` within 29 minutes) | `* BYE Autologout; idle for too long`      |
-| Command line                            | 1 MiB                                                  | `BAD`                                      |
-| Literal before login / after login      | 64 KiB / 64 KiB                                        | `BAD Literal too large`, before it is sent |
-| Non-synchronising literal (`LITERAL-`)  | 4096 octets                                            | `BAD [TOOBIG]`                             |
-| Data items in one `FETCH`               | 64                                                     | `NO [LIMIT]`                               |
-| Response for one message in a `FETCH`   | output budget minus 4 MiB (54 MiB by default)          | `NO [LIMIT]`                               |
-| Pending output of a session             | 2 x `--max-message-bytes` + 8 MiB (58 MiB by default)  | the connection is closed                   |
-| Output that does not drain              | 30 seconds                                             | the connection is closed                   |
-| Flags per message, keyword length       | 32 flags, 64 characters                                | `NO [LIMIT]`                               |
-| Keywords in the mailbox (including old) | 256                                                    | `NO [LIMIT]`                               |
+| Limit                                                        | Value                                                  | Answer                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------ |
+| Sessions at once                                             | 20                                                     | `* BYE [UNAVAILABLE] Too many connections` |
+| TCP connections, including unfinished TLS handshakes         | 40                                                     | additional connections are closed          |
+| Time to log in after connecting                              | 30 seconds (also the TLS handshake)                    | `* BYE Autologout; idle for too long`      |
+| Inactivity of a logged-in session                            | 30 minutes (clients re-issue `IDLE` within 29 minutes) | `* BYE Autologout; idle for too long`      |
+| Command line                                                 | 1 MiB                                                  | `BAD`                                      |
+| Literal before login / after login                           | 64 KiB / 64 KiB                                        | `BAD Literal too large`, before it is sent |
+| Non-synchronising literal (`LITERAL-`)                       | 4096 octets                                            | `BAD [TOOBIG]`                             |
+| Data items in one `FETCH`                                    | 64                                                     | `NO [LIMIT]`                               |
+| Response for one message in a `FETCH`                        | output budget minus 4 MiB (54 MiB by default)          | `NO [LIMIT]`                               |
+| Pending output of a session                                  | 2 x `--max-message-bytes` + 8 MiB (58 MiB by default)  | the connection is closed                   |
+| Output that does not drain                                   | 30 seconds                                             | the connection is closed                   |
+| Pipelined commands waiting for an earlier command            | 64 commands / 4 MiB of input                           | `* BYE`; reconnect                         |
+| Queued mailbox updates for a selected session                | 1024 updates                                           | `* BYE`; reconnect and select INBOX again  |
+| Deleted sources retained for a session's old message numbers | output budget (counting two bytes per source octet)    | `* BYE`; reconnect and select INBOX again  |
+| Flags per message, keyword length                            | 32 flags, 64 characters                                | `NO [LIMIT]`                               |
+| Keywords in the mailbox (including old)                      | 256                                                    | `NO [LIMIT]`                               |
 
 A `FETCH` that produces more than 4 MiB is answered in batches: each batch is sent once the client has read most of the previous output, so a client can fetch the whole mailbox at the size limit while the server's memory stays bounded. A client that stops reading is disconnected instead of growing the server's memory. The mailbox limits (`--max-messages`, `--max-storage-bytes`, `--max-message-bytes`) apply as for every other surface.
+
+A selected client that stops requesting updates can retain expunged sources to preserve its old message numbers. Those sources and its pending updates are bounded separately from the current mailbox. Clients in `IDLE` receive updates immediately and ordinarily do not accumulate this queue. Shutdown closes every TCP connection within the configured grace period, including clients that never finish a TLS handshake.
 
 ImapKit keeps the message sources it serves in memory, next to the stored mailbox. At the default limits, a mailbox filled to the 250 MiB storage limit used about 290 MiB more private memory with `--imap` than without it on Windows ARM64 (Node 26), and about 1 GiB at the peak while a client fetched the whole mailbox.
 

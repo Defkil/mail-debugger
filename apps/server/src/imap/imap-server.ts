@@ -9,6 +9,7 @@ import type { MailCredentials, TlsMode } from '../types.js';
 import { getVersion } from '../version.js';
 import { MailboxAdapter } from './mailbox-adapter.js';
 import { mailboxProfile } from './mailbox-plugin.js';
+import { limitPendingWork } from './pending-work.js';
 import {
   limitOutput,
   limitSessionTime,
@@ -87,6 +88,9 @@ export async function startImapServer(
     key: options.certificate.key,
     cert: options.certificate.cert,
   };
+  // Include sockets that have not completed an implicit TLS handshake or
+  // were refused before ImapKit created a session.
+  const sockets = new Set<net.Socket>();
 
   let adapter: MailboxAdapter | undefined;
   const imap: IMAPServer = imapkit({
@@ -122,19 +126,35 @@ export async function startImapServer(
   const stopTimers = new Map<number, () => void>();
   imap.connectionHandlers.push((connection: IMAPConnection) => {
     const session = connection.sessionNumber;
+    const socket = connection.socket;
+    limitPendingWork(connection, limits.output.budgetBytes, (reason) =>
+      log.warn(
+        { session, reason },
+        'Disconnected an IMAP client with too much pending work',
+      ),
+    );
     limitOutput(connection, limits.output, (reason, pendingBytes) =>
       log.warn(
         { session, reason, pendingBytes },
         'Disconnected an IMAP client that does not read its responses',
       ),
     );
-    stopTimers.set(
-      session,
-      limitSessionTime(connection, limits, () => {
-        log.info({ session }, 'Logged out an inactive IMAP session');
-        connection.bye('Autologout; idle for too long');
-      }),
-    );
+    const stopTimer = limitSessionTime(connection, limits, () => {
+      log.info({ session }, 'Logged out an inactive IMAP session');
+      if (connection.upgrading) {
+        // The plaintext socket is still exposed while STARTTLS negotiates.
+        socket?.destroy();
+        return;
+      }
+      connection.bye('Autologout; idle for too long');
+      connection.socket?.destroySoon();
+    });
+    stopTimers.set(session, () => {
+      stopTimer();
+      // STARTTLS removes the original socket's listeners; remove its
+      // tracking entry when the upgraded ImapKit session closes instead.
+      if (socket) sockets.delete(socket);
+    });
     log.debug({ session }, 'IMAP session opened');
   });
   imap.on(
@@ -173,8 +193,6 @@ export async function startImapServer(
       },
       accept,
     );
-    // Bounds connections that are still in the TLS handshake.
-    tlsServer.maxConnections = limits.maxSessions * 2;
     tlsServer.on('tlsClientError', (error) =>
       log.debug({ err: error }, 'IMAP TLS handshake failed'),
     );
@@ -182,6 +200,12 @@ export async function startImapServer(
   } else {
     listener = net.createServer(accept);
   }
+  // Bounds unfinished handshakes and the brief BYE/refusal closing period.
+  listener.maxConnections = limits.maxSessions * 2;
+  listener.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
+  });
 
   let address: AddressInfo;
   try {
@@ -207,7 +231,7 @@ export async function startImapServer(
           if (connection.isOpen()) connection.bye('Server shutting down');
         }
         await sessionsGone(imap, graceMs);
-        for (const connection of imap.connections) connection.socket?.destroy();
+        for (const socket of sockets) socket.destroy();
         await closed;
       })();
       return closing;

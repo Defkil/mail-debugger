@@ -1,3 +1,4 @@
+import net from 'node:net';
 import type { IMAPConnection } from 'imapkit';
 import pino from 'pino';
 import {
@@ -17,6 +18,11 @@ import {
   sequenceSet,
   type OutputLimits,
 } from './output-control.js';
+import {
+  MAX_QUEUED_COMMAND_BYTES,
+  MAX_QUEUED_COMMANDS,
+  MAX_QUEUED_NOTIFICATIONS,
+} from './pending-work.js';
 
 afterEach(async () => {
   await closeTestImaps();
@@ -196,6 +202,20 @@ describe('IMAP output limits', () => {
     );
   });
 
+  it('counts large envelopes before constructing repeated FETCH responses', async () => {
+    const imap = await startTestImap({ limits: { output: smallOutput } });
+    await imap.service.receive(
+      rawMessage({ subject: `${'\\'.repeat(64 * KiB)} end` }),
+      null,
+    );
+    const raw = await loggedInImap(imap.port);
+    await raw.command('S', 'SELECT INBOX');
+    expect(await raw.command('F', 'FETCH 1 (ENVELOPE ENVELOPE)')).toMatch(
+      /^F NO \[LIMIT\]/m,
+    );
+    expect(await raw.command('N', 'NOOP')).toMatch(/^N OK/m);
+  });
+
   it('cuts off output above the budget', () => {
     const socket = {
       destroyed: false,
@@ -235,6 +255,88 @@ describe('IMAP output limits', () => {
 });
 
 describe('IMAP session limits', () => {
+  it('bounds pipelined commands behind a pending CHECK', async () => {
+    const imap = await startTestImap();
+    const raw = await loggedInImap(imap.port);
+    await raw.command('S', 'SELECT INBOX');
+    let release: (() => void) | undefined;
+    // eslint-disable-next-line unicorn/prefer-promise-with-resolvers -- The configured TypeScript lib is ES2022.
+    const flush = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.spyOn(imap.service, 'flush').mockReturnValue(flush);
+    try {
+      raw.write('C CHECK\r\n');
+      raw.write(
+        Array.from(
+          { length: MAX_QUEUED_COMMANDS + 1 },
+          (_, index) => `N${index} NOOP\r\n`,
+        ).join(''),
+      );
+      await raw.waitForClose();
+    } finally {
+      release?.();
+    }
+    // Refusing one client's queue does not exhaust the listener's sessions.
+    expect(
+      await (await loggedInImap(imap.port)).command('N', 'NOOP'),
+    ).toContain('N OK');
+  });
+
+  it('bounds queued input bytes even when there are few commands', async () => {
+    const imap = await startTestImap();
+    const raw = await loggedInImap(imap.port);
+    await raw.command('S', 'SELECT INBOX');
+    let release: (() => void) | undefined;
+    // eslint-disable-next-line unicorn/prefer-promise-with-resolvers -- The configured TypeScript lib is ES2022.
+    const flush = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.spyOn(imap.service, 'flush').mockReturnValue(flush);
+    try {
+      raw.write('C CHECK\r\n');
+      const size = Math.floor(MAX_QUEUED_COMMAND_BYTES / 5);
+      for (let index = 0; index < 6; index++) {
+        raw.write(`F${index} UID SEARCH TEXT "${'x'.repeat(size)}"\r\n`);
+      }
+      await raw.waitForClose();
+    } finally {
+      release?.();
+    }
+  });
+
+  it('bounds notifications for a selected client that never asks for updates', async () => {
+    const imap = await startTestImap();
+    const received = await imap.service.receive(rawMessage(), null);
+    const raw = await loggedInImap(imap.port);
+    await raw.command('S', 'SELECT INBOX');
+    for (let index = 0; index <= MAX_QUEUED_NOTIFICATIONS; index++) {
+      imap.service.setFlags(
+        [
+          {
+            id: received.id,
+            flags: index % 2 === 0 ? [String.raw`\Seen`] : [],
+          },
+        ],
+        'internal',
+      );
+    }
+    await raw.waitForClose();
+    expect(imap.service.get(received.id)).toBeDefined();
+  });
+
+  it('bounds deleted sources retained for a selected session', async () => {
+    const imap = await startTestImap({ limits: { output: smallOutput } });
+    await fill(imap, 2, 100 * KiB);
+    const raw = await loggedInImap(imap.port);
+    await raw.command('S', 'SELECT INBOX');
+    for (const entry of imap.service.mailboxEntries()) {
+      imap.service.delete(entry.id, 'rest');
+    }
+    await raw.waitForClose();
+    expect(imap.service.mailboxEntries()).toEqual([]);
+  });
+
   it('says BYE to connections above the session limit', async () => {
     const imap = await startTestImap({ limits: { maxSessions: 2 } });
     await rawImap(imap.port);
@@ -278,6 +380,16 @@ describe('IMAP session limits', () => {
     expect(await raw.tagged('B')).toMatch(/^B BAD Literal too large/m);
   });
 
+  it('closes a STARTTLS client that never begins its TLS handshake', async () => {
+    const imap = await startTestImap({
+      tls: 'starttls',
+      limits: { preAuthMs: 300 },
+    });
+    const raw = await rawImap(imap.port);
+    expect(await raw.command('T', 'STARTTLS')).toMatch(/^T OK/m);
+    await raw.waitForClose();
+  });
+
   it('says BYE to every session on shutdown', async () => {
     const imap = await startTestImap();
     const raw = await loggedInImap(imap.port);
@@ -288,5 +400,28 @@ describe('IMAP session limits', () => {
     await raw.waitForClose();
     await closing;
     await expect(rawImap(imap.port)).rejects.toThrow();
+  });
+
+  it('does not wait for an unfinished implicit TLS handshake on shutdown', async () => {
+    const imap = await startTestImap({ tls: 'implicit' });
+    const socket = net.connect({ host: '127.0.0.1', port: imap.port });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        socket.once('connect', resolve);
+        socket.once('error', reject);
+      });
+      // Sending no ClientHello leaves this outside ImapKit's session set.
+      const closing = imap.listener.close(50);
+      await expect(
+        Promise.race([
+          closing,
+          new Promise((resolve) =>
+            setTimeout(() => resolve('still waiting'), 1000),
+          ),
+        ]),
+      ).resolves.toBeUndefined();
+    } finally {
+      socket.destroy();
+    }
   });
 });
