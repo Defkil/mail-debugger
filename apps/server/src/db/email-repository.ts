@@ -49,6 +49,13 @@ export interface StoreStats {
   bytes: number;
 }
 
+/** What the IMAP mailbox needs to know about a stored email besides its source. */
+export interface MailboxEntry extends EmailKey {
+  flags: string[];
+  /** UTC ISO 8601 timestamp with milliseconds. */
+  receivedAt: string;
+}
+
 /**
  * SQL access to the canonical mailbox. Methods are synchronous; mutations
  * that must be atomic run inside {@link EmailRepository.transaction}.
@@ -201,6 +208,19 @@ export class EmailRepository {
     return rowsFrom(this.db.exec('SELECT id, uid FROM emails ORDER BY id')).map(
       (row) => toKey(row),
     );
+  }
+
+  /** Keys, IMAP flags and arrival times of all emails, in ascending UID order. */
+  mailboxEntries(): MailboxEntry[] {
+    return rowsFrom(
+      this.db.exec(
+        'SELECT id, uid, flags, received_at FROM emails ORDER BY uid',
+      ),
+    ).map((row) => ({
+      ...toKey(row),
+      flags: parseJson<string[]>(row['flags'], []),
+      receivedAt: String(row['received_at']),
+    }));
   }
 
   /** Deletes the emails with the given ids; returns the keys that existed. */

@@ -3,7 +3,12 @@ import { isIP } from 'node:net';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { DEFAULT_LIMITS } from './mail/mail-service.js';
-import type { MailCredentials, ServerConfig, TlsMode } from './types.js';
+import type {
+  ImapConfig,
+  MailCredentials,
+  ServerConfig,
+  TlsMode,
+} from './types.js';
 
 /** A command line or environment problem; the process exits with code 2. */
 export class UsageError extends Error {
@@ -16,6 +21,8 @@ export class UsageError extends Error {
 export const DEFAULT_HOST = '127.0.0.1';
 export const DEFAULT_SMTP_PORT = 2525;
 export const DEFAULT_API_PORT = 3000;
+export const DEFAULT_IMAP_PORT = 1143;
+export const DEFAULT_IMAPS_PORT = 1993;
 export const DEFAULT_MAX_SMTP_CLIENTS = 20;
 
 const TLS_MODES: readonly TlsMode[] = ['none', 'starttls', 'implicit'];
@@ -63,11 +70,24 @@ export const SERVER_OPTIONS: readonly OptionSpec[] = [
       'HTTP port of the web inbox, REST API and API docs (0 picks a free port)',
   },
   {
+    name: 'imap',
+    type: 'boolean',
+    description:
+      'Also serve the captured mail over IMAP: one shared INBOX, read, flag and delete only (login mail-debugger / mail-debugger unless --auth-user is set)',
+  },
+  {
+    name: 'imap-port',
+    type: 'string',
+    value: 'port',
+    default: `${DEFAULT_IMAP_PORT}, ${DEFAULT_IMAPS_PORT} with --tls implicit`,
+    description: 'IMAP port (0 picks a free port)',
+  },
+  {
     name: 'tls',
     type: 'string',
     value: 'none|starttls|implicit',
     default: 'none',
-    description: 'SMTP encryption',
+    description: 'Encryption of SMTP and IMAP',
   },
   {
     name: 'tls-cert',
@@ -87,7 +107,7 @@ export const SERVER_OPTIONS: readonly OptionSpec[] = [
     type: 'string',
     value: 'name',
     description:
-      'Require SMTP authentication as this user; the password comes from MAIL_DEBUGGER_AUTH_PASSWORD or --auth-password-file',
+      'Require SMTP and IMAP authentication as this user; the password comes from MAIL_DEBUGGER_AUTH_PASSWORD or --auth-password-file',
   },
   {
     name: 'auth-password-file',
@@ -99,7 +119,7 @@ export const SERVER_OPTIONS: readonly OptionSpec[] = [
     name: 'allow-insecure-auth',
     type: 'boolean',
     description:
-      'Allow SMTP authentication without TLS (only on a loopback --host)',
+      'Allow SMTP and IMAP authentication without TLS (only on a loopback --host)',
   },
   {
     name: 'persist',
@@ -199,6 +219,12 @@ export function parseServerArgs(
 
   const credentials = parseCredentials(values, context);
   const allowInsecureAuth = values['allow-insecure-auth'] === true;
+  const imap = parseImap(values, tls);
+  if (imap && credentials && tls === 'none' && !allowInsecureAuth) {
+    throw new UsageError(
+      'IMAP clients would send the --auth-user password in plain text; use --tls starttls or --tls implicit, or add --allow-insecure-auth',
+    );
+  }
 
   const limits = {
     maxMessageBytes: parseCount(
@@ -253,9 +279,27 @@ export function parseServerArgs(
     httpAllowedOrigins: listValue(values, 'http-allowed-origin').map((value) =>
       parseAllowedOrigin(value),
     ),
+    ...(imap && { imap }),
   };
   assertExposureIsProtected(config);
   return { kind: 'run', config };
+}
+
+function parseImap(values: Values, tls: TlsMode): ImapConfig | undefined {
+  const enabled = values['imap'] === true;
+  if (!enabled) {
+    if (stringValue(values, 'imap-port') !== undefined) {
+      throw new UsageError('--imap-port needs --imap');
+    }
+    return undefined;
+  }
+  return {
+    port: parsePort(
+      values,
+      'imap-port',
+      tls === 'implicit' ? DEFAULT_IMAPS_PORT : DEFAULT_IMAP_PORT,
+    ),
+  };
 }
 
 type Values = Record<

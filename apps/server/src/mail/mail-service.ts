@@ -5,7 +5,11 @@ import type {
   SmtpEnvelope,
 } from '@mail-debugger/client';
 import { buildFilterClause, normalizeFilter } from '../db/email-query.js';
-import type { EmailKey, StoreStats } from '../db/email-repository.js';
+import type {
+  EmailKey,
+  MailboxEntry,
+  StoreStats,
+} from '../db/email-repository.js';
 import { storedSize } from '../db/sizes.js';
 import type { MailStore } from '../db/store.js';
 import type { Logger } from '../logger.js';
@@ -45,6 +49,9 @@ export const MAX_ACTIVE_WAITS = 100;
 /** Longest keyword flag and most flags per message (IMAP STORE). */
 export const MAX_FLAG_LENGTH = 64;
 export const MAX_FLAGS_PER_MESSAGE = 32;
+
+/** Highest IMAP UID (RFC 3501 nz-number, 32 bits). */
+export const MAX_UID = 0xff_ff_ff_ff;
 
 export interface Page {
   limit: number;
@@ -128,6 +135,33 @@ export class MailService {
   cursor(): MailboxCursor {
     const { lastId, mailboxId } = this.store.repository.metadata();
     return { highWatermark: lastId, mailboxId };
+  }
+
+  /** IMAP state of the INBOX: UIDVALIDITY, UIDNEXT and its subscription. */
+  imapState(): { uidValidity: number; uidNext: number; subscribed: boolean } {
+    const meta = this.store.repository.metadata();
+    return {
+      uidValidity: meta.uidValidity,
+      uidNext: meta.uidNext,
+      subscribed: meta.inboxSubscribed,
+    };
+  }
+
+  /** Keys, flags and arrival times of all emails, in ascending UID order. */
+  mailboxEntries(): MailboxEntry[] {
+    return this.store.repository.mailboxEntries();
+  }
+
+  /** Stores whether the INBOX is subscribed over IMAP. */
+  setInboxSubscribed(subscribed: boolean): void {
+    const repository = this.store.repository;
+    repository.transaction(() => repository.setInboxSubscribed(subscribed));
+    this.store.changed();
+  }
+
+  /** Writes pending changes of a persistent store to disk now. */
+  flush(): Promise<void> {
+    return this.store.flush();
   }
 
   stats(): StoreStats {
@@ -394,6 +428,13 @@ export class MailService {
   }
 
   private assertRoomFor(bytes: number): void {
+    // IMAP UIDs are 32-bit and never reused: an exhausted data set takes no
+    // more mail instead of starting over with a new UIDVALIDITY.
+    if (this.store.repository.metadata().uidNext > MAX_UID) {
+      throw new StorageFullError(
+        'The mailbox has used up its IMAP UIDs; start with a new --data-dir to receive more',
+      );
+    }
     const { count, bytes: used } = this.store.repository.stats();
     if (count + 1 > this.limits.maxMessages) {
       throw new StorageFullError(

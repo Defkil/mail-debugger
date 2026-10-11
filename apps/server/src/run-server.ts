@@ -91,6 +91,15 @@ function logStartup(
     },
     `SMTP server listening on ${server.smtp.address}:${server.smtp.port}`,
   );
+  if (server.imap) {
+    logger.info(
+      {
+        tls: config.tls,
+        login: config.credentials ? 'configured' : 'mail-debugger',
+      },
+      `IMAP server listening on ${server.imap.address}:${server.imap.port}`,
+    );
+  }
   if (program.webDir) {
     logger.info(`Web inbox: ${httpUrl(server.http)}`);
   }
@@ -109,6 +118,7 @@ function logStartup(
       host: config.host,
       smtpPort: server.smtp.port,
       apiPort: server.http.port,
+      ...(server.imap && { imapPort: server.imap.port }),
     },
     'mail-debugger is ready',
   );

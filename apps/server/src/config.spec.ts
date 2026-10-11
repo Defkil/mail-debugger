@@ -277,6 +277,43 @@ describe('parseServerArgs', () => {
     expect(usageError(['--http-allowed-origin', 'ftp://x'])).toMatch(/scheme/);
   });
 
+  describe('IMAP', () => {
+    it('is off unless --imap is given', () => {
+      expect(run([]).imap).toBeUndefined();
+      expect(usageError(['--imap-port', '1143'])).toBe(
+        '--imap-port needs --imap',
+      );
+    });
+
+    it('uses 1143, 1993 with implicit TLS, or the given port', () => {
+      expect(run(['--imap']).imap).toEqual({ port: 1143 });
+      expect(run(['--imap', '--tls', 'starttls']).imap).toEqual({
+        port: 1143,
+      });
+      expect(run(['--imap', '--tls', 'implicit']).imap).toEqual({
+        port: 1993,
+      });
+      expect(run(['--imap', '--imap-port', '0']).imap).toEqual({ port: 0 });
+      expect(usageError(['--imap', '--imap-port', '70000'])).toMatch(
+        /--imap-port must be a whole number/,
+      );
+    });
+
+    it('refuses configured credentials over plaintext unless allowed', () => {
+      const env = context({ MAIL_DEBUGGER_AUTH_PASSWORD: 'pw' });
+      expect(usageError(['--imap', '--auth-user', 'dev'], env)).toMatch(
+        /plain text.*--allow-insecure-auth/,
+      );
+      expect(
+        run(['--imap', '--auth-user', 'dev', '--allow-insecure-auth'], env)
+          .imap,
+      ).toEqual({ port: 1143 });
+      expect(
+        run(['--imap', '--auth-user', 'dev', '--tls', 'starttls'], env).imap,
+      ).toEqual({ port: 1143 });
+    });
+  });
+
   it('rejects an empty or whitespace API token', () => {
     expect(usageError([], context({ MAIL_DEBUGGER_API_TOKEN: '' }))).toMatch(
       /MAIL_DEBUGGER_API_TOKEN/,
@@ -313,6 +350,8 @@ describe('formatServerHelp', () => {
       '--data-dir',
       '--max-messages',
       '--http-allowed-origin',
+      '--imap',
+      '--imap-port <port>',
     ]) {
       expect(help).toContain(option);
     }

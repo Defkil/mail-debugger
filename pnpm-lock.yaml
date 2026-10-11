@@ -181,6 +181,9 @@ importers:
       elysia:
         specifier: 1.4.30
         version: 1.4.30(@sinclair/typebox@0.34.52)(exact-mirror@1.0.0)(file-type@22.0.1(supports-color@8.1.1))(openapi-types@12.1.3)(typescript@6.0.3)
+      imapkit:
+        specifier: 5.0.1
+        version: 5.0.1(smtp-server@3.19.21)
       mailparser:
         specifier: 3.9.38
         version: 3.9.38
@@ -290,6 +293,9 @@ importers:
       husky:
         specifier: 9.1.7
         version: 9.1.7
+      imapflow:
+        specifier: 2.4.0
+        version: 2.4.0
       jsonc-eslint-parser:
         specifier: 3.3.0
         version: 3.3.0
@@ -3498,6 +3504,24 @@ packages:
     resolution: {integrity: sha512-BAg6QkE8W+TuQLrrw0Ugr7HegXduRuuj8/ti2kSOc+jz1dmx8/WNcjr6XGnq5YpDWxFwwaavqD0+jIUOKelTsw==}
     engines: {node: '>= 4'}
 
+  imap-handler@1.4.0:
+    resolution: {integrity: sha512-/Vsz6s9pHmoy8rRkyVu1TnodNmBHOVBudme8wHLZPCmtR/cJmbLmhYhJTi+qK7ZlFTQyIG/yFlh9wqvnigGkpg==}
+    engines: {node: '>=20.0.0'}
+
+  imapflow@2.4.0:
+    resolution: {integrity: sha512-42quCGcSiPFH2ho+/n89lXwR2JA0iuYcE+pe3BvezF24tXgSOrvB/KsJr0i45lCpLSAMZdE+iSFLCokXUGo2sA==}
+    engines: {node: '>=20.0.0'}
+
+  imapkit@5.0.1:
+    resolution: {integrity: sha512-skbGO72BlcohOJ1PRvpcvb0fhnxEg7h6CV1vkU2hmf4sFfm+4G8Aes7/PlV339XjCAnNGBJEJiI5km0BqSET/Q==}
+    engines: {node: '>=20.0.0'}
+    hasBin: true
+    peerDependencies:
+      smtp-server: ^3.19.17
+    peerDependenciesMeta:
+      smtp-server:
+        optional: true
+
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
@@ -3516,6 +3540,10 @@ packages:
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
+
+  ip-address@10.7.3:
+    resolution: {integrity: sha512-A1kdq/tSb5QjvKvAMgIoEvDBIgL7qaqVP/jkvSwYYRZ9iEzvPpopxp2wQfu3SuZRHtpHNxMn8Fs0bS+gf5Xmwg==}
+    engines: {node: '>= 12'}
 
   ip-regex@4.3.0:
     resolution: {integrity: sha512-B9ZWJxHHOHUhUjCPrMpLD4xEq35bUTClHM1S6CBU5ixQnkZmwipwgc96vAd7AAGM9TGHvJR+Uss+/Ak6UphK+Q==}
@@ -4223,6 +4251,10 @@ packages:
   pino-std-serializers@7.1.0:
     resolution: {integrity: sha512-BndPH67/JxGExRgiX1dX0w1FvZck5Wa4aal9198SrRhZjH3GxKQUKIBnYJTdj2HDN3UQAS06HlfcSbQj2OHmaw==}
 
+  pino@10.3.1:
+    resolution: {integrity: sha512-r34yH/GlQpKZbU1BvFFqOjhISRo1MNx1tWYsYvmj6KIRHSPMT2+yHOEb1SG6NMvRoHRF0a07kCOox/9yakl1vg==}
+    hasBin: true
+
   pino@10.4.0:
     resolution: {integrity: sha512-bk1ZMTwG/Vymx+zPoa28MhNzucFvXJWp3csrSuxuHPSMeUettaCoQ5Jvg07mtC4JGNpcfTwz41oVCnNgBK9+vA==}
     hasBin: true
@@ -4533,6 +4565,10 @@ packages:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
 
+  smart-buffer@4.2.0:
+    resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
+    engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
+
   smol-toml@1.9.0:
     resolution: {integrity: sha512-hpd+HLON7HdZXqYchMM/+LaTTbdK0AU3NngIJ4KVyWbY9bfQqdL9cD+4yf6dUoU2Ap4VsU0JkQi6FxAI1B2mXQ==}
     engines: {node: '>= 18'}
@@ -4540,6 +4576,10 @@ packages:
   smtp-server@3.19.21:
     resolution: {integrity: sha512-d0wWijB5dK4gImQidwWMlcGsycqcDCJV0VdQbfz61rgkDqnzAx0Epvi0o5JN2nnr/YwriVC+XV0T8YgcoB0bng==}
     engines: {node: '>=20.0.0'}
+
+  socks@2.8.10:
+    resolution: {integrity: sha512-e0VyvkVTwVYViNovRkZ9aodhxVlyoMn7eJhVUPxZ+eK9P/7CBkxvvsBOHqFPEH416726W8tLXXXjKwqgTErrCQ==}
+    engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
   sonic-boom@4.2.1:
     resolution: {integrity: sha512-w6AxtubXa2wTXAUsZMMWERrsIRAdrK0Sc+FUytWvYAhBJLyuI4llrMIC1DtlNSdI99EI86KZum2MMq3EAZlF9Q==}
@@ -8338,6 +8378,25 @@ snapshots:
 
   ignore@7.0.6: {}
 
+  imap-handler@1.4.0: {}
+
+  imapflow@2.4.0:
+    dependencies:
+      '@zone-eu/mailsplit': 5.4.20
+      encoding-japanese: 2.4.0
+      iconv-lite: 0.7.3
+      libbase64: 1.3.2
+      libmime: 5.4.7
+      libqp: 2.1.2
+      pino: 10.3.1
+      socks: 2.8.10
+
+  imapkit@5.0.1(smtp-server@3.19.21):
+    dependencies:
+      imap-handler: 1.4.0
+    optionalDependencies:
+      smtp-server: 3.19.21
+
   import-fresh@3.3.1:
     dependencies:
       parent-module: 1.0.1
@@ -8353,6 +8412,8 @@ snapshots:
       wrappy: 1.0.2
 
   inherits@2.0.4: {}
+
+  ip-address@10.7.3: {}
 
   ip-regex@4.3.0: {}
 
@@ -9281,6 +9342,20 @@ snapshots:
 
   pino-std-serializers@7.1.0: {}
 
+  pino@10.3.1:
+    dependencies:
+      '@pinojs/redact': 0.4.0
+      atomic-sleep: 1.0.0
+      on-exit-leak-free: 2.1.2
+      pino-abstract-transport: 3.0.0
+      pino-std-serializers: 7.1.0
+      process-warning: 5.0.0
+      quick-format-unescaped: 4.0.4
+      real-require: 0.2.0
+      safe-stable-stringify: 2.5.0
+      sonic-boom: 4.2.1
+      thread-stream: 4.0.0
+
   pino@10.4.0:
     dependencies:
       '@pinojs/redact': 0.4.0
@@ -9520,6 +9595,8 @@ snapshots:
 
   slash@3.0.0: {}
 
+  smart-buffer@4.2.0: {}
+
   smol-toml@1.9.0: {}
 
   smtp-server@3.19.21:
@@ -9527,6 +9604,11 @@ snapshots:
       ipv6-normalize: 1.0.1
       nodemailer: 10.1.0
       punycode.js: 2.3.1
+
+  socks@2.8.10:
+    dependencies:
+      ip-address: 10.7.3
+      smart-buffer: 4.2.0
 
   sonic-boom@4.2.1:
     dependencies:

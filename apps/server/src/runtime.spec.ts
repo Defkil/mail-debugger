@@ -5,7 +5,12 @@ import path from 'node:path';
 import { createTransport } from 'nodemailer';
 import { parseServerArgs } from './config.js';
 import { LOCK_FILE } from './db/persistence.js';
-import { startServer, StartupError, type RunningServer } from './runtime.js';
+import {
+  allowsPlaintextImapAuth,
+  startServer,
+  StartupError,
+  type RunningServer,
+} from './runtime.js';
 import { silentLogger } from './testing/mail-fixtures.js';
 import type { ServerConfig } from './types.js';
 
@@ -169,6 +174,68 @@ describe('startServer', () => {
       await first.close();
     }
   });
+
+  it('serves IMAP when enabled and reports its port', async () => {
+    const server = await startServer(config(['--imap', '--imap-port', '0']), {
+      logger: silentLogger,
+    });
+    try {
+      expect(server.imap?.address).toBe('127.0.0.1');
+      expect(await health(server)).toMatchObject({
+        imapPort: server.imap?.port,
+      });
+    } finally {
+      await server.close();
+    }
+    const plain = await startServer(config(), { logger: silentLogger });
+    try {
+      expect(plain.imap).toBeUndefined();
+      expect(await health(plain)).not.toHaveProperty('imapPort');
+    } finally {
+      await plain.close();
+    }
+  });
+
+  it('closes SMTP and HTTP again when the IMAP port is taken', async () => {
+    const blocker = await occupy();
+    try {
+      await expect(
+        startServer(
+          config([
+            '--imap',
+            '--imap-port',
+            String(portOf(blocker)),
+            '--data-dir',
+            dataDir,
+          ]),
+          { logger: silentLogger },
+        ),
+      ).rejects.toThrow(/IMAP port .* already in use.*--imap-port/);
+      expect(fs.existsSync(path.join(dataDir, LOCK_FILE))).toBe(false);
+    } finally {
+      blocker.close();
+    }
+  });
+
+  it.each([
+    ['none', false, false, true],
+    ['none', true, false, false],
+    ['none', true, true, true],
+    ['starttls', false, false, false],
+    ['starttls', false, true, true],
+    ['implicit', false, false, false],
+  ] as const)(
+    'allows plaintext IMAP login for --tls %s, credentials %s, insecure %s: %s',
+    (tls, credentials, allowInsecureAuth, expected) => {
+      expect(
+        allowsPlaintextImapAuth({
+          tls,
+          allowInsecureAuth,
+          ...(credentials && { credentials: { user: 'u', password: 'p' } }),
+        }),
+      ).toBe(expected);
+    },
+  );
 
   it('refuses new mail during shutdown', async () => {
     const server = await startServer(config(), { logger: silentLogger });

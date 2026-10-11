@@ -40,4 +40,11 @@ export interface ServerConfig {
   httpAllowedHosts: string[];
   /** Additional browser origins the HTTP server accepts. */
   httpAllowedOrigins: string[];
+  /** The IMAP listener; absent unless enabled with --imap. */
+  imap?: ImapConfig;
+}
+
+export interface ImapConfig {
+  /** IMAP port; 0 picks a free port. */
+  port: number;
 }

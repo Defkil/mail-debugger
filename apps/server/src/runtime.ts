@@ -3,6 +3,7 @@ import { createApp } from './api/app.js';
 import { createHttpPolicy, type HttpPolicy } from './api/guards.js';
 import { listenHttp, type HttpListener } from './api/listener.js';
 import { openStore } from './db/store.js';
+import type { ImapListener } from './imap/imap-server.js';
 import type { Logger } from './logger.js';
 import { MailService } from './mail/mail-service.js';
 import { describeListenError } from './net-listen.js';
@@ -32,6 +33,8 @@ export interface RunningServer {
   readonly smtp: AddressInfo;
   /** Bound HTTP address (the actual port when 0 was requested). */
   readonly http: AddressInfo;
+  /** Bound IMAP address, when IMAP is enabled. */
+  readonly imap?: AddressInfo;
   readonly service: MailService;
   /**
    * Stops accepting mail and connections, lets clients finish within the
@@ -60,6 +63,7 @@ export async function startServer(
   let smtpServer: ReturnType<typeof createSmtpServer> | undefined;
   let smtpOpen = false;
   let http: HttpListener | undefined;
+  let imap: ImapListener | undefined;
 
   try {
     const certificate = await loadCertificate(config);
@@ -96,6 +100,7 @@ export async function startServer(
       info: () => ({
         smtpPort: smtpAddress.port,
         apiPort: http?.address.port ?? config.apiPort,
+        ...(imap && { imapPort: imap.address.port }),
       }),
       policy: () => {
         policy ??= createHttpPolicy({
@@ -125,11 +130,42 @@ export async function startServer(
         ),
     );
 
+    if (config.imap) {
+      const imapConfig = config.imap;
+      // Loaded on demand: a server without --imap never loads ImapKit.
+      const { imapLimits, startImapServer, DEFAULT_IMAP_CREDENTIALS } =
+        await import('./imap/imap-server.js');
+      imap = await startupStep(
+        () =>
+          startImapServer({
+            service,
+            logger,
+            host: config.host,
+            port: imapConfig.port,
+            tls: config.tls,
+            ...(certificate && { certificate }),
+            credentials: config.credentials ?? DEFAULT_IMAP_CREDENTIALS,
+            plaintextAuth: allowsPlaintextImapAuth(config),
+            limits: imapLimits(config.limits.maxMessageBytes),
+          }),
+        (error) =>
+          describeListenError(
+            error,
+            'IMAP',
+            '--imap-port',
+            config.host,
+            imapConfig.port,
+          ),
+      );
+    }
+
     const httpListener = http;
+    const imapListener = imap;
     let closing: Promise<void> | undefined;
     return {
       smtp: smtpAddress,
       http: httpListener.address,
+      ...(imapListener && { imap: imapListener.address }),
       service,
       close() {
         closing ??= (async () => {
@@ -137,6 +173,7 @@ export async function startServer(
           await Promise.allSettled([
             httpListener.close(SHUTDOWN_GRACE_MS),
             closeSmtp(smtp),
+            imapListener?.close(SHUTDOWN_GRACE_MS),
           ]);
           await store.close();
         })();
@@ -145,7 +182,11 @@ export async function startServer(
     };
   } catch (error) {
     service.stopAccepting();
-    if (smtpServer && smtpOpen) await closeSmtp(smtpServer);
+    await Promise.allSettled([
+      imap?.close(0),
+      http?.close(0),
+      smtpServer && smtpOpen ? closeSmtp(smtpServer) : undefined,
+    ]);
     try {
       await store.close();
     } catch (closeError) {
@@ -153,6 +194,20 @@ export async function startServer(
     }
     throw error;
   }
+}
+
+/**
+ * Whether IMAP clients may log in without TLS: the development login on a
+ * plain loopback listener, configured credentials only with
+ * --allow-insecure-auth. With STARTTLS the login waits for TLS unless
+ * insecure authentication is allowed.
+ */
+export function allowsPlaintextImapAuth(
+  config: Pick<ServerConfig, 'tls' | 'credentials' | 'allowInsecureAuth'>,
+): boolean {
+  return config.allowInsecureAuth
+    ? true
+    : config.tls === 'none' && !config.credentials;
 }
 
 /** Runs a startup step and turns its failure into a {@link StartupError}. */
