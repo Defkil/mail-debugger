@@ -1,35 +1,57 @@
 import { Elysia } from 'elysia';
 import { node } from '@elysiajs/node';
 import { openapi } from '@elysiajs/openapi';
-import type { EmailRepository } from '../db/email-repository.js';
 import type { Logger } from '../logger.js';
-import type { Config } from '../types.js';
+import { ServiceError } from '../mail/errors.js';
+import type { MailService } from '../mail/mail-service.js';
+import { getVersion } from '../version.js';
+import { checkRequest, type HttpPolicy } from './guards.js';
+import { HttpError, jsonError, toHttpError } from './http-errors.js';
 import { emailRoutes } from './routes/emails.js';
-import { healthRoutes } from './routes/health.js';
-import { serveWeb } from './serve-web.js';
+import { healthRoutes, type RuntimeInfo } from './routes/health.js';
+import { createStaticHandler } from './static-files.js';
 
 export interface CreateAppOptions {
-  /** Mount the static web UI at `/*`. Defaults to `false` (API-only). */
-  serveWeb?: boolean;
+  service: MailService;
+  logger: Logger;
+  /** Policy for Host, Origin and the API token; read per request. */
+  policy: () => HttpPolicy;
+  /** Bound ports, read per request. */
+  info: () => RuntimeInfo;
+  /** Directory of the built web inbox; omit for the API-only server. */
+  webDir?: string;
 }
 
-export function createApp(
-  repository: EmailRepository,
-  config: Config,
-  logger: Logger,
-  options: CreateAppOptions = {},
-) {
-  const log = logger.child({ component: 'api' });
+export function createApp(options: CreateAppOptions) {
+  const { service } = options;
+  const log = options.logger.child({ component: 'http' });
 
   const app = new Elysia({ adapter: node() })
     .onRequest(({ request }) => {
-      log.debug({ method: request.method, url: request.url }, 'Request');
+      const { pathname } = new URL(request.url);
+      log.debug({ method: request.method, path: pathname }, 'Request');
+      const rejection = checkRequest(options.policy(), request, pathname);
+      return rejection ? jsonError(rejection) : undefined;
     })
-    .onError(({ error, request }) => {
-      log.error(
-        { err: error, method: request.method, url: request.url },
-        'Request error',
-      );
+    .onError(({ code, error, request }) => {
+      // Elysia derives `code` from a `status` property, so own errors go first.
+      if (error instanceof HttpError) return jsonError(error);
+      if (code === 'NOT_FOUND') {
+        return jsonError(new HttpError(404, 'NOT_FOUND', 'Not found'));
+      }
+      if (code === 'VALIDATION' || code === 'PARSE') {
+        return jsonError(
+          new HttpError(400, 'INVALID_ARGUMENT', 'Invalid request parameters'),
+        );
+      }
+      const httpError = toHttpError(error);
+      if (httpError.status >= 500 && !(error instanceof ServiceError)) {
+        log.error(
+          { err: error, method: request.method, url: request.url },
+          'Request failed',
+        );
+      }
+      return jsonError(httpError);
     })
     .use(
       openapi({
@@ -38,29 +60,48 @@ export function createApp(
         documentation: {
           info: {
             title: 'Mail Debugger API',
-            version: '0.1.0',
+            version: getVersion(),
             description:
-              'REST API for managing emails caught by the Mail Debugger SMTP server.',
+              'REST API for managing emails caught by the Mail Debugger SMTP server. Errors are JSON objects of the form {"error": {"code", "message"}}.',
           },
           tags: [
-            {
-              name: 'Emails',
-              description: 'Email management endpoints',
-            },
-            {
-              name: 'Health',
-              description: 'Server health and status',
-            },
+            { name: 'Emails', description: 'Email management endpoints' },
+            { name: 'Health', description: 'Server health and status' },
           ],
         },
       }),
     )
-    .use(emailRoutes(repository))
-    .use(healthRoutes(repository, config));
+    .use(emailRoutes(service))
+    .use(healthRoutes(service, options.info));
 
-  if (options.serveWeb) {
-    app.use(serveWeb());
+  // Unknown API paths stay JSON 404s instead of reaching the web inbox. Each
+  // method is registered on its own: Elysia prefers a GET wildcard over an
+  // ALL route.
+  const hidden = { detail: { hide: true } };
+  app
+    .get('/api/*', unknownApiPath, hidden)
+    .post('/api/*', unknownApiPath, hidden)
+    .put('/api/*', unknownApiPath, hidden)
+    .patch('/api/*', unknownApiPath, hidden)
+    .delete('/api/*', unknownApiPath, hidden);
+
+  const staticHandler = options.webDir
+    ? createStaticHandler(options.webDir)
+    : undefined;
+  if (staticHandler) {
+    app.get(
+      '/*',
+      ({ request }) => staticHandler(new URL(request.url).pathname),
+      {
+        detail: { hide: true },
+      },
+    );
   }
-
   return app;
 }
+
+function unknownApiPath(): never {
+  throw new HttpError(404, 'NOT_FOUND', 'No such API endpoint');
+}
+
+export type App = ReturnType<typeof createApp>;

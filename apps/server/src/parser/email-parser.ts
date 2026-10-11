@@ -1,5 +1,19 @@
 import { simpleParser, type AddressObject } from 'mailparser';
-import type { ParsedEmail, AttachmentMeta } from '@mail-debugger/types';
+import type { AttachmentMeta } from '@mail-debugger/types';
+
+/** The decoded parts of a message, without its source. */
+export interface ParsedContent {
+  messageId: string | null;
+  from: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject: string;
+  textBody: string | null;
+  htmlBody: string | null;
+  headers: Record<string, string>;
+  attachments: AttachmentMeta[];
+}
 
 function extractAddresses(
   value: AddressObject | AddressObject[] | undefined,
@@ -9,8 +23,11 @@ function extractAddresses(
   return list.flatMap((group) => group.value.map((addr) => addr.address ?? ''));
 }
 
-export async function parseEmail(raw: string): Promise<ParsedEmail> {
-  const parsed = await simpleParser(raw);
+/** Parses the exact octets of a message. */
+export async function parseEmail(raw: Uint8Array): Promise<ParsedContent> {
+  const parsed = await simpleParser(
+    Buffer.from(raw.buffer, raw.byteOffset, raw.byteLength),
+  );
 
   const attachments: AttachmentMeta[] = (parsed.attachments ?? []).map(
     (att) => ({
@@ -37,7 +54,6 @@ export async function parseEmail(raw: string): Promise<ParsedEmail> {
     subject: parsed.subject ?? '',
     textBody: parsed.text || null,
     htmlBody: parsed.html || null,
-    raw,
     headers,
     attachments,
   };

@@ -46,7 +46,7 @@ const MULTIPART_EMAIL = [
 
 describe('parseEmail', () => {
   it('should parse a simple plain text email', async () => {
-    const result = await parseEmail(SIMPLE_EMAIL);
+    const result = await parseEmail(Buffer.from(SIMPLE_EMAIL));
 
     expect(result.from).toBe('sender@example.com');
     expect(result.to).toEqual(['recipient@example.com']);
@@ -57,18 +57,17 @@ describe('parseEmail', () => {
     expect(result.attachments).toEqual([]);
     expect(result.cc).toEqual([]);
     expect(result.bcc).toEqual([]);
-    expect(result.raw).toBe(SIMPLE_EMAIL);
   });
 
   it('should parse an HTML email', async () => {
-    const result = await parseEmail(HTML_EMAIL);
+    const result = await parseEmail(Buffer.from(HTML_EMAIL));
 
     expect(result.subject).toBe('HTML Email');
     expect(result.htmlBody).toContain('<p>Hello, world!</p>');
   });
 
   it('should parse multipart email with attachments', async () => {
-    const result = await parseEmail(MULTIPART_EMAIL);
+    const result = await parseEmail(Buffer.from(MULTIPART_EMAIL));
 
     expect(result.from).toBe('sender@example.com');
     expect(result.to).toEqual(['alice@example.com', 'bob@example.com']);
@@ -85,7 +84,7 @@ describe('parseEmail', () => {
 
   it('should handle missing fields gracefully', async () => {
     const minimal = ['From: a@b.com', '', 'body'].join('\r\n');
-    const result = await parseEmail(minimal);
+    const result = await parseEmail(Buffer.from(minimal));
 
     expect(result.from).toBe('a@b.com');
     expect(result.to).toEqual([]);
@@ -94,7 +93,7 @@ describe('parseEmail', () => {
   });
 
   it('should populate headers', async () => {
-    const result = await parseEmail(SIMPLE_EMAIL);
+    const result = await parseEmail(Buffer.from(SIMPLE_EMAIL));
     expect(result.headers).toBeDefined();
     expect(result.headers['subject']).toBe('Test Subject');
   });

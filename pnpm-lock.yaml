@@ -196,6 +196,9 @@ importers:
       sql.js:
         specifier: 1.14.2
         version: 1.14.2
+      srvx:
+        specifier: 0.11.15
+        version: 0.11.15
     devDependencies:
       '@eslint/js':
         specifier: 10.0.1
@@ -356,6 +359,9 @@ importers:
       sql.js:
         specifier: 1.14.2
         version: 1.14.2
+      srvx:
+        specifier: 0.11.15
+        version: 0.11.15
 
   apps/server-e2e: {}
 

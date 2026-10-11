@@ -56,6 +56,15 @@ export default [
       'unicorn/consistent-boolean-name': 'off',
       'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
       'unicorn/single-line-block-comment-style': 'off',
+      // Class members are ordered for reading (public API first).
+      'unicorn/consistent-class-member-order': 'off',
+    },
+  },
+  {
+    // Tests read single fields of awaited responses.
+    files: ['**/*.spec.ts', '**/*.test.ts'],
+    rules: {
+      'unicorn/no-await-expression-member': 'off',
     },
   },
   // Must stay last: turns off the rules that conflict with Prettier.

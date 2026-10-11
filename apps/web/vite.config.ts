@@ -22,6 +22,9 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        // The server only accepts its own origin; present the dev server's
+        // requests as same-origin ones.
+        headers: { origin: 'http://localhost:3000' },
       },
     },
   },
