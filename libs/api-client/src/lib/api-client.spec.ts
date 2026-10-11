@@ -161,6 +161,16 @@ describe('createApiClient', () => {
       await expect(client.listEmails()).rejects.toThrow('Something went wrong');
     });
 
+    it('should read the message of a structured error body', async () => {
+      mockFetch(
+        { error: { code: 'EMAIL_NOT_FOUND', message: 'Email not found' } },
+        404,
+      );
+      const client = createApiClient(API_URL);
+
+      await expect(client.getEmail(9)).rejects.toThrow('Email not found');
+    });
+
     it('should fall back to HTTP status when body has no error field', async () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue(
         new Response('not json', { status: 502 }),

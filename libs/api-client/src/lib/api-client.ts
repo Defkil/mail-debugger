@@ -14,16 +14,24 @@ async function request<T>(
 ): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, init);
   if (!res.ok) {
-    const body = (await readJson(res)) as {
-      error?: string;
-    } | null;
-    const message =
-      body && typeof body === 'object' && 'error' in body && body.error
-        ? body.error
-        : `HTTP ${res.status}`;
-    throw new Error(message);
+    throw new Error(errorMessage(await readJson(res)) ?? `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
+}
+
+/**
+ * The message of an error body: `{ error: { code, message } }` since 0.4,
+ * `{ error: "message" }` before.
+ */
+function errorMessage(body: unknown): string | undefined {
+  if (!body || typeof body !== 'object' || !('error' in body)) return undefined;
+  const { error } = body;
+  if (typeof error === 'string' && error) return error;
+  if (error && typeof error === 'object' && 'message' in error) {
+    const { message } = error;
+    if (typeof message === 'string' && message) return message;
+  }
+  return undefined;
 }
 
 async function readJson(res: Response): Promise<unknown> {
