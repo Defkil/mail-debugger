@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import selfsigned from 'selfsigned';
 import {
   closeImapClients,
   imapClient,
@@ -8,8 +5,8 @@ import {
   ImapTranscript,
 } from '../helpers/imap.js';
 import { sendMail } from '../helpers/mail.js';
+import { createTrustedCertificate } from '../helpers/tls.js';
 import {
-  makeTempDir,
   removeTempDirs,
   runBinary,
   startServerProcess,
@@ -202,37 +199,14 @@ describe('IMAP with implicit TLS', () => {
   }, 30_000);
 
   it('uses configured certificate files that clients can trust', async () => {
-    const dir = makeTempDir();
-    const pems = await selfsigned.generate(
-      [{ name: 'commonName', value: 'localhost' }],
-      {
-        extensions: [
-          {
-            name: 'subjectAltName',
-            altNames: [{ type: 2, value: 'localhost' }],
-          },
-        ],
-      },
-    );
-    const certFile = path.join(dir, 'cert.pem');
-    const keyFile = path.join(dir, 'key.pem');
-    fs.writeFileSync(certFile, pems.cert);
-    fs.writeFileSync(keyFile, pems.private);
+    const certificate = await createTrustedCertificate();
 
     const server = await startServerProcess({
-      args: [
-        '--imap',
-        '--tls',
-        'implicit',
-        '--tls-cert',
-        certFile,
-        '--tls-key',
-        keyFile,
-      ],
+      args: ['--imap', '--tls', 'implicit', ...certificate.args],
     });
     const client = imapClient(imapPort(server), {
       secure: true,
-      tls: { ca: pems.cert, servername: 'localhost' },
+      tls: { ca: certificate.cert, servername: 'localhost' },
     });
     await client.connect();
     await client.mailboxOpen('INBOX');

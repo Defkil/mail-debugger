@@ -1,11 +1,17 @@
 import { api, sendMail } from '../helpers/mail.js';
-import { startServerProcess, stopAllServers } from '../helpers/server.js';
+import {
+  removeTempDirs,
+  startServerProcess,
+  stopAllServers,
+} from '../helpers/server.js';
+import { createTrustedCertificate } from '../helpers/tls.js';
 
 const modes = ['none', 'starttls', 'implicit'] as const;
 
 describe('TLS E2E', () => {
   afterAll(async () => {
     await stopAllServers();
+    removeTempDirs();
   });
 
   describe.each(modes)('TLS mode: %s', (tls) => {
@@ -28,6 +34,45 @@ describe('TLS E2E', () => {
       }
     }, 30_000);
   });
+
+  describe.each(['starttls', 'implicit'] as const)(
+    'certificates with TLS mode %s',
+    (tls) => {
+      it('presents a generated certificate that verifying clients reject', async () => {
+        const server = await startServerProcess({ args: ['--tls', tls] });
+        try {
+          await expect(
+            sendMail({ port: server.smtpPort, tls, verify: true }),
+          ).rejects.toThrow(/certificate/i);
+          expect((await api(server.baseUrl, '/api/emails')).body.total).toBe(0);
+        } finally {
+          await server.stop();
+        }
+      }, 30_000);
+
+      it('presents configured certificate files that clients can trust', async () => {
+        const certificate = await createTrustedCertificate();
+        const server = await startServerProcess({
+          args: ['--tls', tls, ...certificate.args],
+        });
+        try {
+          await sendMail(
+            { port: server.smtpPort, tls, ca: certificate.cert },
+            { subject: `trusted ${tls}` },
+          );
+          await expect(
+            sendMail({ port: server.smtpPort, tls, verify: true }),
+          ).rejects.toThrow(/certificate/i);
+          const { body } = await api(server.baseUrl, '/api/emails');
+          expect(
+            body.data.map((email: { subject: string }) => email.subject),
+          ).toEqual([`trusted ${tls}`]);
+        } finally {
+          await server.stop();
+        }
+      }, 30_000);
+    },
+  );
 
   it('requires the configured credentials after STARTTLS', async () => {
     const server = await startServerProcess({

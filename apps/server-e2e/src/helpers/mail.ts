@@ -5,6 +5,15 @@ export interface SendOptions {
   /** none: plain; starttls: upgrade required; implicit: TLS from the start. */
   tls?: 'none' | 'starttls' | 'implicit';
   auth?: { user: string; pass: string };
+  /** AUTH mechanism; Nodemailer picks PLAIN by default. */
+  authMethod?: 'PLAIN' | 'LOGIN';
+  /** Trust this PEM certificate and verify the server (as localhost) against it. */
+  ca?: string;
+  /**
+   * Verify the server certificate against the system's trusted CAs. Off by
+   * default because the server presents a generated self-signed certificate.
+   */
+  verify?: boolean;
 }
 
 export interface TestMail {
@@ -32,9 +41,11 @@ export async function sendMail(options: SendOptions, mail: TestMail = {}) {
     secure: tls === 'implicit',
     requireTLS: tls === 'starttls',
     ignoreTLS: tls === 'none',
-    // The server presents a generated self-signed certificate.
-    tls: { rejectUnauthorized: false },
+    tls: options.ca
+      ? { ca: options.ca, servername: 'localhost' }
+      : { rejectUnauthorized: options.verify ?? false },
     ...(options.auth && { auth: options.auth }),
+    ...(options.authMethod && { authMethod: options.authMethod }),
   });
   try {
     if (mail.raw) {
