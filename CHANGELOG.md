@@ -40,13 +40,14 @@ This release adds the JavaScript client, an IMAP inbox and MCP, and makes the se
 ### Fixed
 
 - Message sources are stored as the exact bytes SMTP received; 0.3 stored decoded text, which changed bytes that were not UTF-8.
+- New mailbox data sets use a clock-independent, nonzero 32-bit UIDVALIDITY, avoiding deterministic reuse during rapid in-memory restarts; persistent stores retain their identity.
 - Static files of the web inbox are resolved strictly inside its directory, with the same rules on every platform; directories are not served.
 - The help of `mail-debugger-api` no longer mentions a web inbox.
 
 ### Security
 
-- The HTML preview of the web inbox runs with a Content-Security-Policy that blocks scripts, requests, frames and form submissions; remote images load only on request.
-- The terminal client replaces control characters of captured mail, so escape sequences in a message cannot act on the terminal.
+- The HTML preview of the web inbox runs with a Content-Security-Policy that blocks scripts, requests, frames and form submissions; remote images load only on request, with consent scoped to the current message and preview content.
+- Terminal output replaces control characters of captured mail and command-line diagnostics, so escape sequences cannot act on the terminal.
 - Attachment and source downloads are served with safe content types, `X-Content-Type-Options: nosniff` and a sandboxing Content-Security-Policy.
 - Passwords and tokens are compared in constant time and never logged.
 

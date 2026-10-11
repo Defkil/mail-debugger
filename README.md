@@ -220,7 +220,7 @@ Unknown, repeated or malformed options stop the server with exit code 2; a port 
 
 ### TLS and authentication
 
-`--tls none|starttls|implicit` applies to SMTP and IMAP alike. Without `--tls-cert` and `--tls-key`, a self-signed certificate for `localhost`, `127.0.0.1`, `::1` and the `--host` name is generated at every start. `--auth-user` makes SMTP and IMAP require that account; its password comes from `MAIL_DEBUGGER_AUTH_PASSWORD` or the first line of `--auth-password-file`, never from the command line. Configured credentials are only accepted over TLS unless `--allow-insecure-auth` is given, which works on a loopback `--host` only.
+`--tls none|starttls|implicit` applies to SMTP and IMAP alike. Without `--tls-cert` and `--tls-key`, a self-signed certificate for `localhost`, `127.0.0.1`, `::1` and the `--host` name is generated at every start. `--auth-user` makes SMTP and IMAP require that account; its password comes from `MAIL_DEBUGGER_AUTH_PASSWORD` or the contents of `--auth-password-file` with one trailing line ending removed, never from the command line. Configured credentials are only accepted over TLS unless `--allow-insecure-auth` is given, which works on a loopback `--host` only.
 
 ### Reaching it from containers or other machines
 
@@ -269,7 +269,7 @@ All three are built from this repository and released together with the same ver
 - **403 from the API or the web inbox**: the `Host` or `Origin` header is not allowed, typically behind a proxy or a custom hostname. Add it with `--http-allowed-host` or `--http-allowed-origin`.
 - **401 from the API**: the server runs with `MAIL_DEBUGGER_API_TOKEN`. Send `Authorization: Bearer <token>` (the client's `token` option, the CLI reads the variable).
 - **SMTP answers 452 or 552**: a limit is reached. Delete mail or raise `--max-messages`, `--max-storage-bytes` or `--max-message-bytes`.
-- **`The data directory is in use`** on startup: `mail-debugger.lock` already exists. The server preserves live, stale and malformed locks. Check that no process uses the directory before manually removing this file; never remove a running server's lock.
+- **`The data directory is locked`** on startup: `mail-debugger.lock` already exists. The server preserves live, stale and malformed locks. Check that no process uses the directory before manually removing this file; never remove a running server's lock.
 - **The interactive inbox does not start**: it needs a terminal and a supported platform; use the commands (`list`, `show`, `wait`) or the web inbox.
 
 ## Contributing and security

@@ -120,7 +120,7 @@ describe('openStore', () => {
     await second.close();
   });
 
-  it('writes a debounced snapshot after changes and a final one on close', async () => {
+  it('writes a coalesced snapshot after changes and a final one on close', async () => {
     const store = await openStore({
       dataDir: dir,
       logger: silentLogger,

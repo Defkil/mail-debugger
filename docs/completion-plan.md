@@ -1,6 +1,6 @@
 # mail-debugger completion plan
 
-Research date: 2026-10-11. Planning only. This document is the sole repository write made during this review; no source, manifest, lockfile, branch, commit, tag, stash, or remote setting is changed.
+Research date: 2026-10-11. The original planning review only wrote this document. The implementation notes in section 13 record the subsequent work; the [final release review](reviews/2026-10-11-release-review.md) records the finishing fixes, verification evidence, and release verdict.
 
 ## 1. Outcome and decision baseline
 

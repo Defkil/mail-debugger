@@ -6,7 +6,7 @@ import type { Database } from 'sql.js';
 export const DATABASE_FILE = 'mail-debugger.sqlite';
 export const LOCK_FILE = 'mail-debugger.lock';
 
-/** Thrown when another running process uses the data directory. */
+/** Thrown when an existing lock prevents opening the data directory. */
 export class DataDirectoryInUseError extends Error {
   constructor(
     readonly lockFile: string,
@@ -112,7 +112,7 @@ export interface SnapshotWriterOptions {
 }
 
 /**
- * Persists an in-memory sql.js database: snapshots are debounced after
+ * Persists an in-memory sql.js database: snapshots are coalesced after
  * changes, never overlap, and {@link SnapshotWriter.close} writes the final
  * state. Durability is limited to the last snapshot.
  */

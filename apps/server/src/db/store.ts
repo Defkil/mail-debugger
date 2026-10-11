@@ -12,7 +12,7 @@ import {
   type DataDirectoryLock,
 } from './persistence.js';
 
-/** Debounce between a change and the snapshot that persists it. */
+/** Delay from the first pending change until a snapshot is scheduled. */
 export const SNAPSHOT_DELAY_MS = 250;
 
 export interface StoreOptions {

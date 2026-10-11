@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { newMetadata } from './metadata.js';
 
 vi.mock('node:crypto', async (importOriginal) => ({
@@ -12,6 +13,7 @@ describe('newMetadata', () => {
     try {
       const first = newMetadata({ lastId: 0 });
       const second = newMetadata({ lastId: 0 });
+      expect(randomInt).toHaveBeenCalledWith(1, 0x1_00_00_00_00);
       expect(second.mailboxId).not.toBe(first.mailboxId);
       expect(second.uidValidity).not.toBe(first.uidValidity);
       for (const meta of [first, second]) {
