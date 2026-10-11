@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createQuery } from '@tanstack/svelte-query';
-  import { healthOptions } from '#lib/query';
+  import { healthOptions, isUnauthorized } from '#lib/query';
 
   const health = createQuery(() => healthOptions());
 </script>
@@ -11,7 +11,9 @@
     <span class="text-surface-400">connecting…</span>
   {:else if health.isError}
     <span class="bg-danger-500 inline-block h-2.5 w-2.5 rounded-full"></span>
-    <span class="text-danger-500">offline</span>
+    <span class="text-danger-500"
+      >{isUnauthorized(health.error) ? 'token required' : 'offline'}</span
+    >
   {:else if health.data}
     <span class="bg-success-500 inline-block h-2.5 w-2.5 rounded-full"></span>
     <span class="text-surface-400">

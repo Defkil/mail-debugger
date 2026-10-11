@@ -1,12 +1,19 @@
 <script lang="ts">
-  import { QueryClientProvider } from '@tanstack/svelte-query';
+  import { createQuery, QueryClientProvider } from '@tanstack/svelte-query';
   import { resolve } from '$app/paths';
-  import { queryClient } from '#lib/query';
+  import { healthOptions, isUnauthorized, queryClient } from '#lib/query';
   import HealthBadge from '../components/HealthBadge.svelte';
   import ThemeToggle from '../components/ThemeToggle.svelte';
+  import TokenLogin from '../components/TokenLogin.svelte';
   import '../app.css';
 
   let { children } = $props();
+
+  // The health check also tells whether the server requires an API token.
+  const health = createQuery(
+    () => healthOptions(),
+    () => queryClient,
+  );
 </script>
 
 <QueryClientProvider client={queryClient}>
@@ -23,7 +30,11 @@
       </div>
     </nav>
     <main class="flex-1 p-6">
-      {@render children()}
+      {#if isUnauthorized(health.error)}
+        <TokenLogin checking={health.isFetching} />
+      {:else}
+        {@render children()}
+      {/if}
     </main>
   </div>
 </QueryClientProvider>

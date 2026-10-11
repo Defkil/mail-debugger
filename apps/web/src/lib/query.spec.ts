@@ -1,4 +1,11 @@
-import { emailDetailOptions, emailListOptions, queryKeys } from './query';
+import { MailDebuggerApiError } from '@mail-debugger/client';
+import {
+  emailDetailOptions,
+  emailListOptions,
+  isUnauthorized,
+  queryClient,
+  queryKeys,
+} from './query';
 import { api } from './api';
 
 vi.mock('./api', () => ({
@@ -51,5 +58,47 @@ describe('email queries', () => {
     expect(queryKeys.emails.detail(1).slice(0, 1)).toEqual(
       queryKeys.emails.all,
     );
+  });
+});
+
+describe('isUnauthorized', () => {
+  const target = { method: 'GET', url: '/api/health' };
+
+  it('recognizes the 401 of a server that requires a token', () => {
+    expect(
+      isUnauthorized(
+        new MailDebuggerApiError('This API requires a valid bearer token', {
+          ...target,
+          status: 401,
+          code: 'UNAUTHORIZED',
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isUnauthorized(
+        new MailDebuggerApiError('Email not found', {
+          ...target,
+          status: 404,
+          code: 'EMAIL_NOT_FOUND',
+        }),
+      ),
+    ).toBe(false);
+    expect(isUnauthorized(new Error('offline'))).toBe(false);
+  });
+
+  it('does not retry a missing token', () => {
+    const retry = queryClient.getDefaultOptions().queries?.retry as (
+      failures: number,
+      error: unknown,
+    ) => boolean;
+    const unauthorized = new MailDebuggerApiError('denied', {
+      ...target,
+      status: 401,
+      code: 'UNAUTHORIZED',
+    });
+
+    expect(retry(0, unauthorized)).toBe(false);
+    expect(retry(0, new Error('offline'))).toBe(true);
+    expect(retry(1, new Error('offline'))).toBe(false);
   });
 });
