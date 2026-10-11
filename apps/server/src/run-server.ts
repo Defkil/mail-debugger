@@ -44,7 +44,12 @@ export async function runServerProgram(
     return;
   }
   if (command.kind === 'help') {
-    process.stdout.write(formatServerHelp(program.name, program.withCommands));
+    process.stdout.write(
+      formatServerHelp(program.name, {
+        withCommands: program.withCommands ?? false,
+        withWeb: program.webDir !== undefined,
+      }),
+    );
     return;
   }
   if (command.kind === 'version') {

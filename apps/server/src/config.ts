@@ -88,7 +88,7 @@ export const SERVER_OPTIONS: readonly OptionSpec[] = [
     name: 'mcp',
     type: 'boolean',
     description:
-      'Serve MCP for AI agents at /mcp on the HTTP port, with read-only tools (see docs/mcp.md)',
+      'Serve MCP for AI agents at /mcp on the HTTP port, with read-only tools',
   },
   {
     name: 'mcp-allow-mutations',
@@ -555,19 +555,48 @@ function assertExposureIsProtected(config: ServerConfig): void {
   }
 }
 
+export interface HelpOptions {
+  /** Lists the serve, cli and mcp commands of the main binary. */
+  withCommands?: boolean;
+  /** The server includes the web inbox; mail-debugger-api does not. */
+  withWeb?: boolean;
+}
+
+export interface OptionRow {
+  /** Short alias such as `-h`, if any. */
+  short?: string;
+  /** The option with its value placeholder, e.g. `--host <address>`. */
+  flag: string;
+  default?: string;
+  description: string;
+}
+
 /**
- * The server help. `withCommands` adds the subcommands of the main
- * mail-debugger binary.
+ * The documented server options; the help text and the option tables of
+ * the README files are both made from them.
  */
+export function serverOptionRows(withWeb = true): OptionRow[] {
+  return SERVER_OPTIONS.map((spec) => ({
+    ...(spec.short && { short: `-${spec.short}` }),
+    flag: `--${spec.name}${spec.value ? ` <${spec.value}>` : ''}`,
+    ...(spec.default !== undefined && { default: spec.default }),
+    description:
+      !withWeb && spec.name === 'api-port'
+        ? 'HTTP port of the REST API and API docs (0 picks a free port)'
+        : spec.description,
+  }));
+}
+
+/** The server help, for the main binary or the slim API distribution. */
 export function formatServerHelp(
   command = 'mail-debugger',
-  withCommands = false,
+  { withCommands = false, withWeb = true }: HelpOptions = {},
 ): string {
-  const rows = SERVER_OPTIONS.map((spec) => {
-    const flag = `${spec.short ? `-${spec.short}, ` : ' '.repeat(4)}--${spec.name}${spec.value ? ` <${spec.value}>` : ''}`;
+  const rows = serverOptionRows(withWeb).map((row) => {
+    const flag = `${row.short ? `${row.short}, ` : ' '.repeat(4)}${row.flag}`;
     const suffix =
-      spec.default === undefined ? '' : ` (default: ${spec.default})`;
-    return [flag, `${spec.description}${suffix}`] as const;
+      row.default === undefined ? '' : ` (default: ${row.default})`;
+    return [flag, `${row.description}${suffix}`] as const;
   });
   const width = Math.max(...rows.map(([flag]) => flag.length)) + 2;
   return [
@@ -579,8 +608,16 @@ export function formatServerHelp(
         ].join('\n')
       : `Usage: ${command} [options]`,
     '',
-    'Fake SMTP server for development: catches every email and shows it in a',
-    'web inbox, over a REST API and, when enabled, over IMAP and MCP.',
+    ...(withWeb
+      ? [
+          'Fake SMTP server for development: catches every email and shows it in a',
+          'web inbox, over a REST API and, when enabled, over IMAP and MCP.',
+        ]
+      : [
+          'Fake SMTP server for development: catches every email and serves it over',
+          'a REST API and, when enabled, over IMAP and MCP. No web inbox.',
+        ]),
+    'Documentation: https://github.com/Defkil/mail-debugger#readme',
     '',
     ...(withCommands
       ? [

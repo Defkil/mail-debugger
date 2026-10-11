@@ -413,8 +413,17 @@ describe('formatServerHelp', () => {
     expect(help).toContain('(default: 127.0.0.1)');
   });
 
+  it('describes the slim distribution without a web inbox', () => {
+    const help = formatServerHelp('mail-debugger-api', { withWeb: false });
+    expect(help).toMatch(/^Usage: mail-debugger-api \[options\]$/m);
+    expect(help).toContain('No web inbox.');
+    expect(help).toContain('HTTP port of the REST API and API docs');
+    expect(help).not.toContain('shows it in a');
+    expect(help).not.toContain('Commands:');
+  });
+
   it('lists the commands of the main binary', () => {
-    const help = formatServerHelp('mail-debugger', true);
+    const help = formatServerHelp('mail-debugger', { withCommands: true });
     expect(help).toContain('mail-debugger mcp [--url <url>]');
     expect(help).toMatch(/^ {2}mcp {4}Connect an MCP client/m);
   });
