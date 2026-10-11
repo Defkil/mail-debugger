@@ -17,6 +17,7 @@ import {
   type McpEndpoint,
 } from './http.js';
 import { MAX_MCP_WAITS, clip } from './tools.js';
+import { MAX_BODY_BYTES, MAX_RESULT_BYTES } from './schemas.js';
 
 let service: MailService;
 let store: MailStore;
@@ -285,6 +286,34 @@ describe('MCP tools', () => {
     expect(clip('a😀b', 5)).toEqual({ text: 'a😀', truncated: true });
     expect(clip('abc', 3)).toEqual({ text: 'abc', truncated: false });
     expect(clip('abc', 0)).toEqual({ text: '', truncated: true });
+    expect(clip('😀'.repeat(10_000), 7)).toEqual({
+      text: '😀',
+      truncated: true,
+    });
+  });
+
+  it('limits the serialized result including the escaped text copy', async () => {
+    const { id } = await service.receive(
+      rawMessage({ text: '\\'.repeat(240 * 1024) }),
+      null,
+    );
+    const client = await connect(endpoint());
+    const oversized = await call(client, 'get_email', {
+      id,
+      maxBodyBytes: MAX_BODY_BYTES,
+    });
+    expect(oversized.result.isError).toBe(true);
+    expect(oversized.data.error.code).toBe('LIMIT_EXCEEDED');
+
+    const bounded = await call(client, 'get_email', {
+      id,
+      maxBodyBytes: 120 * 1024,
+    });
+    expect(bounded.result.isError).not.toBe(true);
+    expect(bounded.data.body.truncated).toBe(true);
+    expect(
+      Buffer.byteLength(JSON.stringify(bounded.result)),
+    ).toBeLessThanOrEqual(MAX_RESULT_BYTES);
   });
 
   it('reads attachments in bounded base64 chunks', async () => {
@@ -519,6 +548,35 @@ describe('MCP mutations', () => {
 });
 
 describe('MCP endpoint', () => {
+  it('removes the request abort listener once the response is consumed', async () => {
+    const request = new Request('http://127.0.0.1/mcp', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'ping' }),
+    });
+    const removed = vi.spyOn(request.signal, 'removeEventListener');
+    const response = await endpoint().fetch(request);
+    await response.text();
+    await vi.waitFor(() =>
+      expect(removed).toHaveBeenCalledWith('abort', expect.any(Function)),
+    );
+  });
+
+  it('rejects already cancelled requests without reserving a slot', async () => {
+    const reason = new Error('gone');
+    const target = endpoint();
+    await expect(
+      target.fetch(
+        new Request('http://127.0.0.1/mcp', {
+          signal: AbortSignal.abort(reason),
+        }),
+      ),
+    ).rejects.toBe(reason);
+  });
+
   it('answers 429 while MAX_MCP_REQUESTS requests are in progress', async () => {
     const target = endpoint();
     const post = (

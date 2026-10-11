@@ -7,9 +7,13 @@ import {
   type Tool,
 } from '@modelcontextprotocol/client';
 import { Server } from '@modelcontextprotocol/server';
-import { serveStdio } from '@modelcontextprotocol/server/stdio';
+import {
+  serveStdio,
+  StdioServerTransport,
+} from '@modelcontextprotocol/server/stdio';
 import { createLogger, type Logger } from '../logger.js';
 import { failure } from './tools.js';
+import { MAX_MCP_BODY_BYTES } from './http.js';
 
 export const DEFAULT_MCP_URL = 'http://127.0.0.1:3000/mcp';
 const TOKEN_VARIABLE = 'MAIL_DEBUGGER_MCP_TOKEN';
@@ -46,7 +50,11 @@ export function formatBridgeHelp(name: string): string {
   ].join('\n');
 }
 
-class UsageError extends Error {}
+class UsageError extends Error {
+  constructor(message: string) {
+    super(diagnosticLine(message));
+  }
+}
 
 type BridgeCommand =
   { kind: 'help' } | { kind: 'version' } | { kind: 'run'; url: URL };
@@ -163,6 +171,14 @@ export async function runMcpBridge(
     'MCP bridge ready',
   );
 
+  let finish!: () => void;
+  // eslint-disable-next-line unicorn/prefer-promise-with-resolvers -- the project's ES2022 types do not include withResolvers
+  const finished = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  const transport = new StdioServerTransport(process.stdin, process.stdout, {
+    maxBufferSize: MAX_MCP_BODY_BYTES,
+  });
   const handle = serveStdio(
     () => {
       const server = new Server(
@@ -178,15 +194,24 @@ export async function runMcpBridge(
       );
       return server;
     },
-    { onerror: (error) => log.debug({ err: error }, 'MCP stdio error') },
+    {
+      transport,
+      onerror: (error) => log.debug({ err: error }, 'MCP stdio error'),
+    },
   );
-
-  await new Promise<void>((resolve) => {
-    process.stdin.once('end', resolve);
-    process.stdin.once('close', resolve);
-    process.once('SIGINT', resolve);
-    process.once('SIGTERM', resolve);
-  });
+  // The SDK also closes on oversized input or a failed stdout. Its close
+  // callback tears down in-flight calls; then close the upstream client.
+  const onTransportClose = transport.onclose;
+  // eslint-disable-next-line unicorn/prefer-add-event-listener -- SDK Transport exposes callbacks, not EventTarget
+  transport.onclose = () => {
+    onTransportClose?.();
+    finish();
+  };
+  process.once('SIGINT', finish);
+  process.once('SIGTERM', finish);
+  await finished;
+  process.off('SIGINT', finish);
+  process.off('SIGTERM', finish);
   await Promise.race([
     Promise.allSettled([handle.close(), upstream.close()]),
     new Promise((resolve) => setTimeout(resolve, CLOSE_TIMEOUT_MS).unref()),
@@ -226,7 +251,13 @@ async function forward(
 function describe(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   // The first line is enough; SDK errors can carry response bodies.
-  return message.split('\n', 1)[0].slice(0, 300);
+  return diagnosticLine(message.split('\n', 1)[0].slice(0, 300));
+}
+
+/** Arguments and remote errors must not execute terminal control sequences. */
+function diagnosticLine(value: string): string {
+  // eslint-disable-next-line no-control-regex -- diagnostics contain untrusted text
+  return value.replaceAll(/[\u{0}-\u{1F}\u{7F}-\u{9F}]/gu, '\u{FFFD}');
 }
 
 async function closeQuietly(close: () => Promise<void>): Promise<void> {

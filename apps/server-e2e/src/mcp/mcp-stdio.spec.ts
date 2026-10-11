@@ -27,6 +27,8 @@ afterAll(async () => {
 interface BridgeProcess {
   /** Sends one JSON-RPC message as a line on stdin. */
   send(message: unknown): void;
+  /** Writes incomplete or malformed protocol input. */
+  write(text: string): void;
   /** Resolves with the next JSON-RPC message on stdout that has `id`. */
   response(id: number): Promise<Record<string, unknown>>;
   stdoutLines(): string[];
@@ -36,12 +38,9 @@ interface BridgeProcess {
 }
 
 /** Spawns `mail-debugger mcp` with plain pipes, without an SDK client. */
-function spawnBridge(
-  args: string[],
-  env: Record<string, string> = {},
-): BridgeProcess {
+function spawnBridge(args: string[]): BridgeProcess {
   const child = spawn(process.execPath, [BINARIES.full, 'mcp', ...args], {
-    env: { ...process.env, ...env },
+    env: process.env,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
   let stdout = '';
@@ -64,6 +63,7 @@ function spawnBridge(
       .filter((line) => line.trim() !== '');
   return {
     send: (message) => child.stdin.write(`${JSON.stringify(message)}\n`),
+    write: (text) => child.stdin.write(text),
     response: (id) =>
       new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
@@ -200,6 +200,15 @@ describe('MCP stdio bridge', () => {
     // The log transport writes asynchronously; all of it is there on exit.
     expect(bridge.stderr()).toContain('MCP bridge ready');
   }, 30_000);
+
+  it('exits when oversized stdin closes the protocol transport', async () => {
+    const bridge = spawnBridge(['--url', url.href]);
+    // A message with no terminating LF cannot grow the bridge indefinitely.
+    bridge.write('x'.repeat(65 * 1024));
+    // Keep stdin open: transport failure itself must close the bridge.
+    expect(await bridge.exited).toBe(0);
+    expect(bridge.stdoutLines()).toEqual([]);
+  }, 15_000);
 
   it('fails clearly when the server cannot be used', async () => {
     const unused = net.createServer();

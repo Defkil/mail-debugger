@@ -55,6 +55,7 @@ export function createMcpEndpoint(options: McpEndpointOptions): McpEndpoint {
       return context.waits.pending;
     },
     async fetch(request) {
+      request.signal.throwIfAborted();
       if (active >= MAX_MCP_REQUESTS) {
         return Response.json(
           {
@@ -74,12 +75,13 @@ export function createMcpEndpoint(options: McpEndpointOptions): McpEndpoint {
         if (released) return;
         released = true;
         active--;
+        request.signal.removeEventListener('abort', release);
       };
       // Reading the signal makes the HTTP layer abort it on disconnect,
       // which cancels a tool call in progress.
       request.signal.addEventListener('abort', release, { once: true });
       try {
-        return track(await handler.fetch(request), release);
+        return track(await handler.fetch(request), request.signal, release);
       } catch (error) {
         release();
         throw error;
@@ -90,7 +92,11 @@ export function createMcpEndpoint(options: McpEndpointOptions): McpEndpoint {
 }
 
 /** Calls `done` once the response body is finished or cancelled. */
-function track(response: Response, done: () => void): Response {
+function track(
+  response: Response,
+  signal: AbortSignal,
+  done: () => void,
+): Response {
   if (!response.body) {
     done();
     return response;
@@ -98,7 +104,7 @@ function track(response: Response, done: () => void): Response {
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   void (async () => {
     try {
-      await response.body?.pipeTo(writable);
+      await response.body?.pipeTo(writable, { signal });
     } catch {
       // The client went away; the stream is cancelled.
     } finally {

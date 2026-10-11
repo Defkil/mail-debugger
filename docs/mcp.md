@@ -94,7 +94,7 @@ At most 32 `wait_for_email` calls can be pending at once (they count toward the 
 
 ### Bounded output
 
-Bodies are cut at `maxBodyBytes` and attachment chunks at `maxBytes`, both at UTF-8 character or byte boundaries, and the results say so (`truncated`, `bytes`, `nextOffset`). Long subjects, addresses, header values and attachment lists are shortened as well (`truncated: true`), so that no result exceeds 1 MiB. Attachment bytes are only ever returned as base64 data: the server never opens, executes or saves them, and fetches nothing from the network.
+Bodies are cut at `maxBodyBytes` and attachment chunks at `maxBytes`, both at UTF-8 character or byte boundaries, and the results say so (`truncated`, `bytes`, `nextOffset`). Long subjects, addresses, header values and attachment lists are shortened as well (`truncated: true`). The serialized tool result, including its escaped JSON text copy, is limited to 1 MiB; larger results fail with `LIMIT_EXCEEDED`, so request a smaller page or body. Attachment bytes are only ever returned as base64 data: the server never opens, executes or saves them, and fetches nothing from the network.
 
 ### Errors
 
@@ -127,6 +127,8 @@ mail-debugger mcp [--url <url>]
 ```
 
 The bridge connects to the endpoint (default `http://127.0.0.1:3000/mcp`) when it starts, takes over the tool list and the instructions of the server, and then serves MCP on stdin and stdout. It opens no mailbox and no listener, forwards every call once (it never retries, so a deletion is never sent twice) and forwards cancellations. Only protocol messages go to stdout; its log lines go to stderr. It exits with code 0 when stdin closes, 1 when the server cannot be reached or refuses the token at startup (with a message on stderr), and 2 for invalid options or a malformed token. It keeps the tool list it started with, so restart it after restarting the server with other MCP options. If the server goes away later, calls fail with `SERVER_UNAVAILABLE`.
+
+Its stdin buffer is limited to 64 KiB. Oversized input closes the protocol transport and the upstream connection, even when stdin stays open. A failed stdout also closes the bridge. Argument and upstream error diagnostics replace terminal control characters before writing to stderr.
 
 ## How this is tested
 

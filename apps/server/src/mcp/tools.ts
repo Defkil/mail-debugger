@@ -242,13 +242,18 @@ async function run(
   try {
     const result = await implementation();
     const text = JSON.stringify(result);
-    // The text copy doubles the size of the structured result.
-    return 2 * Buffer.byteLength(text) > MAX_RESULT_BYTES
+    const response: CallToolResult = {
+      content: [{ type: 'text', text }],
+      structuredContent: result,
+    };
+    // The JSON text is escaped again inside content; doubling its byte
+    // length undercounts bodies with quotes, backslashes or controls.
+    return Buffer.byteLength(JSON.stringify(response)) > MAX_RESULT_BYTES
       ? failure(
           'LIMIT_EXCEEDED',
           'The result is too large; request fewer emails or bytes',
         )
-      : { content: [{ type: 'text', text }], structuredContent: result };
+      : response;
   } catch (error) {
     return describeFailure(context, error, ctx);
   }
@@ -526,8 +531,12 @@ export function clip(
   value: string,
   maxBytes: number,
 ): { text: string; truncated: boolean } {
-  const bytes = Buffer.from(value, 'utf8');
-  if (bytes.length <= maxBytes) return { text: value, truncated: false };
+  if (Buffer.byteLength(value, 'utf8') <= maxBytes) {
+    return { text: value, truncated: false };
+  }
+  // Every UTF-16 code unit needs at least one UTF-8 byte. No character
+  // beyond this prefix can fit, so avoid copying a whole large body.
+  const bytes = Buffer.from(value.slice(0, maxBytes), 'utf8');
   let end = maxBytes;
   // Step back over continuation bytes (10xxxxxx) to a character boundary.
   while (end > 0 && (bytes[end] & 0xc0) === 0x80) end--;
