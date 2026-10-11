@@ -44,7 +44,9 @@
     "typecheck": "nx run-many -t typecheck",
     "test": "nx run-many -t test -- --coverage",
     "e2e": "nx run @mail-debugger/server-e2e:e2e",
+    "smoke": "nx run @mail-debugger/server-e2e:smoke",
     "format:check": "prettier --check .",
+    "verify": "pnpm format:check && pnpm audit --prod && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e && pnpm smoke",
     "prepack": "nx build @mail-debugger/server --skip-nx-cache"
   },
   "files": [

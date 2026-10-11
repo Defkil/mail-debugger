@@ -26,6 +26,15 @@
           "@mail-debugger/server:build-api",
           "mail-debugger-cli:build"
         ]
+      },
+      "smoke": {
+        "command": "node scripts/pack-and-smoke.mjs",
+        "dependsOn": [
+          "client:build",
+          "@mail-debugger/server:build",
+          "mail-debugger-api:build",
+          "mail-debugger-cli:build"
+        ]
       }
     }
   },
