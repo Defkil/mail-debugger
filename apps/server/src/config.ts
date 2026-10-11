@@ -297,12 +297,12 @@ export function parseServerArgs(
   return { kind: 'run', config };
 }
 
-/** A bearer token from the environment: absent, or non-empty without whitespace. */
+/** A bearer token from the environment: absent, or non-empty visible ASCII. */
 function parseToken(context: ParseContext, name: string): string | undefined {
   const token = context.env[name];
-  if (token !== undefined && !/^\S+$/.test(token)) {
+  if (token !== undefined && !/^[\u{21}-\u{7E}]+$/u.test(token)) {
     throw new UsageError(
-      `${name} must be a non-empty value without whitespace`,
+      `${name} must contain only visible ASCII characters without whitespace`,
     );
   }
   return token;

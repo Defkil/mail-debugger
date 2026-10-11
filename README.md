@@ -218,6 +218,8 @@ These options apply to `mail-debugger` (and its explicit form `mail-debugger ser
 
 Unknown, repeated or malformed options stop the server with exit code 2; a port in use stops it with exit code 1. Port `0` picks a free port, and the startup log and `GET /api/health` report the bound ones.
 
+API and MCP tokens must be nonempty visible ASCII without whitespace. Invalid tokens are rejected without printing the secret.
+
 ### TLS and authentication
 
 `--tls none|starttls|implicit` applies to SMTP and IMAP alike. Without `--tls-cert` and `--tls-key`, a self-signed certificate for `localhost`, `127.0.0.1`, `::1` and the `--host` name is generated at every start. `--auth-user` makes SMTP and IMAP require that account; its password comes from `MAIL_DEBUGGER_AUTH_PASSWORD` or the contents of `--auth-password-file` with one trailing line ending removed, never from the command line. Configured credentials are only accepted over TLS unless `--allow-insecure-auth` is given, which works on a loopback `--host` only.

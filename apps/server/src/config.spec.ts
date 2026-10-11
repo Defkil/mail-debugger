@@ -373,6 +373,26 @@ describe('parseServerArgs', () => {
       /without whitespace/,
     );
   });
+
+  it.each([
+    'secret\0token',
+    'secret\u{1B}token',
+    'secret\u{7F}token',
+    'secret🔒token',
+  ])(
+    'rejects invalid API and MCP tokens without exposing their value (%j)',
+    (token) => {
+      for (const name of [
+        'MAIL_DEBUGGER_API_TOKEN',
+        'MAIL_DEBUGGER_MCP_TOKEN',
+      ]) {
+        const message = usageError(['--mcp'], context({ [name]: token }));
+        expect(message).toContain(name);
+        expect(message).toContain('visible ASCII');
+        expect(message).not.toContain('secret');
+      }
+    },
+  );
 });
 
 describe('isLoopbackHost', () => {
