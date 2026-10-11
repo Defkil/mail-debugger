@@ -36,8 +36,16 @@
             },
             "banner": {
               "js": "#!/usr/bin/env node"
-            }
-          }
+            },
+            "splitting": true,
+            "external": [
+              "@rezi-ui/native"
+            ]
+          },
+          "excludeFromExternal": [
+            "@rezi-ui/core",
+            "@rezi-ui/node"
+          ]
         },
         "configurations": {
           "development": {},
@@ -49,7 +57,11 @@
               },
               "banner": {
                 "js": "#!/usr/bin/env node"
-              }
+              },
+              "splitting": true,
+              "external": [
+                "@rezi-ui/native"
+              ]
             }
           }
         }

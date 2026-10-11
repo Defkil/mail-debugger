@@ -472,7 +472,14 @@ function assertExposureIsProtected(config: ServerConfig): void {
 }
 
 /** The usage text, generated from {@link SERVER_OPTIONS}. */
-export function formatServerHelp(command = 'mail-debugger'): string {
+/**
+ * The server help. `withCommands` adds the subcommands of the main
+ * mail-debugger binary.
+ */
+export function formatServerHelp(
+  command = 'mail-debugger',
+  withCommands = false,
+): string {
   const rows = SERVER_OPTIONS.map((spec) => {
     const flag = `${spec.short ? `-${spec.short}, ` : ' '.repeat(4)}--${spec.name}${spec.value ? ` <${spec.value}>` : ''}`;
     const suffix =
@@ -481,11 +488,21 @@ export function formatServerHelp(command = 'mail-debugger'): string {
   });
   const width = Math.max(...rows.map(([flag]) => flag.length)) + 2;
   return [
-    `Usage: ${command} [options]`,
+    withCommands
+      ? `Usage: ${command} [serve] [options]\n       ${command} cli [options] [command]`
+      : `Usage: ${command} [options]`,
     '',
     'Fake SMTP server for development: catches every email and shows it in a',
     'web inbox and over a REST API.',
     '',
+    ...(withCommands
+      ? [
+          'Commands:',
+          '  serve  Start the server (the default)',
+          `  cli    Read the inbox of a running server; see "${command} cli --help"`,
+          '',
+        ]
+      : []),
     'Options:',
     ...rows.map(([flag, text]) => `  ${flag.padEnd(width)}${text}`),
     '',

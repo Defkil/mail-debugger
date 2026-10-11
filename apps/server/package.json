@@ -40,9 +40,15 @@
             "external": [
               "sql.js",
               "pino",
-              "pino-pretty"
-            ]
-          }
+              "pino-pretty",
+              "@rezi-ui/native"
+            ],
+            "splitting": true
+          },
+          "excludeFromExternal": [
+            "@rezi-ui/core",
+            "@rezi-ui/node"
+          ]
         },
         "configurations": {
           "development": {},
@@ -61,8 +67,10 @@
               "external": [
                 "sql.js",
                 "pino",
-                "pino-pretty"
-              ]
+                "pino-pretty",
+                "@rezi-ui/native"
+              ],
+              "splitting": true
             }
           }
         }
@@ -227,6 +235,7 @@
     }
   },
   "dependencies": {
+    "@mail-debugger/cli": "workspace:*",
     "@mail-debugger/client": "workspace:*",
     "pino": "10.4.0",
     "pino-pretty": "13.2.0",

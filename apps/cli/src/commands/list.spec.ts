@@ -19,7 +19,7 @@ describe('listCommand', () => {
     const client = createMockClient();
     await listCommand(client);
 
-    expect(client.listEmails).toHaveBeenCalledWith(undefined);
+    expect(client.listEmails).toHaveBeenCalledWith({});
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     const output = consoleSpy.mock.calls[0][0] as string;
     expect(output).toContain('sender@example.com');
@@ -29,9 +29,9 @@ describe('listCommand', () => {
   it('should pass filter to listEmails', async () => {
     const client = createMockClient();
     const filter = { from: 'alice@test.com' };
-    await listCommand(client, filter);
+    await listCommand(client, { filter, limit: 5 });
 
-    expect(client.listEmails).toHaveBeenCalledWith(filter);
+    expect(client.listEmails).toHaveBeenCalledWith({ filter, limit: 5 });
   });
 
   it('should output JSON when json flag set', async () => {

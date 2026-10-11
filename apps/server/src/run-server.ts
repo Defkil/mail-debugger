@@ -18,6 +18,8 @@ export interface ServerProgram {
   name: string;
   /** Directory of the built web inbox; omit for the API-only server. */
   webDir?: string;
+  /** Lists the serve and cli commands in the help. */
+  withCommands?: boolean;
 }
 
 /**
@@ -42,7 +44,7 @@ export async function runServerProgram(
     return;
   }
   if (command.kind === 'help') {
-    process.stdout.write(formatServerHelp(program.name));
+    process.stdout.write(formatServerHelp(program.name, program.withCommands));
     return;
   }
   if (command.kind === 'version') {

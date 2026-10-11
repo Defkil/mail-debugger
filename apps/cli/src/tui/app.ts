@@ -40,6 +40,8 @@ export async function startTui(
       createDetailScreen(screenDeps.detail),
     ],
     initialRoute: 'list',
+    // The bundle has no separate worker entry file, so the engine runs inline.
+    config: { executionMode: 'inline' },
   });
   appHandle.current = app;
 

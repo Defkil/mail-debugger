@@ -23,7 +23,8 @@
         "dependsOn": [
           "^build",
           "@mail-debugger/server:build",
-          "@mail-debugger/server:build-api"
+          "@mail-debugger/server:build-api",
+          "mail-debugger-cli:build"
         ]
       }
     }

@@ -21,10 +21,31 @@ describe('command line', () => {
   it('prints help without opening any listener', async () => {
     const result = await runBinary(['--help']);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain('Usage: mail-debugger [options]');
+    expect(result.stdout).toContain('Usage: mail-debugger [serve] [options]');
+    expect(result.stdout).toContain('mail-debugger cli [options] [command]');
     expect(result.stdout).toContain('--data-dir <dir>');
     expect(result.stderr).toBe('');
   });
+
+  it('accepts serve as the explicit server command', async () => {
+    const result = await runBinary(['serve', '--help']);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain('--data-dir <dir>');
+
+    const server = await startServerProcess({ args: ['serve'] });
+    expect((await api(server.baseUrl, '/api/health')).status).toBe(200);
+    expect(await server.stop()).toBe(0);
+  });
+
+  it.each([['frobnicate'], ['mcp'], ['--cli']])(
+    'rejects the command %s with exit code 2',
+    async (command) => {
+      const result = await runBinary([command]);
+      expect(result.code).toBe(2);
+      expect(result.stdout).toBe('');
+      expect(result.stderr).toMatch(/Unknown (command|option)/);
+    },
+  );
 
   it('prints the version', async () => {
     const result = await runBinary(['--version']);

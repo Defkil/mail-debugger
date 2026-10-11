@@ -10,6 +10,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const BINARIES = {
   full: path.resolve(here, '../../../server/dist/main.mjs'),
   api: path.resolve(here, '../../../server/dist-api/main.mjs'),
+  /** The legacy mail-debugger-cli distribution. */
+  cli: path.resolve(here, '../../../../packages/cli/dist/main.mjs'),
 } as const;
 
 export interface ServerProcess {
