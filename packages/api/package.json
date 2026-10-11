@@ -1,8 +1,8 @@
 {
   "name": "mail-debugger-api",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "license": "MIT",
-  "description": "Slim SMTP + REST API build of Mail Debugger. Same wire protocol as mail-debugger, without the web UI — meant for CI/E2E where a small footprint matters.",
+  "description": "Slim build of mail-debugger for CI: local SMTP email catcher with REST API, IMAP and MCP, without the web inbox.",
   "type": "module",
   "homepage": "https://github.com/Defkil/mail-debugger#readme",
   "repository": {
@@ -15,15 +15,17 @@
   },
   "keywords": [
     "smtp",
+    "smtp-server",
     "email",
-    "mail",
-    "debugger",
+    "email-testing",
     "fake-smtp",
-    "catch-all",
+    "mail-catcher",
+    "rest-api",
+    "imap",
+    "mcp",
     "testing",
-    "e2e",
     "ci",
-    "api"
+    "e2e"
   ],
   "engines": {
     "node": ">=22.17.0"
