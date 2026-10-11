@@ -8,7 +8,7 @@ Security fixes go into the latest minor release line of `mail-debugger`, `mail-d
 
 ## Reporting a vulnerability
 
-Please report vulnerabilities privately through GitHub: **[Report a vulnerability](https://github.com/Defkil/mail-debugger/security/advisories/new)**. Do not open a public issue, pull request or discussion for it.
+Please report vulnerabilities privately through GitHub: **[Report a vulnerability](https://github.com/Defkil/mail-debugger/security/advisories/new)**. If that option is unavailable, email the maintainer at **[mail@olivergruettner.de](mailto:mail@olivergruettner.de)**. Do not open a public issue, pull request or discussion for it.
 
 A useful report contains:
 
@@ -16,7 +16,7 @@ A useful report contains:
 - the command line and relevant environment variables, with secrets replaced,
 - the steps or a small script that reproduce the problem, and what an attacker gains.
 
-Do not include real mail, passwords or tokens. The maintainer reviews reports as time allows, keeps you informed in the advisory and agrees on the disclosure with you. There is no bug bounty.
+Do not include real mail, passwords or tokens. The maintainer reviews reports as time allows, keeps you informed privately and agrees on the disclosure with you. There is no bug bounty.
 
 Conduct issues are not security reports; see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
