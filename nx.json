@@ -38,6 +38,10 @@
     },
     {
       "plugin": "@nx/vite/plugin",
+      "exclude": ["apps/server-e2e/**/*", "apps/web/**/*"]
+    },
+    {
+      "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
       },

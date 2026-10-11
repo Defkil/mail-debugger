@@ -50,3 +50,6 @@ test-output
 # SvelteKit
 .svelte-kit
 apps/web/build
+
+.nx/self-healing
+.nx/migrate-runs

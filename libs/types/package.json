@@ -17,8 +17,5 @@
   },
   "nx": {
     "name": "types"
-  },
-  "dependencies": {
-    "tslib": "^2.3.0"
   }
 }
