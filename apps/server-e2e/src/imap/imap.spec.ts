@@ -10,6 +10,7 @@ import {
   sha256,
 } from '../helpers/imap.js';
 import { api, sendMail } from '../helpers/mail.js';
+import { callTool, mcpClient, mcpUrl } from '../helpers/mcp.js';
 import {
   BINARIES,
   eventually,
@@ -38,7 +39,7 @@ describe('IMAP inbox', () => {
   let port: number;
 
   beforeAll(async () => {
-    server = await startServerProcess({ args: ['--imap'] });
+    server = await startServerProcess({ args: ['--imap', '--mcp'] });
     port = imapPort(server);
   }, 30_000);
 
@@ -380,7 +381,7 @@ describe('IMAP inbox', () => {
     }
   }, 30_000);
 
-  it('shows an IMAP deletion on the REST API, the client library and the CLI', async () => {
+  it('shows an IMAP deletion on the REST API, the client library, the CLI and MCP', async () => {
     await send('survivor');
     await send('expunged over IMAP');
     const client = imapClient(port);
@@ -404,6 +405,12 @@ describe('IMAP inbox', () => {
     expect(
       (JSON.parse(cli.stdout) as { subject: string }[]).map((e) => e.subject),
     ).toEqual(['survivor']);
+    const mcp = await mcpClient(mcpUrl(server), { modern: true });
+    const listed = await callTool(mcp, 'list_emails');
+    expect(
+      listed.data.data.map((email: { subject: string }) => email.subject),
+    ).toEqual(['survivor']);
+    await mcp.close();
     await eventually(async () =>
       expect((await api(server.baseUrl, '/api/health')).body.emailCount).toBe(
         1,
