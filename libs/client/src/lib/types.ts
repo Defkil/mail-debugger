@@ -111,7 +111,9 @@ export interface EmailPage extends PaginatedResponse<EmailSummary> {
 export interface WaitForEmailParams {
   /**
    * Cursor: the result is the lowest matching email with an id above it.
-   * Use `highWatermark` of a list or wait result, or 0 for any email.
+   * Use a list's `highWatermark` to start watching new arrivals, or 0 to
+   * include stored mail. After a match, use `data.id` to read the next
+   * matching email; after a timeout, continue from `highWatermark`.
    */
   afterId: number;
   /** Rejects the wait when the server's mailbox is another data set. */

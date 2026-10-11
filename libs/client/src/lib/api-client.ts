@@ -107,9 +107,10 @@ const WAIT_GRACE_MS = 10_000;
  *
  * @example
  * const mail = createApiClient('http://127.0.0.1:3000');
- * const { highWatermark = 0 } = await mail.listEmails({ limit: 1 });
+ * const { highWatermark, mailboxId } = await mail.listEmails({ limit: 1 });
+ * if (highWatermark === undefined || mailboxId === undefined) throw new Error('mail-debugger 0.4 or later is required');
  * // ... trigger the email under test ...
- * const result = await mail.waitForEmail({ afterId: highWatermark, filter: { to: 'alice@example.com' } });
+ * const result = await mail.waitForEmail({ afterId: highWatermark, mailboxId, filter: { to: 'alice@example.com' } });
  */
 export function createApiClient(
   baseUrl: string,
