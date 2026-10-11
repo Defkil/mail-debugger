@@ -337,6 +337,21 @@ describe('IMAP session limits', () => {
     expect(imap.service.mailboxEntries()).toEqual([]);
   });
 
+  it('keeps an IDLE reader connected when large expunges drain immediately', async () => {
+    const imap = await startTestImap({ limits: { output: smallOutput } });
+    await fill(imap, 2, 100 * KiB);
+    const raw = await loggedInImap(imap.port);
+    await raw.command('S', 'SELECT INBOX');
+    raw.write('I IDLE\r\n');
+    await raw.readUntil((text) => text.startsWith('+ '));
+    imap.service.clear('rest');
+    const updates = await raw.readUntil((text) => text.includes('* 0 EXISTS'));
+    expect(updates.match(/^\* \d+ EXPUNGE/gm)).toHaveLength(2);
+    expect(updates).not.toContain('* BYE');
+    raw.write('DONE\r\n');
+    expect(await raw.tagged('I')).toMatch(/^I OK/m);
+  });
+
   it('says BYE to connections above the session limit', async () => {
     const imap = await startTestImap({ limits: { maxSessions: 2 } });
     await rawImap(imap.port);

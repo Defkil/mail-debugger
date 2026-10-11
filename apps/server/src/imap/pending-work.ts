@@ -42,6 +42,13 @@ export function limitPendingWork(
   const queueNotification = connection.queueNotification.bind(connection);
   connection.queueNotification = (command, notification) => {
     if (!connection.isOpen()) return;
+    if (connection.directNotifications) {
+      // IDLE drains this synchronously. In particular, a final EXISTS can
+      // carry an old snapshot whose EXPUNGEs have already reached the client.
+      // Its transient references must not be charged as retained sources.
+      queueNotification(command, notification);
+      return;
+    }
     const queue = connection.notificationQueue;
     if (
       queue.length >= MAX_QUEUED_NOTIFICATIONS ||
