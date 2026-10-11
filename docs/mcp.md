@@ -16,7 +16,7 @@ mail-debugger --mcp
 | `--mcp-allow-mutations`   | Also offer `delete_email` and `clear_emails`                                                                   |
 | `MAIL_DEBUGGER_MCP_TOKEN` | Require `Authorization: Bearer <token>` on `/mcp` (independent of `MAIL_DEBUGGER_API_TOKEN`)                   |
 
-On a loopback `--host` the token is optional. Binding anything else requires `MAIL_DEBUGGER_MCP_TOKEN` with `--mcp`, besides the rules that apply to every listener (TLS and credentials for mail, the API token for REST). Remote use needs a TLS reverse proxy in front of the HTTP port; never send a bearer token over plain HTTP across a network. Every request is checked for an allowed `Host` and, when present, `Origin` header before it reaches MCP; requests from a browser on another site are refused with 403. Behind a proxy, add its names with `--http-allowed-host` and `--http-allowed-origin`.
+On a loopback `--host` the token is optional. Tokens must be non-empty visible ASCII values, without whitespace or control characters. Binding anything else requires `MAIL_DEBUGGER_MCP_TOKEN` with `--mcp`, besides the rules that apply to every listener (TLS and credentials for mail, the API token for REST). Remote use needs a TLS reverse proxy in front of the HTTP port; never send a bearer token over plain HTTP across a network. Every request is checked for an allowed `Host` and, when present, `Origin` header before it reaches MCP; requests from a browser on another site are refused with 403. Behind a proxy, add its names with `--http-allowed-host` and `--http-allowed-origin`.
 
 Without `--mcp`, `/mcp` answers a JSON 404.
 

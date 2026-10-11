@@ -128,9 +128,9 @@ export async function runMcpBridge(
   }
 
   const token = process.env[TOKEN_VARIABLE];
-  if (token !== undefined && !/^\S+$/.test(token)) {
+  if (token !== undefined && !/^[\u{21}-\u{7E}]+$/u.test(token)) {
     process.stderr.write(
-      `${program.name}: ${TOKEN_VARIABLE} must be a non-empty value without whitespace\n`,
+      `${program.name}: ${TOKEN_VARIABLE} must be a non-empty value of visible ASCII characters\n`,
     );
     return 2;
   }

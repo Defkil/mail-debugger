@@ -22,7 +22,7 @@ export type HeadersSource =
 // Spelled via RequestInit so the declarations also work without the DOM lib.
 type HeadersInit = NonNullable<RequestInit['headers']>;
 
-/** A bearer token, or a function that returns the current one. */
+/** A non-empty visible ASCII bearer token, or a function that returns it. */
 export type TokenSource =
   string | (() => string | undefined | Promise<string | undefined>);
 
@@ -148,16 +148,32 @@ export function createApiClient(
     const forwardAbort = () => controller.abort(callerSignal?.reason);
     callerSignal?.addEventListener('abort', forwardAbort, { once: true });
     try {
-      const headers = new Headers(
+      const suppliedHeaders =
         typeof options.headers === 'function'
           ? await abortable(options.headers(), controller.signal)
-          : options.headers,
-      );
+          : options.headers;
+      let headers: Headers;
+      try {
+        headers = new Headers(suppliedHeaders);
+      } catch {
+        // Header validation errors can include Authorization or other secrets.
+        throw new TypeError(
+          'The request headers contain invalid HTTP header names or values',
+        );
+      }
       const token =
         typeof options.token === 'function'
           ? await abortable(options.token(), controller.signal)
           : options.token;
-      if (token) headers.set('authorization', `Bearer ${token}`);
+      if (token !== undefined) {
+        if (!/^[\u{21}-\u{7E}]+$/u.test(token)) {
+          // Fetch/Headers errors can echo the supplied credential value.
+          throw new TypeError(
+            'The bearer token must contain only visible ASCII characters and must not be empty',
+          );
+        }
+        headers.set('authorization', `Bearer ${token}`);
+      }
       controller.signal.throwIfAborted();
       const response = await fetchImpl(url, {
         method,

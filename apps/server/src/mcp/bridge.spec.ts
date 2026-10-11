@@ -18,7 +18,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
 function expectSafeDiagnostic(): void {
   expect(stderr).toContain('\u{FFFD}]52;c;cHduZWQ=\u{FFFD}\u{FFFD}2J');
@@ -37,3 +40,15 @@ it('sanitizes an upstream error before writing the startup diagnostic', async ()
   expect(await runMcpBridge([], program)).toBe(1);
   expectSafeDiagnostic();
 });
+
+it.each(['secret\u{1B}token', 'secret\u{7F}token', 'secret\u{1F512}token'])(
+  'rejects an invalid token without exposing it in a header error',
+  async (token) => {
+    vi.stubEnv('MAIL_DEBUGGER_MCP_TOKEN', token);
+    const connect = vi.spyOn(Client.prototype, 'connect');
+    expect(await runMcpBridge([], program)).toBe(2);
+    expect(stderr).toContain('visible ASCII');
+    expect(stderr).not.toContain('secret');
+    expect(connect).not.toHaveBeenCalled();
+  },
+);

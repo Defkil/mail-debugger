@@ -484,6 +484,42 @@ describe('createApiClient', () => {
   });
 
   describe('authentication and headers', () => {
+    it('does not reveal invalid Authorization headers in request errors', async () => {
+      const { fetch, calls } = stubFetch();
+      const client = createApiClient(BASE, {
+        fetch,
+        headers: { authorization: 'Bearer secret\0token' },
+      });
+      const error = await rejectionOf(client.health());
+      expect(error).toBeInstanceOf(MailDebuggerNetworkError);
+      expect(error).toMatchObject({
+        message: expect.stringContaining('invalid HTTP header'),
+      });
+      expect((error as Error).message).not.toContain('secret');
+      expect(calls).toHaveLength(0);
+    });
+
+    it.each([
+      '',
+      'secret\0token',
+      'secret\u{1B}token',
+      'secret token',
+      'secret\u{1F512}token',
+    ])(
+      'rejects an invalid token without exposing it or fetching',
+      async (token) => {
+        const { fetch, calls } = stubFetch();
+        const client = createApiClient(BASE, { fetch, token });
+        const error = await rejectionOf(client.health());
+        expect(error).toBeInstanceOf(MailDebuggerNetworkError);
+        expect(error).toMatchObject({
+          message: expect.stringContaining('visible ASCII'),
+        });
+        expect((error as Error).message).not.toContain('secret');
+        expect(calls).toHaveLength(0);
+      },
+    );
+
     it('sends static headers and a static token', async () => {
       const { fetch, calls } = stubFetch(() => Response.json(health));
       const headers = { 'x-test': '1' };
