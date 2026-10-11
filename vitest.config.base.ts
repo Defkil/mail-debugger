@@ -9,7 +9,11 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      // `pnpm test` collects coverage and prints a summary per project.
+      // Projects set floors just below the measured coverage of the
+      // modules that hold service, protocol and error logic: they catch
+      // tests that get lost, they are not a percentage to chase.
+      reporter: ['text-summary'],
     },
   },
 });
