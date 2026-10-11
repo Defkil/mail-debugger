@@ -1,5 +1,4 @@
-import type { ApiClient } from '@mail-debugger/api-client';
-import type { EmailFilter } from '@mail-debugger/types';
+import type { ApiClient, EmailFilter } from '@mail-debugger/client';
 import { formatEmailTable } from '../formatter/format-email-table.js';
 
 export async function listCommand(

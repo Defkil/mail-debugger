@@ -1,4 +1,4 @@
-import type { EmailSummary } from '@mail-debugger/types';
+import type { EmailSummary } from '@mail-debugger/client';
 
 /** The surface that caused a change, so adapters can ignore their own echoes. */
 export type MutationOrigin = 'smtp' | 'rest' | 'imap' | 'mcp' | 'internal';

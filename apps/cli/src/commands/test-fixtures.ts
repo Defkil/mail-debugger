@@ -1,6 +1,10 @@
 import { vi } from 'vitest';
-import type { ApiClient } from '@mail-debugger/api-client';
-import type { Email, EmailSummary, HealthResponse } from '@mail-debugger/types';
+import type {
+  ApiClient,
+  Email,
+  EmailSummary,
+  HealthResponse,
+} from '@mail-debugger/client';
 
 export const mockSummary: EmailSummary = {
   id: 1,
@@ -37,8 +41,17 @@ export const mockHealth: HealthResponse = {
 
 export function createMockClient(overrides?: Partial<ApiClient>): ApiClient {
   return {
+    baseUrl: 'http://127.0.0.1:3000',
     listEmails: vi.fn().mockResolvedValue({ data: [mockSummary], total: 1 }),
     getEmail: vi.fn().mockResolvedValue(mockEmail),
+    getRawEmail: vi.fn().mockResolvedValue(new TextEncoder().encode('raw')),
+    getAttachment: vi.fn(),
+    waitForEmail: vi.fn().mockResolvedValue({
+      data: mockSummary,
+      timedOut: false,
+      highWatermark: 1,
+      mailboxId: 'test-mailbox',
+    }),
     deleteEmail: vi.fn().mockResolvedValue(true),
     deleteAllEmails: vi.fn().mockResolvedValue(3),
     health: vi.fn().mockResolvedValue(mockHealth),

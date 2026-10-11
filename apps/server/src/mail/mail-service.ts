@@ -3,7 +3,7 @@ import type {
   EmailFilter,
   EmailSummary,
   SmtpEnvelope,
-} from '@mail-debugger/types';
+} from '@mail-debugger/client';
 import { buildFilterClause, normalizeFilter } from '../db/email-query.js';
 import type { EmailKey, StoreStats } from '../db/email-repository.js';
 import { storedSize } from '../db/sizes.js';

@@ -1,5 +1,9 @@
 import type { QueryExecResult, SqlValue } from 'sql.js';
-import type { AttachmentMeta, Email, EmailSummary } from '@mail-debugger/types';
+import type {
+  AttachmentMeta,
+  Email,
+  EmailSummary,
+} from '@mail-debugger/client';
 
 export type Row = Record<string, SqlValue>;
 

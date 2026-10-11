@@ -227,7 +227,7 @@
     }
   },
   "dependencies": {
-    "@mail-debugger/types": "workspace:*",
+    "@mail-debugger/client": "workspace:*",
     "pino": "10.4.0",
     "pino-pretty": "13.2.0",
     "sql.js": "1.14.2",

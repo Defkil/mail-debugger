@@ -1,6 +1,6 @@
 import { ui } from '@rezi-ui/core';
 import type { TableColumn } from '@rezi-ui/core';
-import type { EmailSummary } from '@mail-debugger/types';
+import type { EmailSummary } from '@mail-debugger/client';
 
 export const emailColumns: TableColumn<EmailSummary>[] = [
   { key: 'id', header: 'ID', width: 5 },

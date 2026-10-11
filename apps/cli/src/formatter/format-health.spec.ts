@@ -1,5 +1,5 @@
 import { formatHealth } from './format-health.js';
-import type { HealthResponse } from '@mail-debugger/types';
+import type { HealthResponse } from '@mail-debugger/client';
 
 describe('formatHealth', () => {
   it('should format all health fields', () => {

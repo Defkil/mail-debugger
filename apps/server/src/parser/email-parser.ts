@@ -1,5 +1,5 @@
 import { simpleParser, type AddressObject } from 'mailparser';
-import type { AttachmentMeta } from '@mail-debugger/types';
+import type { AttachmentMeta } from '@mail-debugger/client';
 
 /** The decoded parts of a message, without its source. */
 export interface ParsedContent {

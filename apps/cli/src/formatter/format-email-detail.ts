@@ -1,4 +1,4 @@
-import type { Email } from '@mail-debugger/types';
+import type { Email } from '@mail-debugger/client';
 
 export function formatEmailDetail(email: Email): string {
   const lines: string[] = [

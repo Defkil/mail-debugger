@@ -46,7 +46,6 @@
     }
   },
   "dependencies": {
-    "@mail-debugger/api-client": "workspace:*",
-    "@mail-debugger/types": "workspace:*"
+    "@mail-debugger/client": "workspace:*"
   }
 }

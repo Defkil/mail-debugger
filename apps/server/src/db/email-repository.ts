@@ -4,7 +4,7 @@ import type {
   Email,
   EmailSummary,
   SmtpEnvelope,
-} from '@mail-debugger/types';
+} from '@mail-debugger/client';
 import type { FilterClause } from './email-query.js';
 import { readMetadata, type StoreMetadata } from './metadata.js';
 import {

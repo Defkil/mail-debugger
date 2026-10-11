@@ -1,4 +1,4 @@
-import type { EmailSummary } from '@mail-debugger/types';
+import type { EmailSummary } from '@mail-debugger/client';
 import { truncate, padRight } from './text.js';
 
 export function formatEmailTable(emails: EmailSummary[]): string {

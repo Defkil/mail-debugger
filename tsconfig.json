@@ -16,10 +16,7 @@
       "path": "./apps/web"
     },
     {
-      "path": "./libs/types"
-    },
-    {
-      "path": "./libs/api-client"
+      "path": "./libs/client"
     }
   ]
 }

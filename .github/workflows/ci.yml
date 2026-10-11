@@ -37,16 +37,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Lint
-      - run: pnpm exec nx run types:lint
-      - run: pnpm exec nx run api-client:lint
+      - run: pnpm exec nx run client:lint
       - run: pnpm exec nx run "@mail-debugger/server:lint"
       - run: pnpm exec nx run "@mail-debugger/cli:lint"
       - run: pnpm exec nx run "@mail-debugger/web:lint"
       - run: pnpm exec nx run "@mail-debugger/server-e2e:lint"
 
       # Build (must run before test — web tests need .svelte-kit/ from svelte-kit sync)
-      - run: pnpm exec nx run types:build
-      - run: pnpm exec nx run api-client:build
+      - run: pnpm exec nx run client:build
       - run: pnpm exec nx run "@mail-debugger/web:build"
       - run: pnpm exec nx run "@mail-debugger/server:build"
       - run: pnpm exec nx run "@mail-debugger/cli:build"
@@ -54,7 +52,7 @@ jobs:
       - run: pnpm exec nx run mail-debugger-cli:build
 
       # Test
-      - run: pnpm exec nx run api-client:test
+      - run: pnpm exec nx run client:test
       - run: pnpm exec nx run "@mail-debugger/server:test"
       - run: pnpm exec nx run "@mail-debugger/cli:test"
       - run: pnpm exec nx run "@mail-debugger/web:test"
@@ -65,8 +63,7 @@ jobs:
       - run: pnpm exec nx run "@mail-debugger/server-e2e:e2e"
 
       # Typecheck
-      - run: pnpm exec nx run types:typecheck
-      - run: pnpm exec nx run api-client:typecheck
+      - run: pnpm exec nx run client:typecheck
       - run: pnpm exec nx run "@mail-debugger/server:typecheck"
       - run: pnpm exec nx run "@mail-debugger/cli:typecheck"
       - run: pnpm exec nx run "@mail-debugger/web:typecheck"

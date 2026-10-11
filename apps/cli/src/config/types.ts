@@ -1,4 +1,4 @@
-import type { EmailFilter } from '@mail-debugger/types';
+import type { EmailFilter } from '@mail-debugger/client';
 
 const COMMANDS = ['list', 'show', 'delete', 'delete-all', 'health'] as const;
 export type CommandName = (typeof COMMANDS)[number];

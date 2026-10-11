@@ -332,12 +332,9 @@ importers:
 
   apps/cli:
     dependencies:
-      '@mail-debugger/api-client':
+      '@mail-debugger/client':
         specifier: workspace:*
-        version: link:../../libs/api-client
-      '@mail-debugger/types':
-        specifier: workspace:*
-        version: link:../../libs/types
+        version: link:../../libs/client
       '@rezi-ui/core':
         specifier: 0.1.0-beta.2
         version: 0.1.0-beta.2
@@ -347,9 +344,9 @@ importers:
 
   apps/server:
     dependencies:
-      '@mail-debugger/types':
+      '@mail-debugger/client':
         specifier: workspace:*
-        version: link:../../libs/types
+        version: link:../../libs/client
       pino:
         specifier: 10.4.0
         version: 10.4.0
@@ -367,20 +364,11 @@ importers:
 
   apps/web:
     dependencies:
-      '@mail-debugger/api-client':
+      '@mail-debugger/client':
         specifier: workspace:*
-        version: link:../../libs/api-client
-      '@mail-debugger/types':
-        specifier: workspace:*
-        version: link:../../libs/types
+        version: link:../../libs/client
 
-  libs/api-client:
-    dependencies:
-      '@mail-debugger/types':
-        specifier: workspace:*
-        version: link:../types
-
-  libs/types: {}
+  libs/client: {}
 
   packages/api:
     dependencies:

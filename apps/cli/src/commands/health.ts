@@ -1,4 +1,4 @@
-import type { ApiClient } from '@mail-debugger/api-client';
+import type { ApiClient } from '@mail-debugger/client';
 import { formatHealth } from '../formatter/format-health.js';
 
 export async function healthCommand(

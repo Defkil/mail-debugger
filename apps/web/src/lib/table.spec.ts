@@ -1,5 +1,5 @@
 import type { PaginationState, SortingState } from '@tanstack/svelte-table';
-import type { EmailSummary } from '@mail-debugger/types';
+import type { EmailSummary } from '@mail-debugger/client';
 import { columns } from './columns';
 import { createAppTable, type AppTable } from './table';
 

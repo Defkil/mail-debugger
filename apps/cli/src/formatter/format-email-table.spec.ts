@@ -1,5 +1,5 @@
 import { formatEmailTable } from './format-email-table.js';
-import type { EmailSummary } from '@mail-debugger/types';
+import type { EmailSummary } from '@mail-debugger/client';
 
 const mockSummary: EmailSummary = {
   id: 1,

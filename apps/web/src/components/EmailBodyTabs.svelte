@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Email } from '@mail-debugger/types';
+  import type { Email } from '@mail-debugger/client';
   import HtmlPreview from './HtmlPreview.svelte';
 
   interface Props {

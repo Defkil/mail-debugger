@@ -1,6 +1,6 @@
 import { ui } from '@rezi-ui/core';
 import type { RouteDefinition } from '@rezi-ui/core';
-import { type ApiClient, getErrorMessage } from '@mail-debugger/api-client';
+import { type ApiClient, getErrorMessage } from '@mail-debugger/client';
 import type { TuiState } from '../state.js';
 import { BOX_DEFAULTS, DIM } from '../theme.js';
 

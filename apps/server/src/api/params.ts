@@ -1,4 +1,4 @@
-import type { EmailFilter } from '@mail-debugger/types';
+import type { EmailFilter } from '@mail-debugger/client';
 import {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,

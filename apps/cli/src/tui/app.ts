@@ -1,5 +1,5 @@
 import { createNodeApp } from '@rezi-ui/node';
-import type { ApiClient } from '@mail-debugger/api-client';
+import type { ApiClient } from '@mail-debugger/client';
 import { createInitialState, type TuiState } from './state.js';
 import { createStateContainer } from './state-container.js';
 import { type AppHandle, createActions } from './actions.js';

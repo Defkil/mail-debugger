@@ -1,5 +1,5 @@
 import type { App } from '@rezi-ui/core';
-import { type ApiClient, getErrorMessage } from '@mail-debugger/api-client';
+import { type ApiClient, getErrorMessage } from '@mail-debugger/client';
 import type { TuiState } from './state.js';
 import type { StateContainer } from './state-container.js';
 import { buildFilter } from './build-filter.js';

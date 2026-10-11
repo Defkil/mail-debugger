@@ -1,5 +1,5 @@
 import { formatEmailDetail } from './format-email-detail.js';
-import type { Email } from '@mail-debugger/types';
+import type { Email } from '@mail-debugger/client';
 
 const mockEmail: Email = {
   id: 1,

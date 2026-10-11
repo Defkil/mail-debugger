@@ -1,11 +1,9 @@
 {
-  "name": "@mail-debugger/api-client",
+  "name": "@mail-debugger/client",
   "version": "0.0.1",
   "private": true,
+  "description": "Typed client and wire types of the mail-debugger REST API, published as mail-debugger/client.",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -16,17 +14,14 @@
     }
   },
   "nx": {
-    "name": "api-client",
+    "name": "client",
     "targets": {
       "test": {
         "command": "vitest run",
         "options": {
-          "cwd": "libs/api-client"
+          "cwd": "libs/client"
         }
       }
     }
-  },
-  "dependencies": {
-    "@mail-debugger/types": "workspace:*"
   }
 }

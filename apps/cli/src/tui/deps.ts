@@ -1,4 +1,4 @@
-import type { ApiClient } from '@mail-debugger/api-client';
+import type { ApiClient } from '@mail-debugger/client';
 import type { AppHandle, TuiActions } from './actions.js';
 import type { StateContainer } from './state-container.js';
 import type { DeleteHandlerDeps } from './delete-handler.js';

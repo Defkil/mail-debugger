@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-break-in-nested-loop -- this hand-written parser is replaced by util.parseArgs in the configuration rework */
-import type { EmailFilter } from '@mail-debugger/types';
+import type { EmailFilter } from '@mail-debugger/client';
 import type { CliConfig, CommandName } from './types.js';
 import { COMMAND_NAMES } from './types.js';
 

@@ -1,4 +1,4 @@
-import { getErrorMessage } from './error.js';
+import { getErrorMessage } from './errors.js';
 
 describe('getErrorMessage', () => {
   it('returns the message of an Error instance', () => {

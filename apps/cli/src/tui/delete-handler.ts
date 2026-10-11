@@ -1,5 +1,8 @@
-import { type ApiClient, getErrorMessage } from '@mail-debugger/api-client';
-import type { EmailSummary } from '@mail-debugger/types';
+import {
+  type ApiClient,
+  type EmailSummary,
+  getErrorMessage,
+} from '@mail-debugger/client';
 import type { TuiState } from './state.js';
 
 export interface DeleteHandlerDeps {

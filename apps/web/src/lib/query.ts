@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/svelte-query';
 import { api } from './api';
-import type { EmailFilter } from '@mail-debugger/types';
+import type { EmailFilter } from '@mail-debugger/client';
 
 export const queryClient = new QueryClient({
   defaultOptions: {

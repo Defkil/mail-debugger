@@ -5,7 +5,7 @@ import {
   type SMTPServerDataStream,
   type SMTPServerSession,
 } from 'smtp-server';
-import type { SmtpEnvelope } from '@mail-debugger/types';
+import type { SmtpEnvelope } from '@mail-debugger/client';
 import { safeEqual } from '../crypto.js';
 import type { Logger } from '../logger.js';
 import { ServiceError } from '../mail/errors.js';

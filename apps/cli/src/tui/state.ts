@@ -1,4 +1,4 @@
-import type { EmailSummary, Email } from '@mail-debugger/types';
+import type { EmailSummary, Email } from '@mail-debugger/client';
 
 export interface TuiState {
   emails: EmailSummary[];

@@ -1,4 +1,4 @@
-import type { ApiClient } from '@mail-debugger/api-client';
+import type { ApiClient } from '@mail-debugger/client';
 
 export async function deleteAllCommand(
   client: ApiClient,

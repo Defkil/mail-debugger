@@ -5,7 +5,7 @@
   import { resolve } from '$app/paths';
   import { createAppTable } from '#lib/table';
   import { columns } from '#lib/columns';
-  import type { EmailSummary } from '@mail-debugger/types';
+  import type { EmailSummary } from '@mail-debugger/client';
   import Pagination from './Pagination.svelte';
 
   interface Props {

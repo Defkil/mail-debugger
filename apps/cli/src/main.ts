@@ -1,4 +1,4 @@
-import { getErrorMessage } from '@mail-debugger/api-client';
+import { getErrorMessage } from '@mail-debugger/client';
 import { runCli } from './run-cli.js';
 
 async function main(): Promise<void> {

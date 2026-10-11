@@ -1,4 +1,4 @@
-import type { EmailSummary } from '@mail-debugger/types';
+import type { EmailSummary } from '@mail-debugger/client';
 import { createInitialState, type TuiState } from './state.js';
 
 /**

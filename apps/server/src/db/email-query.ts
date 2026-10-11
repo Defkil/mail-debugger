@@ -1,5 +1,5 @@
 import type { SqlValue } from 'sql.js';
-import type { EmailFilter } from '@mail-debugger/types';
+import type { EmailFilter } from '@mail-debugger/client';
 import { InvalidArgumentError } from '../mail/errors.js';
 
 /** A validated filter: text criteria as given, dates as UTC ISO 8601 strings. */

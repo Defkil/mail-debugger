@@ -2,7 +2,8 @@ import { handleDeleteKey } from './delete-handler.js';
 import type { DeleteHandlerDeps } from './delete-handler.js';
 import { createInitialState } from './state.js';
 import type { TuiState } from './state.js';
-import type { EmailSummary, Email } from '@mail-debugger/types';
+import type { EmailSummary, Email } from '@mail-debugger/client';
+import { createMockClient } from '../commands/test-fixtures.js';
 
 const mockSummary: EmailSummary = {
   id: 1,
@@ -39,13 +40,10 @@ function createDeps(
     getCurrentRouteId: () => routeId,
     isInputFocused: () => false,
     getFocusedEmail: () => state.emails[state.focusedEmailIndex],
-    client: {
-      listEmails: vi.fn(),
-      getEmail: vi.fn(),
+    client: createMockClient({
       deleteEmail: vi.fn().mockResolvedValue(true),
       deleteAllEmails: vi.fn().mockResolvedValue(1),
-      health: vi.fn(),
-    },
+    }),
     navigateBack: vi.fn(),
     refreshEmails: vi.fn().mockResolvedValue(undefined),
     setError: vi.fn(),

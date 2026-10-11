@@ -13,10 +13,7 @@
   "exclude": ["src/service-worker"],
   "references": [
     {
-      "path": "../../libs/types"
-    },
-    {
-      "path": "../../libs/api-client"
+      "path": "../../libs/client"
     }
   ]
 }
