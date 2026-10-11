@@ -12,7 +12,7 @@
   let {
     variant = 'secondary',
     children,
-    class: extraClass,
+    class: extraClass = '',
     ...rest
   }: Props = $props();
 
@@ -25,6 +25,6 @@
   };
 </script>
 
-<button class="{variants[variant]} {extraClass ?? ''}" {...rest}>
+<button class="{variants[variant]} {extraClass}" {...rest}>
   {@render children()}
 </button>

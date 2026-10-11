@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-break-in-nested-loop -- this hand-written parser is replaced by util.parseArgs in the configuration rework */
 import type { Config, TlsMode } from './types.js';
 
 const VALID_TLS_MODES: TlsMode[] = ['none', 'starttls', 'implicit'];
@@ -32,7 +33,7 @@ export function parseConfig(argv: string[]): Config {
         const mode = argv[++i] as TlsMode;
         if (!VALID_TLS_MODES.includes(mode)) {
           throw new Error(
-            `Invalid TLS mode: "${mode}" (valid: ${VALID_TLS_MODES.join(', ')})`
+            `Invalid TLS mode: "${mode}" (valid: ${VALID_TLS_MODES.join(', ')})`,
           );
         }
         config.tls = mode;

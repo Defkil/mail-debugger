@@ -29,22 +29,21 @@ export function createSmtpServer(
         chunks.push(chunk);
       });
 
-      stream.on('end', () => {
+      stream.on('end', async () => {
         const raw = Buffer.concat(chunks).toString('utf8');
 
-        parseEmail(raw)
-          .then((parsed) => {
-            const id = repository.insert(parsed);
-            log.info(
-              { id, from: parsed.from, to: parsed.to, subject: parsed.subject },
-              'Email received',
-            );
-            callback();
-          })
-          .catch((error) => {
-            log.error({ err: error }, 'Failed to process email');
-            callback(error instanceof Error ? error : new Error(String(error)));
-          });
+        try {
+          const parsed = await parseEmail(raw);
+          const id = repository.insert(parsed);
+          log.info(
+            { id, from: parsed.from, to: parsed.to, subject: parsed.subject },
+            'Email received',
+          );
+          callback();
+        } catch (error) {
+          log.error({ err: error }, 'Failed to process email');
+          callback(error instanceof Error ? error : new Error(String(error)));
+        }
       });
     },
     onAuth(_auth, _session, callback) {

@@ -1,6 +1,6 @@
 import { ui } from '@rezi-ui/core';
 import type { RouteDefinition } from '@rezi-ui/core';
-import type { ApiClient } from '@mail-debugger/api-client';
+import { type ApiClient, getErrorMessage } from '@mail-debugger/api-client';
 import type { EmailSummary } from '@mail-debugger/types';
 import type { TuiState } from '../state.js';
 import { BOX_DEFAULTS, NEON, DIM, ERROR_COLOR } from '../theme.js';
@@ -124,10 +124,9 @@ export function createListScreen(
                 focusable: false,
                 onPress: () => {
                   const email = deps.getFocusedEmail();
-                  if (email) {
-                    deps.loadEmailDetail(email.id);
-                    deps.navigateToDetail(String(email.id));
-                  }
+                  if (!email) return;
+                  void deps.loadEmailDetail(email.id);
+                  deps.navigateToDetail(String(email.id));
                 },
               }),
               ui.button({
@@ -154,12 +153,17 @@ export function createListScreen(
                 intent: 'danger',
                 disabled: !hasEmails,
                 focusable: false,
-                onPress: () => {
+                onPress: async () => {
                   const email = deps.getFocusedEmail();
-                  if (email) {
-                    deps.client
-                      .deleteEmail(email.id)
-                      .then(() => deps.refreshEmails());
+                  if (!email) return;
+                  try {
+                    await deps.client.deleteEmail(email.id);
+                    await deps.refreshEmails();
+                  } catch (error) {
+                    update((prev) => ({
+                      ...prev,
+                      error: getErrorMessage(error, 'Delete failed'),
+                    }));
                   }
                 },
               }),
@@ -169,10 +173,17 @@ export function createListScreen(
                 intent: 'danger',
                 disabled: !hasEmails,
                 focusable: false,
-                onPress: () =>
-                  deps.client
-                    .deleteAllEmails()
-                    .then(() => deps.refreshEmails()),
+                onPress: async () => {
+                  try {
+                    await deps.client.deleteAllEmails();
+                    await deps.refreshEmails();
+                  } catch (error) {
+                    update((prev) => ({
+                      ...prev,
+                      error: getErrorMessage(error, 'Delete all failed'),
+                    }));
+                  }
+                },
               }),
               ui.button({
                 id: 'btn-quit',

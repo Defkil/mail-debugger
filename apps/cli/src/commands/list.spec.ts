@@ -1,6 +1,6 @@
 import type { MockInstance } from 'vitest';
-import { listCommand } from './list';
-import { createMockClient, mockSummary } from './test-fixtures';
+import { listCommand } from './list.js';
+import { createMockClient, mockSummary } from './test-fixtures.js';
 
 let consoleSpy: MockInstance;
 

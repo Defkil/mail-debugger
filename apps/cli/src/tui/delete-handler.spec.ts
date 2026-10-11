@@ -1,7 +1,7 @@
-import { handleDeleteKey } from './delete-handler';
-import type { DeleteHandlerDeps } from './delete-handler';
-import { createInitialState } from './state';
-import type { TuiState } from './state';
+import { handleDeleteKey } from './delete-handler.js';
+import type { DeleteHandlerDeps } from './delete-handler.js';
+import { createInitialState } from './state.js';
+import type { TuiState } from './state.js';
 import type { EmailSummary, Email } from '@mail-debugger/types';
 
 const mockSummary: EmailSummary = {
@@ -47,7 +47,6 @@ function createDeps(
       health: vi.fn(),
     },
     navigateBack: vi.fn(),
-    // eslint-disable-next-line unicorn/no-useless-undefined
     refreshEmails: vi.fn().mockResolvedValue(undefined),
     setError: vi.fn(),
     ...overrides,

@@ -5,6 +5,5 @@
  * rare case where a non-Error value is thrown.
  */
 export function getErrorMessage(err: unknown, fallback?: string): string {
-  if (err instanceof Error) return err.message;
-  return fallback ?? String(err);
+  return err instanceof Error ? err.message : (fallback ?? String(err));
 }

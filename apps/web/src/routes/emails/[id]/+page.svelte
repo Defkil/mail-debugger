@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { createQuery, useQueryClient } from '@tanstack/svelte-query';
   import { emailDetailOptions, queryKeys } from '#lib/query';
   import { api } from '#lib/api';
@@ -21,13 +22,15 @@
     await api.deleteEmail(id);
     qc.invalidateQueries({ queryKey: queryKeys.emails.all });
     qc.invalidateQueries({ queryKey: queryKeys.health });
-    goto('/');
+    goto(resolve('/'));
   }
 </script>
 
 <div class="mx-auto flex max-w-4xl flex-col gap-6">
   <div class="flex items-center justify-between">
-    <Button variant="ghost" onclick={() => goto('/')}>&larr; Back</Button>
+    <Button variant="ghost" onclick={() => goto(resolve('/'))}
+      >&larr; Back</Button
+    >
     <Button variant="danger" onclick={() => (showDelete = true)}>Delete</Button>
   </div>
 

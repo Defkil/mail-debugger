@@ -1,10 +1,18 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { TestProject } from 'vitest/node';
 
 const SMTP_PORT = 2526;
 const API_PORT = 3001;
 const HEALTH_URL = `http://localhost:${API_PORT}/api/health`;
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    smtpPort: number;
+    apiPort: number;
+  }
+}
 
 async function waitForHealth(url: string, timeoutMs = 15_000): Promise<void> {
   const start = Date.now();
@@ -22,7 +30,7 @@ async function waitForHealth(url: string, timeoutMs = 15_000): Promise<void> {
 
 let serverProcess: ChildProcess | undefined;
 
-export async function setup() {
+export async function setup(project: TestProject) {
   const thisDir = path.dirname(fileURLToPath(import.meta.url));
   const serverPath = path.resolve(thisDir, '../../server/dist/main.mjs');
 
@@ -44,15 +52,10 @@ export async function setup() {
 
   await waitForHealth(HEALTH_URL);
 
-  process.env['__SERVER_PID__'] = String(serverProcess.pid);
-  (globalThis as Record<string, unknown>).__SERVER_PROCESS__ = serverProcess;
+  project.provide('smtpPort', SMTP_PORT);
+  project.provide('apiPort', API_PORT);
 }
 
 export async function teardown() {
-  const proc = (globalThis as Record<string, unknown>).__SERVER_PROCESS__ as
-    | ChildProcess
-    | undefined;
-  if (proc) {
-    proc.kill('SIGTERM');
-  }
+  serverProcess?.kill('SIGTERM');
 }

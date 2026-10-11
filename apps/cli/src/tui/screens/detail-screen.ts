@@ -1,6 +1,6 @@
 import { ui } from '@rezi-ui/core';
 import type { RouteDefinition } from '@rezi-ui/core';
-import type { ApiClient } from '@mail-debugger/api-client';
+import { type ApiClient, getErrorMessage } from '@mail-debugger/api-client';
 import type { TuiState } from '../state.js';
 import { BOX_DEFAULTS, DIM } from '../theme.js';
 
@@ -19,29 +19,25 @@ export function createDetailScreen(
   return {
     id: 'detail',
     title: 'Email Detail',
-    screen: (_params, { state }) => {
+    screen: (_params, { state, update }) => {
       deps.setCurrentState(state as TuiState);
       const email = state.selectedEmail;
 
-      const detailTitle = email
-        ? `${deps.appTitle} > Email #${email.id}`
-        : `${deps.appTitle} > Loading...`;
+      const detailTitle = `${deps.appTitle} > ${email ? `Email #${email.id}` : 'Loading...'}`;
 
       return ui.column({ p: 1, gap: 0, height: 'full' }, [
         ui.box({ ...BOX_DEFAULTS, title: detailTitle }, [
-          ...(email
-            ? [
-                ui.row({ gap: 1 }, [
-                  ui.text(`From: ${email.from}`, {
-                    style: { fg: DIM },
-                  }),
-                  ui.text('|', { style: { fg: DIM } }),
-                  ui.text(`Subject: ${email.subject}`, {
-                    style: { fg: DIM },
-                  }),
-                ]),
-              ]
-            : [ui.spinner({ label: 'Loading email...' })]),
+          email
+            ? ui.row({ gap: 1 }, [
+                ui.text(`From: ${email.from}`, {
+                  style: { fg: DIM },
+                }),
+                ui.text('|', { style: { fg: DIM } }),
+                ui.text(`Subject: ${email.subject}`, {
+                  style: { fg: DIM },
+                }),
+              ])
+            : ui.spinner({ label: 'Loading email...' }),
         ]),
         ...(email
           ? [
@@ -134,12 +130,17 @@ export function createDetailScreen(
             label: '[d] Delete',
             intent: 'danger',
             disabled: !email,
-            onPress: () => {
-              if (email) {
-                deps.client.deleteEmail(email.id).then(() => {
-                  deps.navigateBack();
-                  deps.refreshEmails();
-                });
+            onPress: async () => {
+              if (!email) return;
+              try {
+                await deps.client.deleteEmail(email.id);
+                deps.navigateBack();
+                void deps.refreshEmails();
+              } catch (error) {
+                update((prev) => ({
+                  ...prev,
+                  error: getErrorMessage(error, 'Delete failed'),
+                }));
               }
             },
           }),

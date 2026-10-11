@@ -1,4 +1,4 @@
-import { formatHealth } from './format-health';
+import { formatHealth } from './format-health.js';
 import type { HealthResponse } from '@mail-debugger/types';
 
 describe('formatHealth', () => {

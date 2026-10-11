@@ -12,7 +12,7 @@
 </script>
 
 <div class="text-surface-400 flex items-center justify-between text-sm">
-  <span>{table.getRowCount()} email{table.getRowCount() !== 1 ? 's' : ''}</span>
+  <span>{table.getRowCount()} email{table.getRowCount() === 1 ? '' : 's'}</span>
 
   <div class="flex items-center gap-2">
     <Button
@@ -40,7 +40,7 @@
       onchange={(e) => table.setPageSize(Number(e.currentTarget.value))}
       class="border-surface-700 bg-surface-800 text-surface-300 rounded border px-2 py-1 text-sm"
     >
-      {#each [25, 50, 100] as size}
+      {#each [25, 50, 100] as size (size)}
         <option value={size}>{size} / page</option>
       {/each}
     </select>

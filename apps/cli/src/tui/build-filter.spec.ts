@@ -1,6 +1,6 @@
-import { buildFilter } from './build-filter';
-import { createInitialState } from './state';
-import type { TuiState } from './state';
+import { buildFilter } from './build-filter.js';
+import { createInitialState } from './state.js';
+import type { TuiState } from './state.js';
 
 function stateWith(overrides: Partial<TuiState>): TuiState {
   return { ...createInitialState(), ...overrides };

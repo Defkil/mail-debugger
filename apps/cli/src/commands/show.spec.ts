@@ -1,11 +1,13 @@
 import type { MockInstance } from 'vitest';
-import { showCommand } from './show';
-import { createMockClient } from './test-fixtures';
+import { showCommand } from './show.js';
+import { createMockClient } from './test-fixtures.js';
 
 let consoleSpy: MockInstance;
 
 beforeEach(() => {
-  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { /* noop */ });
+  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+    /* noop */
+  });
 });
 
 afterEach(() => {

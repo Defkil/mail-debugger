@@ -3,5 +3,5 @@ export function truncate(str: string, max: number): string {
 }
 
 export function padRight(str: string, len: number): string {
-  return str.length >= len ? str : str + ' '.repeat(len - str.length);
+  return str.padEnd(len);
 }

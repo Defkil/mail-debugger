@@ -9,7 +9,10 @@
   let { attachments }: Props = $props();
 
   function download(att: AttachmentMeta) {
-    const bytes = Uint8Array.from(atob(att.content), (c) => c.charCodeAt(0));
+    const bytes = Uint8Array.from(
+      atob(att.content),
+      (c) => c.codePointAt(0) ?? 0,
+    );
     const blob = new Blob([bytes], { type: att.contentType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -26,7 +29,7 @@
       Attachments ({attachments.length})
     </h2>
     <div class="flex flex-col gap-2">
-      {#each attachments as att}
+      {#each attachments as att, index (index)}
         <button
           onclick={() => download(att)}
           class="border-surface-700 bg-surface-800/50 hover:border-surface-600 flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm"

@@ -1,11 +1,13 @@
 import type { MockInstance } from 'vitest';
-import { healthCommand } from './health';
-import { createMockClient, mockHealth } from './test-fixtures';
+import { healthCommand } from './health.js';
+import { createMockClient, mockHealth } from './test-fixtures.js';
 
 let consoleSpy: MockInstance;
 
 beforeEach(() => {
-  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { /* noop */ });
+  consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+    /* noop */
+  });
 });
 
 afterEach(() => {

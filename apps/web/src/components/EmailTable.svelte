@@ -2,6 +2,7 @@
   import { FlexRender, createTableState } from '@tanstack/svelte-table';
   import type { SortingState, PaginationState } from '@tanstack/svelte-table';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { createAppTable } from '#lib/table';
   import { columns } from '#lib/columns';
   import type { EmailSummary } from '@mail-debugger/types';
@@ -52,9 +53,9 @@
       <thead
         class="border-surface-700 bg-surface-800/50 text-surface-400 border-b text-xs uppercase"
       >
-        {#each table.getHeaderGroups() as headerGroup}
+        {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
           <tr>
-            {#each headerGroup.headers as header}
+            {#each headerGroup.headers as header (header.id)}
               <th
                 class="px-4 py-3 font-medium"
                 class:cursor-pointer={header.column.getCanSort()}
@@ -73,12 +74,13 @@
         {/each}
       </thead>
       <tbody>
-        {#each table.getRowModel().rows as row}
+        {#each table.getRowModel().rows as row (row.id)}
           <tr
             class="border-surface-800 hover:bg-surface-800/70 cursor-pointer border-b"
-            onclick={() => goto(`/emails/${row.original.id}`)}
+            onclick={() =>
+              goto(resolve('/emails/[id]', { id: String(row.original.id) }))}
           >
-            {#each row.getVisibleCells() as cell}
+            {#each row.getVisibleCells() as cell (cell.id)}
               <td
                 class="truncate px-4 py-3"
                 style="max-width: {cell.column.getSize()}px"
@@ -91,7 +93,7 @@
           <tr>
             <td
               colspan={columns.length}
-              class="px-4 py-12 text-center text-surface-500"
+              class="text-surface-500 px-4 py-12 text-center"
             >
               No emails yet. Send one to the SMTP server to get started.
             </td>

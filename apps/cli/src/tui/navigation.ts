@@ -18,7 +18,7 @@ export function calculateNextIndex(
   if (key === ZR_KEY_HOME) return 0;
   if (key === ZR_KEY_END) return emailCount - 1;
   if (key === ZR_KEY_PAGE_UP) return Math.max(0, currentIndex - PAGE_SIZE);
-  if (key === ZR_KEY_PAGE_DOWN)
-    return Math.min(emailCount - 1, currentIndex + PAGE_SIZE);
-  return currentIndex;
+  return key === ZR_KEY_PAGE_DOWN
+    ? Math.min(emailCount - 1, currentIndex + PAGE_SIZE)
+    : currentIndex;
 }

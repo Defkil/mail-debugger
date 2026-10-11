@@ -1,4 +1,4 @@
-import { parseConfig } from './parse-config';
+import { parseConfig } from './parse-config.js';
 
 describe('parseConfig', () => {
   it('should default to TUI mode with no args', () => {
@@ -86,37 +86,37 @@ describe('parseConfig', () => {
 
   it('should throw on missing --api-url value', () => {
     expect(() => parseConfig(['--api-url'])).toThrow(
-      'Missing value for --api-url'
+      'Missing value for --api-url',
     );
   });
 
   it('should throw on missing --from value', () => {
     expect(() => parseConfig(['list', '--from'])).toThrow(
-      'Missing value for --from'
+      'Missing value for --from',
     );
   });
 
   it('should throw on missing --to value', () => {
     expect(() => parseConfig(['list', '--to'])).toThrow(
-      'Missing value for --to'
+      'Missing value for --to',
     );
   });
 
   it('should throw on missing --subject value', () => {
     expect(() => parseConfig(['list', '--subject'])).toThrow(
-      'Missing value for --subject'
+      'Missing value for --subject',
     );
   });
 
   it('should throw on missing --since value', () => {
     expect(() => parseConfig(['list', '--since'])).toThrow(
-      'Missing value for --since'
+      'Missing value for --since',
     );
   });
 
   it('should throw on missing --until value', () => {
     expect(() => parseConfig(['list', '--until'])).toThrow(
-      'Missing value for --until'
+      'Missing value for --until',
     );
   });
 

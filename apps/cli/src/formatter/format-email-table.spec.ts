@@ -1,4 +1,4 @@
-import { formatEmailTable } from './format-email-table';
+import { formatEmailTable } from './format-email-table.js';
 import type { EmailSummary } from '@mail-debugger/types';
 
 const mockSummary: EmailSummary = {
@@ -33,7 +33,7 @@ describe('formatEmailTable', () => {
   it('should show "Yes" for emails with attachments', () => {
     const withAtt = { ...mockSummary, hasAttachments: true };
     const output = formatEmailTable([withAtt]);
-    const row = output.split('\n')[2];
+    const row = output.split('\n', 3)[2];
     expect(row).toContain('Yes');
   });
 

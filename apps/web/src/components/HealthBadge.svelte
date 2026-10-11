@@ -17,7 +17,7 @@
     <span class="text-surface-400">
       SMTP :{health.data.smtpPort} · API :{health.data.apiPort}
       {#if health.data.persistent}· persistent{/if}
-      · {health.data.emailCount} email{health.data.emailCount !== 1 ? 's' : ''}
+      · {health.data.emailCount} email{health.data.emailCount === 1 ? '' : 's'}
     </span>
   {/if}
 </div>

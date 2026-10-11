@@ -15,7 +15,6 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 export function serveWeb() {
-  // @ts-expect-error esbuild outputs ESM where import.meta.dirname is available
   const webDir = path.resolve(import.meta.dirname, 'web');
   const indexPath = path.join(webDir, 'index.html');
   const indexHtml = existsSync(indexPath)

@@ -1,4 +1,4 @@
-import { parseEmail } from './email-parser';
+import { parseEmail } from './email-parser.js';
 
 const SIMPLE_EMAIL = [
   'From: sender@example.com',

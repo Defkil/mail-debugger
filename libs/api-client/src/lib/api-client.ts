@@ -14,7 +14,7 @@ async function request<T>(
 ): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, init);
   if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as {
+    const body = (await readJson(res)) as {
       error?: string;
     } | null;
     const message =
@@ -24,6 +24,14 @@ async function request<T>(
     throw new Error(message);
   }
   return res.json() as Promise<T>;
+}
+
+async function readJson(res: Response): Promise<unknown> {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
 function buildEmailsQuery(

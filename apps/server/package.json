@@ -2,6 +2,7 @@
   "name": "@mail-debugger/server",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "bin": {
     "mail-debugger": "./dist/main.mjs"
   },

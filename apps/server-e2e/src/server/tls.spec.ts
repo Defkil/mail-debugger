@@ -61,8 +61,11 @@ function stopServer(server: ServerInstance): Promise<void> {
   });
 }
 
-function api(server: ServerInstance, urlPath: string, init?: RequestInit) {
-  return fetch(`http://localhost:${server.apiPort}${urlPath}`, init);
+async function listEmails(server: ServerInstance) {
+  const res = await fetch(`http://localhost:${server.apiPort}/api/emails`);
+  return (await res.json()) as {
+    data: { from: string; subject: string }[];
+  };
 }
 
 describe('TLS E2E', () => {
@@ -94,10 +97,7 @@ describe('TLS E2E', () => {
 
       await new Promise((r) => setTimeout(r, 300));
 
-      const res = await api(server, '/api/emails');
-      const body = (await res.json()) as {
-        data: { from: string; subject: string }[];
-      };
+      const body = await listEmails(server);
 
       expect(body.data).toHaveLength(1);
       expect(body.data[0].from).toBe('tls-none@example.com');
@@ -134,10 +134,7 @@ describe('TLS E2E', () => {
 
       await new Promise((r) => setTimeout(r, 300));
 
-      const res = await api(server, '/api/emails');
-      const body = (await res.json()) as {
-        data: { from: string; subject: string }[];
-      };
+      const body = await listEmails(server);
 
       expect(body.data).toHaveLength(1);
       expect(body.data[0].from).toBe('tls-starttls@example.com');
@@ -173,10 +170,7 @@ describe('TLS E2E', () => {
 
       await new Promise((r) => setTimeout(r, 300));
 
-      const res = await api(server, '/api/emails');
-      const body = (await res.json()) as {
-        data: { from: string; subject: string }[];
-      };
+      const body = await listEmails(server);
 
       expect(body.data).toHaveLength(1);
       expect(body.data[0].from).toBe('tls-implicit@example.com');

@@ -67,10 +67,12 @@ export function setupInputHandling(deps: InputHandlerDeps): void {
       }
     }
 
-    if (event.kind === 'text') {
-      const cp = event.codepoint;
-      if (cp === 100) handleDeleteKey(deleteDeps, false);
-      if (cp === 68) handleDeleteKey(deleteDeps, true);
+    if (event.kind !== 'text') return;
+    // "d" deletes the focused or opened email, "D" deletes all emails.
+    if (event.codepoint === 100) {
+      handleDeleteKey(deleteDeps, false);
+    } else if (event.codepoint === 68) {
+      handleDeleteKey(deleteDeps, true);
     }
   });
 }

@@ -1,8 +1,8 @@
 import { createTransport } from 'nodemailer';
+import { inject } from 'vitest';
 
-const SMTP_PORT = (globalThis as Record<string, unknown>)
-  .__SMTP_PORT__ as number;
-const API_PORT = (globalThis as Record<string, unknown>).__API_PORT__ as number;
+const SMTP_PORT = inject('smtpPort');
+const API_PORT = inject('apiPort');
 const API_BASE = `http://localhost:${API_PORT}`;
 
 function api(path: string, init?: RequestInit) {

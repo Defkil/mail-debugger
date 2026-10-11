@@ -1,4 +1,4 @@
-import { truncate, padRight } from './text';
+import { truncate, padRight } from './text.js';
 
 describe('truncate', () => {
   it('should return string unchanged when shorter than max', () => {
@@ -36,6 +36,6 @@ describe('padRight', () => {
   });
 
   it('should handle empty string', () => {
-    expect(padRight('', 3)).toBe('   ');
+    expect(padRight('', 3)).toBe(' '.repeat(3));
   });
 });

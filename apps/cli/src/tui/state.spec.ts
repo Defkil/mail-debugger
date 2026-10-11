@@ -1,4 +1,4 @@
-import { createInitialState } from './state';
+import { createInitialState } from './state.js';
 
 describe('createInitialState', () => {
   it('should return empty emails list', () => {

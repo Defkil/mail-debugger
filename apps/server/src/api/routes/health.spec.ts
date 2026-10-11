@@ -1,6 +1,6 @@
-import { healthRoutes } from './health';
-import type { EmailRepository } from '../../db/email-repository';
-import type { Config } from '../../types';
+import { healthRoutes } from './health.js';
+import type { EmailRepository } from '../../db/email-repository.js';
+import type { Config } from '../../types.js';
 
 function createMockRepo(emailCount = 0) {
   return {
@@ -20,9 +20,8 @@ describe('health routes', () => {
     const repo = createMockRepo(5);
     const app = healthRoutes(repo, testConfig);
 
-    const response = await app
-      .handle(new Request('http://localhost/api/health'))
-      .then((r: Response) => r.json());
+    const res = await app.handle(new Request('http://localhost/api/health'));
+    const response = await res.json();
 
     expect(response).toEqual({
       status: 'ok',

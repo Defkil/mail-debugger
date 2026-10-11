@@ -1,6 +1,6 @@
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js';
-import { EmailRepository } from './email-repository';
-import { CREATE_EMAILS_TABLE, CREATE_INDEXES } from './schema';
+import { EmailRepository } from './email-repository.js';
+import { CREATE_EMAILS_TABLE, CREATE_INDEXES } from './schema.js';
 import type { EmailSummary, ParsedEmail } from '@mail-debugger/types';
 
 let SQL: SqlJsStatic;

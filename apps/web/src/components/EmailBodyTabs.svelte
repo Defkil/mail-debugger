@@ -15,7 +15,7 @@
 
 <div>
   <div class="border-surface-700 flex gap-1 border-b">
-    {#each tabs as tab}
+    {#each tabs as tab (tab)}
       <button
         onclick={() => (activeTab = tab)}
         class="border-b-2 px-4 py-2 text-sm transition-colors {activeTab === tab
@@ -45,7 +45,7 @@
       <div class="border-surface-700 bg-surface-800/50 rounded-lg border">
         <table class="w-full text-sm">
           <tbody>
-            {#each Object.entries(email.headers) as [key, value]}
+            {#each Object.entries(email.headers) as [key, value] (key)}
               <tr class="border-surface-700/50 border-b last:border-0">
                 <td class="text-surface-400 px-4 py-2 font-mono text-xs"
                   >{key}</td

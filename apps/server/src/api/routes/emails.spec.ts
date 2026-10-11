@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
-import { emailRoutes } from './emails';
-import type { EmailRepository } from '../../db/email-repository';
+import { emailRoutes } from './emails.js';
+import type { EmailRepository } from '../../db/email-repository.js';
 import type { EmailSummary, Email } from '@mail-debugger/types';
 
 const mockSummary: EmailSummary = {
@@ -96,7 +96,6 @@ describe('email routes', () => {
 
     it('should return 404 for non-existent email', async () => {
       const repo = createMockRepo();
-      // eslint-disable-next-line unicorn/no-useless-undefined
       repo.findById.mockReturnValue(undefined);
       const app = emailRoutes(repo);
 

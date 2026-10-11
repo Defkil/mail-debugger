@@ -2,6 +2,7 @@
   "name": "@mail-debugger/cli",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "exports": {
     "./run-cli": {
       "mail-debugger": "./src/run-cli.ts",

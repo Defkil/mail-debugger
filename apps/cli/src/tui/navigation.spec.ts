@@ -1,4 +1,4 @@
-import { calculateNextIndex } from './navigation';
+import { calculateNextIndex } from './navigation.js';
 import {
   ZR_KEY_UP,
   ZR_KEY_DOWN,
@@ -7,7 +7,7 @@ import {
   ZR_KEY_PAGE_UP,
   ZR_KEY_PAGE_DOWN,
   PAGE_SIZE,
-} from './key-codes';
+} from './key-codes.js';
 
 describe('calculateNextIndex', () => {
   const COUNT = 25;
