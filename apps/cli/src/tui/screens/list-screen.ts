@@ -5,6 +5,7 @@ import {
   type EmailSummary,
   getErrorMessage,
 } from '@mail-debugger/client';
+import { safeSummary, terminalLine } from '../../formatter/terminal-safe.js';
 import type { TuiState } from '../state.js';
 import { BOX_DEFAULTS, NEON, DIM, ERROR_COLOR } from '../theme.js';
 import { emailColumns } from '../email-columns.js';
@@ -50,7 +51,9 @@ export function createListScreen(
             ...(state.error
               ? [
                   ui.text('|', { style: { fg: DIM } }),
-                  ui.text(state.error, { style: { fg: ERROR_COLOR } }),
+                  ui.text(terminalLine(state.error), {
+                    style: { fg: ERROR_COLOR },
+                  }),
                 ]
               : []),
           ]),
@@ -101,7 +104,9 @@ export function createListScreen(
               ui.table<EmailSummary>({
                 id: 'emails-table',
                 columns: emailColumns,
-                data: state.emails,
+                // The rows keep the ids of the stored emails, so the
+                // actions work on these display copies too.
+                data: state.emails.map((email) => safeSummary(email)),
                 getRowKey: (email) => String(email.id),
                 onRowPress: (email) => {
                   deps.loadEmailDetail(email.id);

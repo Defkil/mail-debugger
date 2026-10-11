@@ -10,6 +10,7 @@ import { listCommand } from './commands/list.js';
 import { showCommand } from './commands/show.js';
 import { waitCommand } from './commands/wait.js';
 import { formatHelp, parseConfig, UsageError } from './config/parse-config.js';
+import { terminalLine } from './formatter/terminal-safe.js';
 import type { CliCommand } from './config/types.js';
 
 export interface CliProgram {
@@ -67,7 +68,9 @@ export async function runCli(
           config.json,
         );
       } catch (error) {
-        process.stderr.write(`${program.name}: ${getErrorMessage(error)}\n`);
+        process.stderr.write(
+          `${program.name}: ${terminalLine(getErrorMessage(error))}\n`,
+        );
         return 1;
       }
     }

@@ -1,6 +1,7 @@
 import { ui } from '@rezi-ui/core';
 import type { RouteDefinition } from '@rezi-ui/core';
 import { type ApiClient, getErrorMessage } from '@mail-debugger/client';
+import { safeEmail } from '../../formatter/terminal-safe.js';
 import type { TuiState } from '../state.js';
 import { BOX_DEFAULTS, DIM } from '../theme.js';
 
@@ -21,7 +22,7 @@ export function createDetailScreen(
     title: 'Email Detail',
     screen: (_params, { state, update }) => {
       deps.setCurrentState(state as TuiState);
-      const email = state.selectedEmail;
+      const email = state.selectedEmail && safeEmail(state.selectedEmail);
 
       const detailTitle = `${deps.appTitle} > ${email ? `Email #${email.id}` : 'Loading...'}`;
 

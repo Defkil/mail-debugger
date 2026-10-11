@@ -1,6 +1,9 @@
 import { formatEmailDetail } from './format-email-detail.js';
 import type { Email } from '@mail-debugger/client';
 
+// eslint-disable-next-line no-control-regex -- the test looks for control characters
+const CONTROL = /[\u{0}-\u{8}\u{B}-\u{1F}\u{7F}-\u{9F}]/u;
+
 const mockEmail: Email = {
   id: 1,
   messageId: '<test@example.com>',
@@ -89,5 +92,16 @@ describe('formatEmailDetail', () => {
     expect(output).toContain('doc.pdf');
     expect(output).toContain('application/pdf');
     expect(output).toContain('1024 bytes');
+  });
+
+  it('replaces control characters of the email', () => {
+    const output = formatEmailDetail({
+      ...mockEmail,
+      subject: 'Hi \u{1B}]0;title\u{7}',
+      textBody: 'a\r\nb\u{1B}[2J',
+    });
+    expect(output).not.toMatch(CONTROL);
+    expect(output).toContain('Subject:    Hi \u{FFFD}]0;title\u{FFFD}');
+    expect(output).toContain('a\nb\u{FFFD}[2J');
   });
 });

@@ -1,9 +1,15 @@
 import type { RouteRenderContext } from '@rezi-ui/core';
-import { createTestRenderer } from '@rezi-ui/core/testing';
+import {
+  createTestRenderer,
+  type TestRenderResult,
+} from '@rezi-ui/core/testing';
 import type { ApiClient, Email, EmailSummary } from '@mail-debugger/client';
 import { createInitialState, type TuiState } from '../state.js';
 import { createDetailScreen } from './detail-screen.js';
 import { createListScreen } from './list-screen.js';
+
+// eslint-disable-next-line no-control-regex -- the test looks for control characters
+const CONTROL = /[\u{0}-\u{8}\u{B}-\u{1F}\u{7F}-\u{9F}]/u;
 
 // The screens are rendered with Rezi's test renderer: the whole layout and
 // draw pipeline runs, without a terminal and without the native engine.
@@ -43,16 +49,16 @@ const email: Email = {
 function render(
   screen: ReturnType<typeof createListScreen>,
   state: Partial<TuiState>,
-): string {
+): TestRenderResult {
   const context: RouteRenderContext<TuiState> = {
     router: {} as RouteRenderContext<TuiState>['router'],
     state: { ...createInitialState(), isLoading: false, ...state },
     update: vi.fn(),
     outlet: null,
   };
-  return createTestRenderer({ viewport: { cols: 120, rows: 30 } })
-    .render(screen.screen({}, context))
-    .toText();
+  return createTestRenderer({ viewport: { cols: 120, rows: 30 } }).render(
+    screen.screen({}, context),
+  );
 }
 
 const noop = vi.fn();
@@ -79,7 +85,7 @@ const detailScreen = () =>
 
 describe('inbox screens', () => {
   it('lists the emails with id, sender, subject and attachment mark', () => {
-    const text = render(listScreen(), { emails: [summary] });
+    const text = render(listScreen(), { emails: [summary] }).toText();
     expect(text).toContain(APP_TITLE);
     expect(text).toContain('1 email(s)');
     expect(text).toMatch(/7\s+alice@example\.test\s+Welcome aboard/);
@@ -91,7 +97,7 @@ describe('inbox screens', () => {
     const text = render(listScreen(), {
       error: 'Server not reachable',
       filterVisible: true,
-    });
+    }).toText();
     expect(text).toContain('0 email(s)');
     expect(text).toContain('Server not reachable');
     expect(text).toContain('Filter');
@@ -99,7 +105,7 @@ describe('inbox screens', () => {
   });
 
   it('shows the headers, attachments and text body of an email', () => {
-    const text = render(detailScreen(), { selectedEmail: email });
+    const text = render(detailScreen(), { selectedEmail: email }).toText();
     expect(text).toContain(`${APP_TITLE} > Email #7`);
     expect(text).toMatch(/To:\s+bob@example\.test/);
     expect(text).toMatch(/CC:\s+carol@example\.test/);
@@ -111,8 +117,28 @@ describe('inbox screens', () => {
   });
 
   it('waits for the email it is about to show', () => {
-    const text = render(detailScreen(), { selectedEmail: null });
+    const text = render(detailScreen(), { selectedEmail: null }).toText();
     expect(text).toContain(`${APP_TITLE} > Loading...`);
     expect(text).toContain('Loading email...');
+  });
+
+  it('draws no control characters of captured mail', () => {
+    const hostile = 'Hi \u{1B}]52;c;cHduZWQ=\u{7} \u{1B}[2J';
+    const results = [
+      render(listScreen(), {
+        emails: [{ ...summary, from: hostile, subject: hostile }],
+        error: hostile,
+      }),
+      render(detailScreen(), {
+        selectedEmail: { ...email, subject: hostile, textBody: hostile },
+      }),
+    ];
+    for (const result of results) {
+      const drawn = result.ops
+        .flatMap((op) => (op.kind === 'drawText' ? [op.text] : []))
+        .join('');
+      expect(drawn).toContain('Hi \u{FFFD}]52;c;cHduZWQ=\u{FFFD}');
+      expect(drawn).not.toMatch(CONTROL);
+    }
   });
 });

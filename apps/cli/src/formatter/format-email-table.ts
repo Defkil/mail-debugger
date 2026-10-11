@@ -1,4 +1,5 @@
 import type { EmailSummary } from '@mail-debugger/client';
+import { safeSummary } from './terminal-safe.js';
 import { truncate, padRight } from './text.js';
 
 export function formatEmailTable(emails: EmailSummary[]): string {
@@ -6,7 +7,8 @@ export function formatEmailTable(emails: EmailSummary[]): string {
 
   const header = `${padRight('ID', 6)}${padRight('From', 30)}${padRight('Subject', 40)}${padRight('Date', 22)}Att`;
   const separator = '-'.repeat(header.length);
-  const rows = emails.map((e) => {
+  const rows = emails.map((unsafe) => {
+    const e = safeSummary(unsafe);
     const date = new Date(e.receivedAt).toLocaleString();
     return (
       `${padRight(String(e.id), 6)}` +

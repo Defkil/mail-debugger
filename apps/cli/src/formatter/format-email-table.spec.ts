@@ -1,6 +1,9 @@
 import { formatEmailTable } from './format-email-table.js';
 import type { EmailSummary } from '@mail-debugger/client';
 
+// eslint-disable-next-line no-control-regex -- the test looks for control characters
+const CONTROL = /[\u{0}-\u{8}\u{B}-\u{1F}\u{7F}-\u{9F}]/u;
+
 const mockSummary: EmailSummary = {
   id: 1,
   from: 'sender@example.com',
@@ -41,5 +44,17 @@ describe('formatEmailTable', () => {
     const emails = [mockSummary, { ...mockSummary, id: 2, subject: 'Another' }];
     const lines = formatEmailTable(emails).split('\n');
     expect(lines.length).toBe(4);
+  });
+
+  it('replaces control characters of the sender and subject', () => {
+    const output = formatEmailTable([
+      {
+        ...mockSummary,
+        from: 'a\u{1B}[31m@example.com',
+        subject: 'line\nbreak\u{7}',
+      },
+    ]);
+    expect(output).not.toMatch(CONTROL);
+    expect(output).toContain('line break\u{FFFD}');
   });
 });

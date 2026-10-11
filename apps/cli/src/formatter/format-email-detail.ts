@@ -1,6 +1,9 @@
 import type { Email } from '@mail-debugger/client';
+import { safeEmail } from './terminal-safe.js';
 
-export function formatEmailDetail(email: Email): string {
+/** The email as text for a terminal; control characters of the mail are replaced. */
+export function formatEmailDetail(unsafe: Email): string {
+  const email = safeEmail(unsafe);
   const lines: string[] = [
     `ID:         ${email.id}`,
     `From:       ${email.from}`,
