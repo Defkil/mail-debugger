@@ -50,8 +50,8 @@ export const MAX_ACTIVE_WAITS = 100;
 export const MAX_FLAG_LENGTH = 64;
 export const MAX_FLAGS_PER_MESSAGE = 32;
 
-/** Highest IMAP UID (RFC 3501 nz-number, 32 bits). */
-export const MAX_UID = 0xff_ff_ff_ff;
+/** Highest 32-bit IMAP number; reserve this value for UIDNEXT. */
+export const MAX_IMAP_NUMBER = 0xff_ff_ff_ff;
 
 export interface Page {
   limit: number;
@@ -448,9 +448,9 @@ export class MailService {
   }
 
   private assertRoomFor(bytes: number): void {
-    // IMAP UIDs are 32-bit and never reused: an exhausted data set takes no
-    // more mail instead of starting over with a new UIDVALIDITY.
-    if (this.store.repository.metadata().uidNext > MAX_UID) {
+    // UIDNEXT must also fit in 32 bits, so the highest value cannot be
+    // allocated to a message. An exhausted data set never reuses UIDs.
+    if (this.store.repository.metadata().uidNext >= MAX_IMAP_NUMBER) {
       throw new StorageFullError(
         'The mailbox has used up its IMAP UIDs; start with a new --data-dir to receive more',
       );

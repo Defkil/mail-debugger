@@ -1,3 +1,4 @@
+import { writeMetadata } from '../db/metadata.js';
 import { createTestService, rawMessage } from '../testing/mail-fixtures.js';
 import {
   InvalidArgumentError,
@@ -6,7 +7,7 @@ import {
   StorageFullError,
 } from './errors.js';
 import type { MailEventMap } from './mail-events.js';
-import type { MailService } from './mail-service.js';
+import { MAX_IMAP_NUMBER, type MailService } from './mail-service.js';
 
 function record<K extends keyof MailEventMap>(service: MailService, event: K) {
   const events: MailEventMap[K][] = [];
@@ -96,6 +97,38 @@ describe('MailService', () => {
       await service.receive(raw, null);
       await expect(service.receive(raw, null)).rejects.toThrow(/storage limit/);
       await store.close();
+    });
+
+    it('reserves the highest IMAP number for UIDNEXT without allocating or reusing it', async () => {
+      const { service, store } = await createTestService();
+      try {
+        writeMetadata(store.db, {
+          ...store.repository.metadata(),
+          uidNext: MAX_IMAP_NUMBER - 1,
+        });
+        const inserted = record(service, 'inserted');
+        expect(() => service.assertCapacity()).not.toThrow();
+        const received = await service.receive(rawMessage(), null);
+        expect(received.uid).toBe(MAX_IMAP_NUMBER - 1);
+        expect(service.imapState().uidNext).toBe(MAX_IMAP_NUMBER);
+        const before = store.repository.metadata();
+        const stats = service.stats();
+
+        expect(() => service.assertCapacity()).toThrow(StorageFullError);
+        await expect(
+          service.receive(rawMessage(), null),
+        ).rejects.toBeInstanceOf(StorageFullError);
+        expect(store.repository.metadata()).toEqual(before);
+        expect(service.stats()).toEqual(stats);
+        expect(service.get(received.id)).toBeDefined();
+        expect(inserted).toHaveLength(1);
+
+        service.clear('rest');
+        expect(() => service.assertCapacity()).toThrow(StorageFullError);
+        expect(service.imapState().uidNext).toBe(MAX_IMAP_NUMBER);
+      } finally {
+        await store.close();
+      }
     });
 
     it('refuses mail after stopAccepting', async () => {

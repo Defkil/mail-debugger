@@ -41,6 +41,7 @@ This release adds the JavaScript client, an IMAP inbox and MCP, and makes the se
 
 - Message sources are stored as the exact bytes SMTP received; 0.3 stored decoded text, which changed bytes that were not UTF-8.
 - New mailbox data sets use a clock-independent, nonzero 32-bit UIDVALIDITY, avoiding deterministic reuse during rapid in-memory restarts; persistent stores retain their identity.
+- UID exhaustion refuses new mail before `UIDNEXT` would overflow its 32-bit IMAP range; deleting mail never resets the allocation counter.
 - Static files of the web inbox are resolved strictly inside its directory, with the same rules on every platform; directories are not served.
 - The help of `mail-debugger-api` no longer mentions a web inbox.
 

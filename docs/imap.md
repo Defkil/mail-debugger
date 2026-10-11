@@ -62,7 +62,7 @@ Capabilities: `IMAP4rev1 ID IDLE NAMESPACE UNSELECT UIDPLUS LITERAL-`, plus `AUT
 
 ### Identity and persistence
 
-UIDs never change and are never reused, not even after the inbox is cleared: the next message always gets a higher UID. The `UIDVALIDITY` value belongs to the mailbox data set. With `--persist` or `--data-dir`, UIDs, `UIDVALIDITY`, `UIDNEXT`, flags and the INBOX subscription survive restarts; an in-memory server starts a new data set every time. A new data set receives a random nonzero 32-bit `UIDVALIDITY`, independent of the restart time. A data set that ever used up the 32-bit UID range refuses new mail rather than reusing UIDs.
+UIDs never change and are never reused, not even after the inbox is cleared: the next message always gets a higher UID. The `UIDVALIDITY` value belongs to the mailbox data set. With `--persist` or `--data-dir`, UIDs, `UIDVALIDITY`, `UIDNEXT`, flags and the INBOX subscription survive restarts; an in-memory server starts a new data set every time. A new data set receives a random nonzero 32-bit `UIDVALIDITY`, independent of the restart time. The highest message UID is 4,294,967,294; the last 32-bit value, 4,294,967,295, is reserved for `UIDNEXT`. Once `UIDNEXT` reaches that value, the data set refuses new mail with `STORAGE_FULL`, even after mail is deleted, rather than overflowing or reusing UIDs.
 
 Replacing a data set does not guarantee a greater `UIDVALIDITY`, and random 32-bit values can theoretically collide. This restricted development profile does not preserve the identity history of discarded data sets. Use `--data-dir` when reconnecting clients need persistent mailbox identity and cache continuity.
 
