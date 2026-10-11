@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { AttachmentMeta } from '@mail-debugger/types';
-  import { formatBytes } from '$lib/format';
+  import { formatBytes } from '#lib/format';
 
   interface Props {
     attachments: AttachmentMeta[];

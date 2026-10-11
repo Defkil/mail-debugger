@@ -1,9 +1,10 @@
-<script lang="ts">
-  import type { Table, PaginationState } from '@tanstack/svelte-table';
+<script lang="ts" generics="TData extends RowData">
+  import type { PaginationState, RowData } from '@tanstack/svelte-table';
+  import type { AppTable } from '#lib/table';
   import Button from './ui/Button.svelte';
 
   interface Props {
-    table: Table<any, any>;
+    table: AppTable<TData>;
     pagination: PaginationState;
   }
 

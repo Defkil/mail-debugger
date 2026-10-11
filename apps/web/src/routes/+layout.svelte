@@ -1,6 +1,6 @@
 <script lang="ts">
   import { QueryClientProvider } from '@tanstack/svelte-query';
-  import { queryClient } from '$lib/query';
+  import { queryClient } from '#lib/query';
   import HealthBadge from '../components/HealthBadge.svelte';
   import ThemeToggle from '../components/ThemeToggle.svelte';
   import '../app.css';

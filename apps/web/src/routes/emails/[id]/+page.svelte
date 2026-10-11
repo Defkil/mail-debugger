@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { createQuery, useQueryClient } from '@tanstack/svelte-query';
-  import { derived } from 'svelte/store';
-  import { emailDetailOptions, queryKeys } from '$lib/query';
-  import { api } from '$lib/api';
+  import { emailDetailOptions, queryKeys } from '#lib/query';
+  import { api } from '#lib/api';
   import EmailMetadata from '../../../components/EmailMetadata.svelte';
   import EmailBodyTabs from '../../../components/EmailBodyTabs.svelte';
   import AttachmentList from '../../../components/AttachmentList.svelte';
@@ -12,10 +11,8 @@
   import Button from '../../../components/ui/Button.svelte';
 
   const qc = useQueryClient();
-  const email = createQuery(
-    derived(page, ($p) => emailDetailOptions(Number($p.params.id))),
-  );
-  const id = $derived(Number($page.params.id));
+  const id = $derived(Number(page.params.id));
+  const email = createQuery(() => emailDetailOptions(id));
 
   let showDelete = $state(false);
 
@@ -34,16 +31,16 @@
     <Button variant="danger" onclick={() => (showDelete = true)}>Delete</Button>
   </div>
 
-  {#if $email.isLoading}
+  {#if email.isLoading}
     <div class="text-surface-500 py-12 text-center">Loading...</div>
-  {:else if $email.isError}
+  {:else if email.isError}
     <div class="text-danger-500 py-12 text-center">
-      {$email.error.message}
+      {email.error.message}
     </div>
-  {:else if $email.data}
-    <EmailMetadata email={$email.data} />
-    <EmailBodyTabs email={$email.data} />
-    <AttachmentList attachments={$email.data.attachments} />
+  {:else if email.data}
+    <EmailMetadata email={email.data} />
+    <EmailBodyTabs email={email.data} />
+    <AttachmentList attachments={email.data.attachments} />
   {/if}
 </div>
 

@@ -2,8 +2,8 @@
   import { FlexRender, createTableState } from '@tanstack/svelte-table';
   import type { SortingState, PaginationState } from '@tanstack/svelte-table';
   import { goto } from '$app/navigation';
-  import { createAppTable } from '$lib/table';
-  import { columns } from '$lib/columns';
+  import { createAppTable } from '#lib/table';
+  import { columns } from '#lib/columns';
   import type { EmailSummary } from '@mail-debugger/types';
   import Pagination from './Pagination.svelte';
 

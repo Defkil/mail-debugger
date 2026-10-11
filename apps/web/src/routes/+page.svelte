@@ -1,9 +1,8 @@
 <script lang="ts">
   import { createQuery, useQueryClient } from '@tanstack/svelte-query';
-  import { writable, derived } from 'svelte/store';
   import type { PaginationState } from '@tanstack/svelte-table';
-  import { emailListOptions, queryKeys } from '$lib/query';
-  import { api } from '$lib/api';
+  import { emailListOptions, queryKeys } from '#lib/query';
+  import { api } from '#lib/api';
   import type { EmailFilter } from '@mail-debugger/types';
   import EmailTable from '../components/EmailTable.svelte';
   import FilterBar from '../components/FilterBar.svelte';
@@ -14,18 +13,12 @@
   let pagination: PaginationState = $state({ pageIndex: 0, pageSize: 25 });
   let showDeleteAll = $state(false);
 
-  const paramsStore = writable({
-    filter: {} as EmailFilter,
-    pagination: { pageIndex: 0, pageSize: 25 },
-  });
-  $effect(() => {
-    paramsStore.set({ filter, pagination });
-  });
-
   const qc = useQueryClient();
-  const emails = createQuery(
-    derived(paramsStore, ({ filter: f, pagination: p }) =>
-      emailListOptions(f, p.pageSize, p.pageIndex * p.pageSize),
+  const emails = createQuery(() =>
+    emailListOptions(
+      { ...filter },
+      pagination.pageSize,
+      pagination.pageIndex * pagination.pageSize,
     ),
   );
 
@@ -48,7 +41,7 @@
     <div class="flex-1">
       <FilterBar onchange={onFilterChange} />
     </div>
-    {#if $emails.data && $emails.data.total > 0}
+    {#if emails.data && emails.data.total > 0}
       <Button
         variant="danger"
         class="shrink-0"
@@ -59,16 +52,16 @@
     {/if}
   </div>
 
-  {#if $emails.isLoading}
+  {#if emails.isLoading}
     <div class="text-surface-500 py-12 text-center">Loading...</div>
-  {:else if $emails.isError}
+  {:else if emails.isError}
     <div class="text-danger-500 py-12 text-center">
-      Failed to load emails: {$emails.error.message}
+      Failed to load emails: {emails.error.message}
     </div>
-  {:else if $emails.data}
+  {:else if emails.data}
     <EmailTable
-      data={$emails.data.data}
-      total={$emails.data.total}
+      data={emails.data.data}
+      total={emails.data.total}
       {pagination}
       onpaginationchange={(p) => (pagination = p)}
     />

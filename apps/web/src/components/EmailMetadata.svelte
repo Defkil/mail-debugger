@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Email } from '@mail-debugger/types';
-  import { formatDate } from '$lib/format';
+  import { formatDate } from '#lib/format';
 
   interface Props {
     email: Email;
