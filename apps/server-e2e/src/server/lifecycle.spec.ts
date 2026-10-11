@@ -5,6 +5,7 @@ import initSqlJs from 'sql.js';
 import { api, sendMail } from '../helpers/mail.js';
 import {
   BINARIES,
+  eventually,
   makeTempDir,
   removeTempDirs,
   runBinary,
@@ -153,20 +154,44 @@ describe('lifecycle', () => {
       '0',
     ]);
     expect(result.code).toBe(1);
-    expect(result.stdout + result.stderr).toMatch(/in use by process/);
+    expect(result.stdout + result.stderr).toMatch(/locked by process/);
     await first.stop();
   }, 30_000);
 
-  it('keeps the last snapshot after a forced kill', async () => {
+  it('keeps the last snapshot after a forced kill and manual lock recovery', async () => {
     const dataDir = makeTempDir();
+    const SQL = await initSqlJs();
     const first = await startServerProcess({ args: ['--data-dir', dataDir] });
     await sendMail({ port: first.smtpPort }, { subject: 'snapshotted' });
-    // Snapshots follow changes after 250 ms.
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await eventually(() => {
+      const snapshot = new SQL.Database(
+        fs.readFileSync(path.join(dataDir, 'mail-debugger.sqlite')),
+      );
+      try {
+        expect(snapshot.exec('SELECT subject FROM emails')[0]?.values).toEqual([
+          ['snapshotted'],
+        ]);
+      } finally {
+        snapshot.close();
+      }
+    });
     first.child.kill('SIGKILL');
     await new Promise((resolve) => first.child.once('exit', resolve));
-    // The lock of the killed process stays behind and is taken over.
-    expect(fs.existsSync(path.join(dataDir, 'mail-debugger.lock'))).toBe(true);
+    const lockPath = path.join(dataDir, 'mail-debugger.lock');
+    const originalLock = fs.readFileSync(lockPath, 'utf8');
+    const refused = await runBinary([
+      '--data-dir',
+      dataDir,
+      '--smtp-port',
+      '0',
+      '--api-port',
+      '0',
+    ]);
+    expect(refused.code).toBe(1);
+    expect(refused.stdout + refused.stderr).toMatch(/locked by process/);
+    expect(fs.readFileSync(lockPath, 'utf8')).toBe(originalLock);
+    // The owning child has exited; explicitly recover this test-owned directory.
+    fs.unlinkSync(lockPath);
 
     const second = await startServerProcess({ args: ['--data-dir', dataDir] });
     const { body } = await api(second.baseUrl, '/api/emails');
