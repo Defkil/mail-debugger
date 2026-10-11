@@ -10,10 +10,10 @@ export const LOCK_FILE = 'mail-debugger.lock';
 export class DataDirectoryInUseError extends Error {
   constructor(
     readonly lockFile: string,
-    readonly pid: number,
+    readonly pid: number | undefined,
   ) {
     super(
-      `The data directory is in use by process ${pid}. Stop that mail-debugger, or delete ${lockFile} if no such process runs.`,
+      `The data directory is locked${pid === undefined ? '' : ` by process ${pid}`}. Stop that mail-debugger. If it stopped without releasing its lock, delete ${lockFile} only after checking that no process uses this directory.`,
     );
     this.name = 'DataDirectoryInUseError';
   }
@@ -26,37 +26,30 @@ export interface DataDirectoryLock {
 /**
  * Takes the exclusive lock of a data directory. sql.js keeps the database in
  * memory and writes snapshots, so two processes on the same file would
- * overwrite each other's mail. A lock left by a process that no longer runs
- * is taken over.
+ * overwrite each other's mail. Existing locks are never removed here: an
+ * incomplete PID write can belong to a live process, and concurrent stale
+ * lock reclamations can otherwise remove a new owner's lock.
  */
 export function lockDataDirectory(dir: string): DataDirectoryLock {
   fs.mkdirSync(dir, { recursive: true });
   const lockFile = path.join(dir, LOCK_FILE);
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      fs.writeFileSync(lockFile, JSON.stringify({ pid: process.pid }), {
-        flag: 'wx',
-      });
-      return {
-        release() {
-          try {
-            if (readLockPid(lockFile) === process.pid) fs.unlinkSync(lockFile);
-          } catch {
-            // Already gone.
-          }
-        },
-      };
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-      const pid = readLockPid(lockFile);
-      // The own pid means another store of this process holds the lock.
-      if (pid !== undefined && (pid === process.pid || isRunning(pid))) {
-        throw new DataDirectoryInUseError(lockFile, pid);
-      }
-      fs.rmSync(lockFile, { force: true });
-    }
+  try {
+    fs.writeFileSync(lockFile, JSON.stringify({ pid: process.pid }), {
+      flag: 'wx',
+    });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+    throw new DataDirectoryInUseError(lockFile, readLockPid(lockFile));
   }
-  throw new Error(`Could not lock ${dir}`);
+  return {
+    release() {
+      try {
+        if (readLockPid(lockFile) === process.pid) fs.unlinkSync(lockFile);
+      } catch {
+        // Already gone.
+      }
+    },
+  };
 }
 
 function readLockPid(lockFile: string): number | undefined {
@@ -64,19 +57,11 @@ function readLockPid(lockFile: string): number | undefined {
     const { pid } = JSON.parse(fs.readFileSync(lockFile, 'utf8')) as {
       pid?: unknown;
     };
-    return typeof pid === 'number' ? pid : undefined;
+    return typeof pid === 'number' && Number.isSafeInteger(pid) && pid > 0
+      ? pid
+      : undefined;
   } catch {
     return undefined;
-  }
-}
-
-function isRunning(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    // EPERM: the process exists but belongs to someone else.
-    return (error as NodeJS.ErrnoException).code === 'EPERM';
   }
 }
 
@@ -89,27 +74,31 @@ export async function writeFileAtomic(
   data: Uint8Array,
 ): Promise<void> {
   const temporary = `${file}.${process.pid}.tmp`;
-  const handle = await fs.promises.open(temporary, 'w');
   try {
-    await handle.writeFile(data);
-    await handle.sync();
-  } finally {
-    await handle.close();
-  }
-  // Windows refuses the rename while a virus scanner or indexer holds the
-  // target open; such locks are brief.
-  for (let attempt = 0; ; attempt++) {
+    const handle = await fs.promises.open(temporary, 'w');
     try {
-      await fs.promises.rename(temporary, file);
-      return;
-    } catch (error) {
-      const code = (error as NodeJS.ErrnoException).code;
-      if (attempt >= 5 || (code !== 'EPERM' && code !== 'EBUSY')) {
-        await fs.promises.rm(temporary, { force: true });
-        throw error;
-      }
-      await sleep(50 * (attempt + 1));
+      await handle.writeFile(data);
+      await handle.sync();
+    } finally {
+      await handle.close();
     }
+    // Windows refuses the rename while a virus scanner or indexer holds the
+    // target open; such locks are brief.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await fs.promises.rename(temporary, file);
+        return;
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (attempt >= 5 || (code !== 'EPERM' && code !== 'EBUSY')) {
+          throw error;
+        }
+        await sleep(50 * (attempt + 1));
+      }
+    }
+  } catch (error) {
+    await fs.promises.rm(temporary, { force: true });
+    throw error;
   }
 }
 
@@ -188,13 +177,13 @@ export class SnapshotWriter {
   }
 
   private async write(): Promise<void> {
-    let data: Uint8Array;
     try {
-      data = this.db.export();
-    } finally {
-      this.options.afterExport();
-    }
-    try {
+      let data: Uint8Array;
+      try {
+        data = this.db.export();
+      } finally {
+        this.options.afterExport();
+      }
       await writeFileAtomic(this.file, data);
     } catch (error) {
       this.dirty = true;

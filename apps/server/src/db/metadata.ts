@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import type { Database } from 'sql.js';
 import { firstRow, rowsFrom } from './row-mapper.js';
 import { META_KEYS } from './schema.js';
@@ -21,9 +21,9 @@ export interface StoreMetadata {
 export function newMetadata({ lastId }: { lastId: number }): StoreMetadata {
   return {
     mailboxId: randomUUID(),
-    // RFC 3501 UIDVALIDITY is a non-zero 32-bit number; seconds since the
-    // epoch fit until 2106 and differ between data sets.
-    uidValidity: Math.max(1, Math.floor(Date.now() / 1000) % 0xff_ff_ff_ff),
+    // A fresh non-zero 32-bit value, independent of the clock. Using seconds
+    // would deterministically reuse UIDs across rapid in-memory restarts.
+    uidValidity: randomInt(1, 0x1_00_00_00_00),
     lastId,
     uidNext: lastId + 1,
     inboxSubscribed: true,

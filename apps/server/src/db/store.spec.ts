@@ -164,14 +164,18 @@ describe('openStore', () => {
     await store.close();
   });
 
-  it('takes over the lock of a process that no longer runs', async () => {
-    fs.writeFileSync(
-      path.join(dir, LOCK_FILE),
-      JSON.stringify({ pid: 2_147_483_000 }),
-    );
-    const store = await openStore({ dataDir: dir, logger: silentLogger });
-    await store.close();
-  });
+  it.each(['', '{', '{"pid":-1}', '{"pid":2147483000}'])(
+    'preserves an incomplete, malformed or stale lock (%j)',
+    async (contents) => {
+      const lockFile = path.join(dir, LOCK_FILE);
+      fs.writeFileSync(lockFile, contents);
+      await expect(
+        openStore({ dataDir: dir, logger: silentLogger }),
+      ).rejects.toBeInstanceOf(DataDirectoryInUseError);
+      expect(fs.readFileSync(lockFile, 'utf8')).toBe(contents);
+      expect(fs.readdirSync(dir)).toEqual([LOCK_FILE]);
+    },
+  );
 
   describe('migration from mail-debugger 0.3', () => {
     it('migrates the data, keeps a backup and continues the id counter', async () => {
