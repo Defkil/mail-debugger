@@ -25,16 +25,11 @@ export interface MirroredMessage extends Message {
 }
 
 /**
- * A change could not be written to the mailbox, so the IMAP command must not
- * report success. `limit` marks a refused value (too many flags) rather than
- * a storage failure.
+ * A deletion could not be written to the mailbox, so the IMAP command must
+ * restore its in-memory state and report failure.
  */
 export class PersistenceError extends Error {
-  constructor(
-    message: string,
-    readonly limit = false,
-    options?: { cause?: unknown },
-  ) {
+  constructor(message: string, options?: { cause?: unknown }) {
     super(message, options);
     this.name = 'PersistenceError';
   }
@@ -354,7 +349,7 @@ export class MailboxAdapter {
       );
     } catch (error) {
       this.logger.error({ err: error }, 'Could not delete expunged messages');
-      throw new PersistenceError('The messages could not be deleted', false, {
+      throw new PersistenceError('The messages could not be deleted', {
         cause: error,
       });
     }
