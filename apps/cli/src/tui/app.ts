@@ -10,6 +10,15 @@ import { setupInputHandling } from './input-handler.js';
 
 const POLL_INTERVAL_MS = 3000;
 
+/**
+ * Loads the native terminal engine. @rezi-ui/native ships prebuilt binaries
+ * for Linux (glibc), macOS and Windows on x64 and arm64; elsewhere, such as
+ * on musl-based Linux, this rejects.
+ */
+export async function loadTerminalEngine(): Promise<void> {
+  await import('@rezi-ui/native');
+}
+
 export async function startTui(
   client: ApiClient,
   apiUrl: string,

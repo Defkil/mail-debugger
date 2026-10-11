@@ -56,8 +56,9 @@ export async function runCli(
         );
         return 2;
       }
-      const { startTui } = await import('./tui/app.js');
-      await startTui(createClient(config.apiUrl), config.apiUrl);
+      const tui = await loadInteractiveInbox(program.name);
+      if (!tui) return 1;
+      await tui.startTui(createClient(config.apiUrl), config.apiUrl);
       return 0;
     }
     case 'command': {
@@ -74,6 +75,26 @@ export async function runCli(
         return 1;
       }
     }
+  }
+}
+
+/**
+ * Loads the interactive inbox and its native terminal engine before it
+ * touches the terminal. Where the engine has no prebuilt binary, explains
+ * that and resolves to undefined; the commands work without it.
+ */
+async function loadInteractiveInbox(name: string) {
+  try {
+    const tui = await import('./tui/app.js');
+    await tui.loadTerminalEngine();
+    return tui;
+  } catch (error) {
+    const reason = getErrorMessage(error).split('\n', 1)[0] ?? '';
+    process.stderr.write(
+      `${name}: the interactive inbox cannot start on ${process.platform}-${process.arch}: ${terminalLine(reason)}\n` +
+        'The commands (see --help) and the web inbox work without it.\n',
+    );
+    return;
   }
 }
 

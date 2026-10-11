@@ -98,6 +98,7 @@
   "dependencies": {
     "@mail-debugger/client": "workspace:*",
     "@rezi-ui/core": "0.1.0-beta.2",
+    "@rezi-ui/native": "0.1.0-beta.2",
     "@rezi-ui/node": "0.1.0-beta.2"
   }
 }

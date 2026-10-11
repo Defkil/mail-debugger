@@ -356,6 +356,9 @@ importers:
       '@rezi-ui/core':
         specifier: 0.1.0-beta.2
         version: 0.1.0-beta.2
+      '@rezi-ui/native':
+        specifier: 0.1.0-beta.2
+        version: 0.1.0-beta.2
       '@rezi-ui/node':
         specifier: 0.1.0-beta.2
         version: 0.1.0-beta.2
