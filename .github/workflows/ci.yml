@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feat/claude-d8f0/mail-debugger
   pull_request:
 
 permissions: {}
