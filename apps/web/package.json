@@ -10,11 +10,14 @@
     "targets": {
       "build": {
         "executor": "nx:run-commands",
+        "dependsOn": [
+          "^build"
+        ],
         "outputs": [
           "{projectRoot}/build"
         ],
         "options": {
-          "command": "npx svelte-kit sync && npx vite build",
+          "command": "pnpm exec svelte-kit sync && pnpm exec vite build",
           "cwd": "apps/web"
         }
       },
@@ -25,21 +28,24 @@
         ],
         "executor": "nx:run-commands",
         "options": {
-          "command": "npx vite dev --port 5173",
+          "command": "pnpm exec vite dev --port 5173",
           "cwd": "apps/web"
         }
       },
       "test": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "npx vitest run",
+          "command": "pnpm exec vitest run",
           "cwd": "apps/web"
         }
       },
       "typecheck": {
         "executor": "nx:run-commands",
+        "dependsOn": [
+          "^build"
+        ],
         "options": {
-          "command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json",
+          "command": "pnpm exec svelte-kit sync && pnpm exec svelte-check --tsconfig ./tsconfig.json",
           "cwd": "apps/web"
         }
       }

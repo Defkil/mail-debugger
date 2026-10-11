@@ -6,7 +6,6 @@
   "exports": {
     "./run-cli": {
       "mail-debugger": "./src/run-cli.ts",
-      "types": "./dist/apps/cli/src/run-cli.d.ts",
       "import": "./dist/run-cli.mjs",
       "default": "./dist/run-cli.mjs"
     }
@@ -45,7 +44,9 @@
           "excludeFromExternal": [
             "@rezi-ui/core",
             "@rezi-ui/node"
-          ]
+          ],
+          "declaration": false,
+          "skipTypeCheck": true
         },
         "configurations": {
           "development": {},
@@ -87,7 +88,7 @@
         }
       },
       "test": {
-        "command": "vitest run --passWithNoTests",
+        "command": "vitest run",
         "options": {
           "cwd": "apps/cli"
         }

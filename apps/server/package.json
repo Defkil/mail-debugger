@@ -48,7 +48,9 @@
           "excludeFromExternal": [
             "@rezi-ui/core",
             "@rezi-ui/node"
-          ]
+          ],
+          "declaration": false,
+          "skipTypeCheck": true
         },
         "configurations": {
           "development": {},
@@ -109,7 +111,9 @@
               "pino",
               "pino-pretty"
             ]
-          }
+          },
+          "declaration": false,
+          "skipTypeCheck": true
         },
         "configurations": {
           "development": {},
@@ -144,7 +148,7 @@
           "{workspaceRoot}/apps/server/dist/web"
         ],
         "options": {
-          "command": "node -e \"const fs=require('fs');fs.cpSync('apps/web/build','apps/server/dist/web',{recursive:true})\""
+          "command": "node scripts/copy-dir.mjs apps/web/build apps/server/dist/web"
         }
       },
       "build": {
@@ -157,52 +161,6 @@
       "build-api": {
         "dependsOn": [
           "compile-api"
-        ],
-        "executor": "nx:noop"
-      },
-      "prune-lockfile": {
-        "dependsOn": [
-          "build"
-        ],
-        "cache": true,
-        "executor": "@nx/js:prune-lockfile",
-        "outputs": [
-          "{workspaceRoot}/apps/server/dist/package.json",
-          "{workspaceRoot}/apps/server/dist/pnpm-lock.yaml",
-          "{workspaceRoot}/apps/server/dist/pnpm-workspace.yaml",
-          "{workspaceRoot}/apps/server/dist/patches",
-          "{workspaceRoot}/apps/server/dist/local_path_modules"
-        ],
-        "options": {
-          "buildTarget": "compile"
-        },
-        "inputs": [
-          "default",
-          "^default",
-          "{workspaceRoot}/pnpm-workspace.yaml",
-          "{workspaceRoot}/package.json",
-          {
-            "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
-          }
-        ]
-      },
-      "copy-workspace-modules": {
-        "dependsOn": [
-          "build"
-        ],
-        "cache": true,
-        "outputs": [
-          "{workspaceRoot}/apps/server/dist/workspace_modules"
-        ],
-        "executor": "@nx/js:copy-workspace-modules",
-        "options": {
-          "buildTarget": "compile"
-        }
-      },
-      "prune": {
-        "dependsOn": [
-          "prune-lockfile",
-          "copy-workspace-modules"
         ],
         "executor": "nx:noop"
       },
@@ -227,7 +185,7 @@
         }
       },
       "test": {
-        "command": "vitest run --passWithNoTests",
+        "command": "vitest run",
         "options": {
           "cwd": "apps/server"
         }

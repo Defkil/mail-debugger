@@ -1,7 +1,14 @@
+import { readFileSync } from 'node:fs';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+
+// The version of the published package names the app version, so that the
+// same source always builds the same files (the default is a timestamp).
+const { version } = JSON.parse(
+  readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+) as { version: string };
 
 export default defineConfig({
   plugins: [
@@ -15,6 +22,7 @@ export default defineConfig({
         fallback: 'index.html',
         strict: false,
       }),
+      version: { name: version },
     }),
   ],
   server: {

@@ -40,13 +40,12 @@
         "dependsOn": [
           "@mail-debugger/server:build-api"
         ],
-        "cache": true,
         "outputs": [
           "{projectRoot}/dist"
         ],
         "executor": "nx:run-commands",
         "options": {
-          "command": "node -e \"const fs=require('fs'),path=require('path');const src='apps/server/dist-api',dst='packages/api/dist';fs.rmSync(dst,{recursive:true,force:true});fs.mkdirSync(dst,{recursive:true});for(const f of fs.readdirSync(src)){const s=path.join(src,f);if(fs.statSync(s).isFile())fs.copyFileSync(s,path.join(dst,f))}\""
+          "command": "node scripts/copy-dir.mjs apps/server/dist-api packages/api/dist"
         }
       },
       "build": {
@@ -54,12 +53,6 @@
           "sync-dist"
         ],
         "executor": "nx:noop"
-      },
-      "test": {
-        "command": "vitest run --passWithNoTests",
-        "options": {
-          "cwd": "packages/api"
-        }
       }
     }
   },
