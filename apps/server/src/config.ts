@@ -14,7 +14,9 @@ import type {
 /** A command line or environment problem; the process exits with code 2. */
 export class UsageError extends Error {
   constructor(message: string) {
-    super(message);
+    // Argument values and file-system errors can contain terminal controls.
+    // eslint-disable-next-line no-control-regex -- diagnostics must not execute terminal controls
+    super(message.replaceAll(/[\u{0}-\u{1F}\u{7F}-\u{9F}]/gu, '\u{FFFD}'));
     this.name = 'UsageError';
   }
 }

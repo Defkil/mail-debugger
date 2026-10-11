@@ -48,6 +48,22 @@ describe('command line', () => {
     },
   );
 
+  it.each([
+    { binary: BINARIES.full, args: ['bad\u{1B}]52;c;payload\u{7}'] },
+    { binary: BINARIES.full, args: ['--smtp-port', '\u{9B}31m'] },
+    { binary: BINARIES.api, args: ['--smtp-port', '\u{1B}[31m'] },
+  ])(
+    'sanitizes server usage diagnostics ($binary, $args)',
+    async ({ binary, args }) => {
+      const result = await runBinary(args, { binary });
+      expect(result.code).toBe(2);
+      expect(result.stderr).toContain('\u{FFFD}');
+      expect(result.stderr).not.toContain('\u{1B}');
+      expect(result.stderr).not.toContain('\u{9B}');
+      expect(result.stderr).not.toContain('\u{7}');
+    },
+  );
+
   it('prints the version', async () => {
     const result = await runBinary(['--version']);
     expect(result.code).toBe(0);

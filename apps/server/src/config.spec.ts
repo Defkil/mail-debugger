@@ -428,3 +428,13 @@ describe('formatServerHelp', () => {
     expect(help).toMatch(/^ {2}mcp {4}Connect an MCP client/m);
   });
 });
+describe('UsageError diagnostics', () => {
+  it('replaces terminal controls in untrusted argument and file error text', () => {
+    const error = new UsageError(
+      'Invalid argument \u{1B}]52;c;payload\u{7}\rforged\u{9B}31m',
+    );
+    expect(error.message).toBe(
+      'Invalid argument �]52;c;payload�\u{FFFD}forged�31m',
+    );
+  });
+});

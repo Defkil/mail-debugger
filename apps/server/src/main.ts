@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { UsageError } from './config.js';
 import { runServerProgram } from './run-server.js';
 import { getVersion } from './version.js';
 
@@ -35,8 +36,9 @@ if (command === 'cli') {
     withCommands: true,
   });
 } else {
+  const error = new UsageError(`Unknown command "${command}"`);
   process.stderr.write(
-    `${NAME}: Unknown command "${command}"\nRun "${NAME} --help" for usage.\n`,
+    `${NAME}: ${error.message}\nRun "${NAME} --help" for usage.\n`,
   );
   process.exitCode = 2;
 }

@@ -374,6 +374,23 @@ describe('HTTP app', () => {
   });
 
   describe('request guards', () => {
+    it('does not expose protected handlers through encoded paths', async () => {
+      app = makeApp(service, {
+        apiToken: 'api-token',
+        mcpToken: 'mcp-token',
+        mcp: echoMcp,
+      });
+      for (const path of [
+        '/%61pi/emails',
+        '/api%2femails',
+        '/%6dcp',
+        '/mcp%2f',
+        '//api/emails',
+      ]) {
+        expect((await call(path)).status, path).toBeGreaterThanOrEqual(400);
+      }
+    });
+
     it('rejects foreign Host headers (DNS rebinding)', async () => {
       const { status, body } = await call('/api/health', {
         headers: { host: 'attacker.example:3000' },
