@@ -7,64 +7,102 @@ on:
       - feat/claude-d8f0/mail-debugger
   pull_request:
 
-permissions:
-  actions: read
-  contents: read
+permissions: {}
+
+# A newer push to the same branch supersedes a running check, except on main,
+# where every commit keeps its own result.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   NX_NO_CLOUD: 'true'
 
 jobs:
-  main:
-    runs-on: ubuntu-latest
+  verify:
+    name: Verify (Node 24)
+    # Pinned instead of ubuntu-latest, which moves to Ubuntu 26.04 from
+    # 2026-10-19; publish.yml uses the same image. See docs/release.md.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          filter: tree:0
-          fetch-depth: 0
+          persist-credentials: false
 
       # Installs the pnpm version pinned in package.json#packageManager.
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-        name: Install pnpm
         with:
           run_install: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-          cache: 'pnpm'
+          cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      # Lint
-      - run: pnpm exec nx run client:lint
-      - run: pnpm exec nx run "@mail-debugger/server:lint"
-      - run: pnpm exec nx run "@mail-debugger/cli:lint"
-      - run: pnpm exec nx run "@mail-debugger/web:lint"
-      - run: pnpm exec nx run "@mail-debugger/server-e2e:lint"
+      # Formatting, lint, typecheck, unit tests, builds, end-to-end tests,
+      # the installed-tarball smoke test and the production audit, exactly
+      # as the publish workflow runs them.
+      - run: pnpm verify
 
-      # Build (must run before test — web tests need .svelte-kit/ from svelte-kit sync)
-      - run: pnpm exec nx run client:build
-      - run: pnpm exec nx run "@mail-debugger/web:build"
-      - run: pnpm exec nx run "@mail-debugger/server:build"
-      - run: pnpm exec nx run "@mail-debugger/cli:build"
-      - run: pnpm exec nx run mail-debugger-api:build
-      - run: pnpm exec nx run mail-debugger-cli:build
+  runtime:
+    name: Runtime (Node ${{ matrix.node }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The engines floor: only the installed packages, as users run them.
+          - node: 22.17.0
+            e2e: false
+          # Maintained and current releases; Node 24 runs in the verify job.
+          - node: '22'
+            e2e: true
+          - node: '26'
+            e2e: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      # Test
-      - run: pnpm exec nx run client:test
-      - run: pnpm exec nx run "@mail-debugger/server:test"
-      - run: pnpm exec nx run "@mail-debugger/cli:test"
-      - run: pnpm exec nx run "@mail-debugger/web:test"
-      - run: pnpm exec nx run mail-debugger-api:test
-      - run: pnpm exec nx run mail-debugger-cli:test
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          run_install: false
 
-      # End-to-end tests against the built server
-      - run: pnpm exec nx run "@mail-debugger/server-e2e:e2e"
+      # Install, build and pack with the contributor runtime...
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
 
-      # Typecheck
-      - run: pnpm exec nx run client:typecheck
-      - run: pnpm exec nx run "@mail-debugger/server:typecheck"
-      - run: pnpm exec nx run "@mail-debugger/cli:typecheck"
-      - run: pnpm exec nx run "@mail-debugger/web:typecheck"
-      - run: pnpm exec nx run "@mail-debugger/server-e2e:typecheck"
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Pack the three distributions
+        run: node scripts/pack-and-smoke.mjs --pack-only
+        env:
+          MAIL_DEBUGGER_PACK_DIR: ${{ runner.temp }}/tarballs
+
+      # ...then run the servers, clients and installed packages on the
+      # runtime under test.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: node --version && npm --version
+
+      - name: End-to-end tests
+        if: matrix.e2e
+        working-directory: apps/server-e2e
+        run: pnpm exec vitest run
+
+      - name: Install and run the packed tarballs
+        run: node scripts/pack-and-smoke.mjs --tarballs "$RUNNER_TEMP/tarballs"
