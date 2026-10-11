@@ -87,7 +87,11 @@ async function publishedIntegrity(name, version) {
     return fail(`${url} answered ${response.status}`);
   }
   const document = await response.json();
-  if (!document.versions || typeof document.versions !== 'object') {
+  if (
+    !document.versions ||
+    typeof document.versions !== 'object' ||
+    Array.isArray(document.versions)
+  ) {
     return fail(`${url} returned no version map; refusing to publish`);
   }
   if (!Object.hasOwn(document.versions, version)) return undefined;

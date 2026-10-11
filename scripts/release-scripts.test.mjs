@@ -79,6 +79,7 @@ globalThis.fetch = async (url) => {
   if (scenario === 'unavailable' && name === 'mail-debugger-cli') throw new Error('offline');
   let versions = {};
   if (scenario === 'malformed' && name === 'mail-debugger-cli') versions = undefined;
+  if (scenario === 'array-map' && name === 'mail-debugger-cli') versions = [];
   if (scenario === 'missing-integrity' && name === 'mail-debugger-cli') versions = { '0.4.0': {} };
   if (scenario === 'conflict' && name === 'mail-debugger-cli') versions = { '0.4.0': { dist: { integrity: 'sha512-' + Buffer.alloc(64, 7).toString('base64') } } };
   if (scenario === 'same' || uploaded.has(name) || (scenario === 'partial' && name === 'mail-debugger')) versions = { '0.4.0': { dist: { integrity: integrities[name] } } };
@@ -108,6 +109,7 @@ for (const scenario of [
   'conflict',
   'missing-integrity',
   'malformed',
+  'array-map',
   'unavailable',
 ]) {
   test(`publishing refuses ${scenario} in the last package before any upload`, () =>
