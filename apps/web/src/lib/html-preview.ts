@@ -53,6 +53,12 @@ export function buildPreviewDocument(
 export function hasRemoteImages(html: string): boolean {
   return (
     /<img\b[^>]*\bsrc\s*=\s*["']?\s*(?:https?:)?\/\//i.test(html) ||
+    /<(?:img|source)\b[^>]*\bsrcset\s*=\s*(?:"[^"]*(?:https?:)?\/\/|'[^']*(?:https?:)?\/\/|[^\s>]*(?:https?:)?\/\/)/i.test(
+      html,
+    ) ||
+    /<(?:image|input)\b[^>]*\b(?:src|(?:xlink:)?href)\s*=\s*["']?\s*(?:https?:)?\/\//i.test(
+      html,
+    ) ||
     /url\(\s*["']?\s*(?:https?:)?\/\//i.test(html)
   );
 }

@@ -79,6 +79,16 @@ describe('buildPreviewDocument', () => {
 describe('hasRemoteImages', () => {
   it.each([
     ['<img src="https://a.example/x.png">', true],
+    [
+      '<img src="cid:logo" srcset="cid:logo 1x, https://a.example/2.png 2x">',
+      true,
+    ],
+    [
+      '<picture><source srcset=//cdn.example/x.png><img src="cid:logo"></picture>',
+      true,
+    ],
+    ['<svg><image href="https://cdn.example/logo.svg" /></svg>', true],
+    ['<input type="image" src="https://cdn.example/submit.png">', true],
     ["<img alt='' src='//cdn.example/x.png'>", true],
     ['<div style="background: url(http://a.example/b.png)">', true],
     ['<img src="cid:logo">', false],

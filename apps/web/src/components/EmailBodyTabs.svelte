@@ -37,7 +37,9 @@
       {/if}
     {:else if activeTab === 'html'}
       {#if email.htmlBody}
-        <HtmlPreview html={email.htmlBody} />
+        {#key email.id}
+          <HtmlPreview html={email.htmlBody} />
+        {/key}
       {:else}
         <p class="text-surface-500">No HTML body</p>
       {/if}

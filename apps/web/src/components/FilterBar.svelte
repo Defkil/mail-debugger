@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import type { EmailFilter } from '@mail-debugger/client';
   import Button from './ui/Button.svelte';
   import TextInput from './ui/TextInput.svelte';
@@ -13,6 +14,7 @@
   let to = $state('');
   let subject = $state('');
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  onDestroy(() => clearTimeout(debounceTimer));
 
   function emit() {
     clearTimeout(debounceTimer);
