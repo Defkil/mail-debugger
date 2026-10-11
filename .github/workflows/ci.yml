@@ -61,6 +61,9 @@ jobs:
       - run: pnpm exec nx run mail-debugger-api:test
       - run: pnpm exec nx run mail-debugger-cli:test
 
+      # End-to-end tests against the built server
+      - run: pnpm exec nx run "@mail-debugger/server-e2e:e2e"
+
       # Typecheck
       - run: pnpm exec nx run types:typecheck
       - run: pnpm exec nx run api-client:typecheck
