@@ -3,8 +3,8 @@
 // trusted publishing (OIDC) and provenance, in a fixed order. Only the
 // publish workflow runs this.
 //
-// Publishing three packages is not atomic. Before each upload the script
-// asks the registry for that exact version:
+// Publishing three packages is not atomic. Before any upload the script
+// asks the registry for all three exact versions:
 //   - absent: publish the tarball,
 //   - present with the same integrity: skip it (a rerun after a partial
 //     release),
@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { npmCommand } from './npm-command.mjs';
 
 const dir = process.argv[2];
 if (!dir || process.argv.length !== 3) {
@@ -28,13 +29,10 @@ const ORDER = ['mail-debugger', 'mail-debugger-api', 'mail-debugger-cli'];
 const REGISTRY = 'https://registry.npmjs.org';
 const PUBLISH_NPM = '12.2.0';
 
-/** Runs npm; on Windows through the shell, which resolves npm.cmd. */
+/** Runs npm without passing paths or arguments through a shell. */
 function npm(args, options) {
-  if (process.platform !== 'win32') return spawnSync('npm', args, options);
-  const line = ['npm', ...args]
-    .map((arg) => (/^[\w@%+=:,./\\-]+$/.test(arg) ? arg : `"${arg}"`))
-    .join(' ');
-  return spawnSync(line, { ...options, shell: true });
+  const invocation = npmCommand(args);
+  return spawnSync(invocation.command, invocation.args, options);
 }
 
 function fail(message) {
@@ -89,10 +87,29 @@ async function publishedIntegrity(name, version) {
     return fail(`${url} answered ${response.status}`);
   }
   const document = await response.json();
-  return document.versions?.[version]?.dist?.integrity;
+  if (!document.versions || typeof document.versions !== 'object') {
+    return fail(`${url} returned no version map; refusing to publish`);
+  }
+  if (!Object.hasOwn(document.versions, version)) return undefined;
+  const integrity = document.versions[version]?.dist?.integrity;
+  if (
+    typeof integrity !== 'string' ||
+    !/^sha512-[A-Za-z\d+/]{86}==$/.test(integrity)
+  ) {
+    return fail(
+      `${name}@${version} already exists without a valid SHA-512 integrity; a maintainer must review it`,
+    );
+  }
+  return integrity;
 }
 
-const npmVersion = npm(['--version'], { encoding: 'utf8' }).stdout.trim();
+const versionResult = npm(['--version'], { encoding: 'utf8' });
+if (versionResult.status !== 0 || versionResult.error) {
+  fail(
+    `cannot run npm: ${versionResult.error?.message ?? versionResult.stderr}`,
+  );
+}
+const npmVersion = versionResult.stdout.trim();
 if (npmVersion !== PUBLISH_NPM) {
   fail(`publishing needs npm ${PUBLISH_NPM}, found ${npmVersion}`);
 }
@@ -119,24 +136,41 @@ if (versions.size !== 1 || tarballs.length !== ORDER.length) {
   fail(`${dir} must hold exactly the three tarballs of one version`);
 }
 
-const done = [];
+// Check every package first: an existing mismatch or failed registry request
+// must stop the run before an otherwise missing package can be uploaded.
+const publishedVersions = new Map();
 for (const release of releases) {
   const label = `${release.name}@${release.version}`;
   const published = await publishedIntegrity(release.name, release.version);
+  if (published !== undefined && published !== release.integrity) {
+    fail(
+      `${label} is already published with other contents (${published}, this tarball is ${release.integrity}). ` +
+        'Nothing was published by this run. A maintainer must review this release.',
+    );
+  }
+  publishedVersions.set(release.name, published);
+}
+
+const done = [];
+for (const release of releases) {
+  const label = `${release.name}@${release.version}`;
+  const published = publishedVersions.get(release.name);
   if (published === release.integrity) {
     console.log(`${label} is already published with this tarball; skipped.`);
     done.push(`${label} (already published)`);
     continue;
   }
-  if (published !== undefined) {
-    fail(
-      `${label} is already published with other contents (${published}, this tarball is ${release.integrity}). ` +
-        `Published so far: ${done.join(', ') || 'none'}. A maintainer must review this release.`,
-    );
-  }
   console.log(`Publishing ${label} from ${path.basename(release.file)}`);
   const result = npm(
-    ['publish', release.file, '--provenance', '--access', 'public'],
+    [
+      'publish',
+      release.file,
+      '--provenance',
+      '--access',
+      'public',
+      '--registry',
+      REGISTRY,
+    ],
     { stdio: 'inherit' },
   );
   if (result.status !== 0) {

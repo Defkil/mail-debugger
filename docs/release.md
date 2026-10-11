@@ -7,7 +7,7 @@
 - The workflow accepts only stable tags `vMAJOR.MINOR.PATCH`; pre-releases need a dist-tag policy first. Manual runs are allowed only from `main` and only for an existing tag.
 - `scripts/verify-release.mjs` requires the tag commit to be the checked-out commit and part of `origin/main`, all three package versions to equal the tag, and `CHANGELOG.md` to have a dated section for the version.
 - `pnpm verify` runs formatting, `pnpm audit --prod`, lint, typecheck, unit tests, builds, end-to-end tests and the smoke test, which packs the three tarballs into `$RUNNER_TEMP/release`, checks their contents and runs them installed.
-- `scripts/publish-tarballs.mjs` publishes exactly those tarballs with npm 12.2.0 through OIDC: no npm token exists in the repository. Before each upload it looks the version up on the registry: a missing version is published, a version with the same tarball integrity is skipped, a version with other contents stops the run.
+- `scripts/publish-tarballs.mjs` publishes exactly those tarballs with npm 12.2.0 through OIDC: no npm token exists in the repository. Before any upload it looks all three versions up on the registry: a missing version is published, a version with the same tarball integrity is skipped, a version with other contents or missing integrity stops the run. A failed or malformed registry response also stops the run before any upload.
 
 The npm packages trust this repository and the workflow file name `publish.yml` without a GitHub environment. Renaming the workflow or adding an environment requires changing the trusted publisher of all three packages on npmjs.com first.
 
@@ -17,7 +17,7 @@ The npm packages trust this repository and the workflow file name `publish.yml` 
    - `main` contains everything for the release, and CI on `main` is green.
    - The three manifests (`package.json`, `packages/api/package.json`, `packages/cli/package.json`) carry the new version.
    - `CHANGELOG.md` has `## [X.Y.Z] - YYYY-MM-DD` with the release date and the compare links at the bottom; `[Unreleased]` is empty.
-   - On npmjs.com, each of the three packages has the trusted publisher `Defkil/mail-debugger`, workflow `publish.yml`, no environment.
+   - On npmjs.com, each of the three packages has the trusted publisher `Defkil/mail-debugger`, workflow `publish.yml`, no environment, with direct `npm publish` allowed. [npm's trusted-publisher documentation](https://docs.npmjs.com/trusted-publishers/) explains these settings; newer configurations default to staged publishing, while this workflow publishes directly.
    - Private vulnerability reporting is enabled in the repository settings (SECURITY.md links to it).
 2. **Tag and push**
 

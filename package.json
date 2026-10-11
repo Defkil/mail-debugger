@@ -46,10 +46,11 @@
     "lint": "nx run-many -t lint",
     "typecheck": "nx run-many -t typecheck",
     "test": "nx run-many -t test --output-style=static -- --coverage",
+    "test:release": "node --test scripts/*.test.mjs",
     "e2e": "nx run @mail-debugger/server-e2e:e2e",
     "smoke": "nx run @mail-debugger/server-e2e:smoke",
     "format:check": "prettier --check .",
-    "verify": "pnpm format:check && pnpm audit --prod && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e && pnpm smoke",
+    "verify": "pnpm format:check && pnpm audit --prod && pnpm lint && pnpm typecheck && pnpm test && pnpm test:release && pnpm build && pnpm e2e && pnpm smoke",
     "prepack": "nx build @mail-debugger/server --skip-nx-cache"
   },
   "files": [

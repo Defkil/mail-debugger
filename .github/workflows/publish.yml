@@ -30,7 +30,9 @@ jobs:
       group: publish
       cancel-in-progress: false
     env:
+      NX_DAEMON: 'false'
       NX_NO_CLOUD: 'true'
+      NX_TUI: 'false'
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
       - name: Check the trigger and the tag

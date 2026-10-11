@@ -47,6 +47,7 @@ The root `package.json` is the `mail-debugger` distribution. [docs/architecture.
 | `pnpm lint`         | ESLint, including `.svelte` files                                                                                                           |
 | `pnpm typecheck`    | TypeScript and `svelte-check`                                                                                                               |
 | `pnpm test`         | Unit tests with a coverage summary per project and coverage floors for the core modules                                                     |
+| `pnpm test:release` | Isolated release-script tests with mocked npm and registry calls; nothing is published                                                      |
 | `pnpm e2e`          | End-to-end tests: real servers on free ports, Nodemailer, ImapFlow and the MCP SDK client                                                   |
 | `pnpm smoke`        | Packs the three distributions, installs each tarball into an empty project and runs it (see below)                                          |
 | `pnpm format:check` | Prettier                                                                                                                                    |
@@ -58,6 +59,7 @@ Single projects run through Nx, for example `pnpm nx test @mail-debugger/server`
 
 - **Unit tests** (Vitest) sit next to the code as `*.spec.ts`. They cover the mail service, storage and migrations, configuration, REST routes, IMAP and MCP adapters with fault injection, the client, the CLI and the logic of the web inbox. The interactive inbox is rendered with Rezi's test renderer and driven through a fake app, without a terminal.
 - **End-to-end tests** (`apps/server-e2e`) start the built binaries on free ports and talk to them like users do: Nodemailer over SMTP in every TLS mode, the REST API and the client, both terminal clients, ImapFlow and raw IMAP transcripts, the MCP SDK client over HTTP and through the stdio bridge. One message is read back through every surface in each TLS mode. Servers are stopped and temporary directories removed after each file.
+- **Release-script tests** (`scripts/release-scripts.test.mjs`) use local Git fixtures and mocked npm and registry calls to check release tags, dates, versions and partial-publication recovery. They never publish or contact the registry.
 - **The smoke test** (`scripts/pack-and-smoke.mjs`) checks the npm tarballs against an allowlist, installs each into an empty project outside the workspace with production dependencies only, and runs the installed commands, the client import from JavaScript and TypeScript, and SMTP mail read back over REST, IMAP, MCP and the bridge. A change to the published files needs a matching change of its allowlist.
 - **No browser or UI automation.** The web inbox is checked through unit tests of its logic, its build and HTTP checks of the served pages and assets; nothing drives a browser. The same goes for the terminal UI.
 

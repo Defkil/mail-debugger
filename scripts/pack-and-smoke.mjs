@@ -19,7 +19,7 @@
 // Run it after `pnpm build` (`pnpm smoke` builds first). Every process and
 // file it creates is removed again, also when a check fails or the run is
 // interrupted. Exit code 0 means that every check passed.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -27,6 +27,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import zlib from 'node:zlib';
+import { npmCommand } from './npm-command.mjs';
 import {
   Client,
   StreamableHTTPClientTransport,
@@ -147,11 +148,22 @@ const children = new Set();
 let workDir;
 let keepWorkDir = false;
 
+/** Stops an owned process and its descendants when a check cannot finish. */
+function terminateChild(child) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  if (isWindows && child.pid) {
+    // Killing cmd.exe alone leaves the node process started by an npm shim.
+    spawnSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], {
+      stdio: 'ignore',
+    });
+  } else {
+    child.kill('SIGKILL');
+  }
+}
+
 function cleanUp() {
   for (const child of children) {
-    if (child.exitCode === null && child.signalCode === null) {
-      child.kill('SIGKILL');
-    }
+    terminateChild(child);
   }
   children.clear();
   if (workDir && !keepWorkDir) {
@@ -242,7 +254,7 @@ function exec(command, args, options = {}) {
   const timeoutMs = options.timeoutMs ?? 60_000;
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      child.kill('SIGKILL');
+      terminateChild(child);
       reject(
         new SmokeError(
           `Timed out after ${timeoutMs} ms: ${command} ${args.join(' ')}`,
@@ -264,9 +276,9 @@ function exec(command, args, options = {}) {
 }
 
 async function npm(args, cwd) {
-  const result = await exec('npm', args, {
+  const invocation = npmCommand(args);
+  const result = await exec(invocation.command, invocation.args, {
     cwd,
-    shell: true,
     timeoutMs: 600_000,
   });
   if (result.code !== 0) {
@@ -908,7 +920,7 @@ async function startServer(consumer, name, bin, args) {
     async stop() {
       if (child.connected) child.send('shutdown');
       else child.kill('SIGTERM');
-      const timer = setTimeout(() => child.kill('SIGKILL'), 15_000);
+      const timer = setTimeout(() => terminateChild(child), 15_000);
       const code = await exited;
       clearTimeout(timer);
       children.delete(child);

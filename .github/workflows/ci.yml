@@ -16,7 +16,9 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
+  NX_DAEMON: 'false'
   NX_NO_CLOUD: 'true'
+  NX_TUI: 'false'
 
 jobs:
   verify:

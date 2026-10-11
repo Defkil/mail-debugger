@@ -86,6 +86,13 @@ const dated = heading.exec(changelog);
 if (!dated) {
   fail(`CHANGELOG.md has no section "## [${version}] - YYYY-MM-DD"`);
 }
+const releaseDate = new Date(`${dated[1]}T00:00:00.000Z`);
+if (
+  Number.isNaN(releaseDate.getTime()) ||
+  releaseDate.toISOString().slice(0, 10) !== dated[1]
+) {
+  fail(`CHANGELOG.md has an invalid release date ${dated[1]}`);
+}
 
 console.log(
   `verify-release: ${tag} is ${tagCommit} on main; all three distributions are ${version}; the changelog dates it ${dated[1]}.`,
