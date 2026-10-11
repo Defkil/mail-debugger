@@ -319,7 +319,11 @@ async function pack(destination) {
       ['pack', '--json', '--ignore-scripts', '--pack-destination', destination],
       path.join(root, distribution.dir),
     );
-    const [manifest] = JSON.parse(output);
+    // npm 11 prints an array of packed packages, npm 12 an object by name.
+    const packed = JSON.parse(output);
+    const manifest = Array.isArray(packed)
+      ? packed[0]
+      : packed[distribution.name];
     expectEqual(manifest.name, distribution.name, 'Packed package name');
     const file = path.join(destination, manifest.filename);
     const digest = createHash('sha512')
