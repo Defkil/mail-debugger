@@ -64,6 +64,7 @@ const DISTRIBUTIONS = [
       'package.json',
       'README.md',
       'LICENSE',
+      'CHANGELOG.md',
       'apps/server/dist/main.mjs',
       'apps/server/dist/web/index.html',
       'apps/server/dist/web/_app/version.json',
