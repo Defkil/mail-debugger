@@ -87,6 +87,8 @@ export interface HealthResponse {
   apiPort: number;
   /** Bound IMAP port when the server runs with --imap (0.4 and later). */
   imapPort?: number;
+  /** True when the server serves MCP at /mcp (0.4 and later). */
+  mcp?: boolean;
   persistent: boolean;
   emailCount: number;
 }

@@ -6,6 +6,7 @@ import { DEFAULT_LIMITS } from './mail/mail-service.js';
 import type {
   ImapConfig,
   MailCredentials,
+  McpConfig,
   ServerConfig,
   TlsMode,
 } from './types.js';
@@ -31,6 +32,7 @@ const TLS_MODES: readonly TlsMode[] = ['none', 'starttls', 'implicit'];
 export const ENVIRONMENT = {
   apiToken: 'MAIL_DEBUGGER_API_TOKEN',
   authPassword: 'MAIL_DEBUGGER_AUTH_PASSWORD',
+  mcpToken: 'MAIL_DEBUGGER_MCP_TOKEN',
 } as const;
 
 interface OptionSpec {
@@ -81,6 +83,17 @@ export const SERVER_OPTIONS: readonly OptionSpec[] = [
     value: 'port',
     default: `${DEFAULT_IMAP_PORT}, ${DEFAULT_IMAPS_PORT} with --tls implicit`,
     description: 'IMAP port (0 picks a free port)',
+  },
+  {
+    name: 'mcp',
+    type: 'boolean',
+    description:
+      'Serve MCP for AI agents at /mcp on the HTTP port, with read-only tools (see docs/mcp.md)',
+  },
+  {
+    name: 'mcp-allow-mutations',
+    type: 'boolean',
+    description: 'Also offer the MCP tools delete_email and clear_emails',
   },
   {
     name: 'tls',
@@ -254,12 +267,8 @@ export function parseServerArgs(
         : undefined
       : path.resolve(context.cwd, dataDirValue);
 
-  const apiToken = context.env[ENVIRONMENT.apiToken];
-  if (apiToken !== undefined && !/^\S+$/.test(apiToken)) {
-    throw new UsageError(
-      `${ENVIRONMENT.apiToken} must be a non-empty value without whitespace`,
-    );
-  }
+  const apiToken = parseToken(context, ENVIRONMENT.apiToken);
+  const mcp = parseMcp(values, context);
 
   const config: ServerConfig = {
     host,
@@ -280,9 +289,37 @@ export function parseServerArgs(
       parseAllowedOrigin(value),
     ),
     ...(imap && { imap }),
+    ...(mcp && { mcp }),
   };
   assertExposureIsProtected(config);
   return { kind: 'run', config };
+}
+
+/** A bearer token from the environment: absent, or non-empty without whitespace. */
+function parseToken(context: ParseContext, name: string): string | undefined {
+  const token = context.env[name];
+  if (token !== undefined && !/^\S+$/.test(token)) {
+    throw new UsageError(
+      `${name} must be a non-empty value without whitespace`,
+    );
+  }
+  return token;
+}
+
+function parseMcp(
+  values: Values,
+  context: ParseContext,
+): McpConfig | undefined {
+  const allowMutations = values['mcp-allow-mutations'] === true;
+  if (values['mcp'] !== true) {
+    if (allowMutations) {
+      throw new UsageError('--mcp-allow-mutations needs --mcp');
+    }
+    return undefined;
+  }
+  // Read only with --mcp: the stdio bridge uses the same variable.
+  const token = parseToken(context, ENVIRONMENT.mcpToken);
+  return { allowMutations, ...(token && { token }) };
 }
 
 function parseImap(values: Values, tls: TlsMode): ImapConfig | undefined {
@@ -499,6 +536,9 @@ function assertExposureIsProtected(config: ServerConfig): void {
   if (!config.apiToken) {
     problems.push(`set ${ENVIRONMENT.apiToken} to protect the REST API`);
   }
+  if (config.mcp && !config.mcp.token) {
+    problems.push(`set ${ENVIRONMENT.mcpToken} to protect MCP`);
+  }
   if (config.tls === 'none') {
     problems.push('use --tls starttls or --tls implicit');
   }
@@ -515,7 +555,6 @@ function assertExposureIsProtected(config: ServerConfig): void {
   }
 }
 
-/** The usage text, generated from {@link SERVER_OPTIONS}. */
 /**
  * The server help. `withCommands` adds the subcommands of the main
  * mail-debugger binary.
@@ -533,17 +572,22 @@ export function formatServerHelp(
   const width = Math.max(...rows.map(([flag]) => flag.length)) + 2;
   return [
     withCommands
-      ? `Usage: ${command} [serve] [options]\n       ${command} cli [options] [command]`
+      ? [
+          `Usage: ${command} [serve] [options]`,
+          `       ${command} cli [options] [command]`,
+          `       ${command} mcp [--url <url>]`,
+        ].join('\n')
       : `Usage: ${command} [options]`,
     '',
     'Fake SMTP server for development: catches every email and shows it in a',
-    'web inbox and over a REST API.',
+    'web inbox, over a REST API and, when enabled, over IMAP and MCP.',
     '',
     ...(withCommands
       ? [
           'Commands:',
           '  serve  Start the server (the default)',
           `  cli    Read the inbox of a running server; see "${command} cli --help"`,
+          `  mcp    Connect an MCP client over stdio to a server started with --mcp; see "${command} mcp --help"`,
           '',
         ]
       : []),
@@ -552,6 +596,7 @@ export function formatServerHelp(
     '',
     'Environment:',
     `  ${ENVIRONMENT.apiToken}      Bearer token required by the REST API`,
+    `  ${ENVIRONMENT.mcpToken}      Bearer token required by MCP (--mcp)`,
     `  ${ENVIRONMENT.authPassword}  Password of --auth-user`,
     '  LOG_LEVEL                    debug, info, warn or error',
     '  NODE_ENV=production          Log JSON lines instead of colored text',

@@ -42,6 +42,15 @@ export interface ServerConfig {
   httpAllowedOrigins: string[];
   /** The IMAP listener; absent unless enabled with --imap. */
   imap?: ImapConfig;
+  /** The MCP endpoint at /mcp; absent unless enabled with --mcp. */
+  mcp?: McpConfig;
+}
+
+export interface McpConfig {
+  /** Offer the delete_email and clear_emails tools. */
+  allowMutations: boolean;
+  /** Bearer token that /mcp requires when set. */
+  token?: string;
 }
 
 export interface ImapConfig {

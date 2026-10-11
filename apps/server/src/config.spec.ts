@@ -314,6 +314,57 @@ describe('parseServerArgs', () => {
     });
   });
 
+  describe('MCP', () => {
+    it('is off unless --mcp is given', () => {
+      expect(run([]).mcp).toBeUndefined();
+      expect(usageError(['--mcp-allow-mutations'])).toBe(
+        '--mcp-allow-mutations needs --mcp',
+      );
+    });
+
+    it('offers read-only tools unless mutations are allowed', () => {
+      expect(run(['--mcp']).mcp).toEqual({ allowMutations: false });
+      expect(run(['--mcp', '--mcp-allow-mutations']).mcp).toEqual({
+        allowMutations: true,
+      });
+    });
+
+    it('reads the token from MAIL_DEBUGGER_MCP_TOKEN', () => {
+      const env = context({ MAIL_DEBUGGER_MCP_TOKEN: 'mcp-secret' });
+      expect(run(['--mcp'], env).mcp).toEqual({
+        allowMutations: false,
+        token: 'mcp-secret',
+      });
+      // Without --mcp the variable belongs to the stdio bridge.
+      expect(run([], env).mcp).toBeUndefined();
+      expect(
+        usageError(['--mcp'], context({ MAIL_DEBUGGER_MCP_TOKEN: 'a b' })),
+      ).toMatch(/MAIL_DEBUGGER_MCP_TOKEN must be/);
+    });
+
+    it('requires the token beyond loopback', () => {
+      const env = {
+        MAIL_DEBUGGER_AUTH_PASSWORD: 'pw',
+        MAIL_DEBUGGER_API_TOKEN: 'api',
+      };
+      const remote = [
+        '--host',
+        '0.0.0.0',
+        '--tls',
+        'starttls',
+        '--auth-user',
+        'dev',
+        '--mcp',
+      ];
+      expect(usageError(remote, context(env))).toMatch(
+        /MAIL_DEBUGGER_MCP_TOKEN to protect MCP/,
+      );
+      expect(
+        run(remote, context({ ...env, MAIL_DEBUGGER_MCP_TOKEN: 'mcp' })).mcp,
+      ).toEqual({ allowMutations: false, token: 'mcp' });
+    });
+  });
+
   it('rejects an empty or whitespace API token', () => {
     expect(usageError([], context({ MAIL_DEBUGGER_API_TOKEN: '' }))).toMatch(
       /MAIL_DEBUGGER_API_TOKEN/,
@@ -352,10 +403,19 @@ describe('formatServerHelp', () => {
       '--http-allowed-origin',
       '--imap',
       '--imap-port <port>',
+      '--mcp',
+      '--mcp-allow-mutations',
     ]) {
       expect(help).toContain(option);
     }
     expect(help).toContain('MAIL_DEBUGGER_API_TOKEN');
+    expect(help).toContain('MAIL_DEBUGGER_MCP_TOKEN');
     expect(help).toContain('(default: 127.0.0.1)');
+  });
+
+  it('lists the commands of the main binary', () => {
+    const help = formatServerHelp('mail-debugger', true);
+    expect(help).toContain('mail-debugger mcp [--url <url>]');
+    expect(help).toMatch(/^ {2}mcp {4}Connect an MCP client/m);
   });
 });

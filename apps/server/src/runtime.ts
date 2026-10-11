@@ -5,6 +5,7 @@ import { listenHttp, type HttpListener } from './api/listener.js';
 import { openStore } from './db/store.js';
 import type { ImapListener } from './imap/imap-server.js';
 import type { Logger } from './logger.js';
+import type { McpEndpoint } from './mcp/http.js';
 import { MailService } from './mail/mail-service.js';
 import { describeListenError } from './net-listen.js';
 import { closeSmtp, createSmtpServer, listenSmtp } from './smtp/smtp-server.js';
@@ -35,6 +36,8 @@ export interface RunningServer {
   readonly http: AddressInfo;
   /** Bound IMAP address, when IMAP is enabled. */
   readonly imap?: AddressInfo;
+  /** Whether /mcp serves MCP. */
+  readonly mcp: boolean;
   readonly service: MailService;
   /**
    * Stops accepting mail and connections, lets clients finish within the
@@ -64,6 +67,7 @@ export async function startServer(
   let smtpOpen = false;
   let http: HttpListener | undefined;
   let imap: ImapListener | undefined;
+  let mcp: McpEndpoint | undefined;
 
   try {
     const certificate = await loadCertificate(config);
@@ -92,15 +96,28 @@ export async function startServer(
     );
     smtpOpen = true;
 
+    if (config.mcp) {
+      // Loaded on demand: a server without --mcp never loads the MCP SDK.
+      const { createMcpEndpoint } = await import('./mcp/http.js');
+      mcp = createMcpEndpoint({
+        service,
+        logger,
+        allowMutations: config.mcp.allowMutations,
+      });
+    }
+    const mcpToken = config.mcp?.token;
+
     let policy: HttpPolicy | undefined;
     const app = createApp({
       service,
       logger,
       ...(options.webDir && { webDir: options.webDir }),
+      ...(mcp && { mcp }),
       info: () => ({
         smtpPort: smtpAddress.port,
         apiPort: http?.address.port ?? config.apiPort,
         ...(imap && { imapPort: imap.address.port }),
+        ...(mcp && { mcp: true }),
       }),
       policy: () => {
         policy ??= createHttpPolicy({
@@ -109,6 +126,7 @@ export async function startServer(
           allowedHosts: config.httpAllowedHosts,
           allowedOrigins: config.httpAllowedOrigins,
           ...(config.apiToken && { apiToken: config.apiToken }),
+          ...(mcpToken && { mcpToken }),
         });
         return policy;
       },
@@ -161,16 +179,20 @@ export async function startServer(
 
     const httpListener = http;
     const imapListener = imap;
+    const mcpEndpoint = mcp;
     let closing: Promise<void> | undefined;
     return {
       smtp: smtpAddress,
       http: httpListener.address,
       ...(imapListener && { imap: imapListener.address }),
+      mcp: !!mcpEndpoint,
       service,
       close() {
         closing ??= (async () => {
+          // Ends pending waits, including those of MCP clients.
           service.stopAccepting();
           await Promise.allSettled([
+            mcpEndpoint?.close(),
             httpListener.close(SHUTDOWN_GRACE_MS),
             closeSmtp(smtp),
             imapListener?.close(SHUTDOWN_GRACE_MS),
@@ -183,6 +205,7 @@ export async function startServer(
   } catch (error) {
     service.stopAccepting();
     await Promise.allSettled([
+      mcp?.close(),
       imap?.close(0),
       http?.close(0),
       smtpServer && smtpOpen ? closeSmtp(smtpServer) : undefined,

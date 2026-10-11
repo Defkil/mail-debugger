@@ -11,6 +11,7 @@ import {
 } from '../testing/mail-fixtures.js';
 import { getVersion } from '../version.js';
 import { createApp } from './app.js';
+import type { McpEndpoint } from '../mcp/http.js';
 import { createHttpPolicy } from './guards.js';
 import { contentDisposition, safeContentType } from './routes/emails.js';
 
@@ -18,6 +19,8 @@ const BASE = 'http://localhost:3000';
 
 interface AppOptions {
   apiToken?: string;
+  mcpToken?: string;
+  mcp?: McpEndpoint;
   webDir?: string;
   allowedOrigins?: string[];
 }
@@ -29,6 +32,7 @@ function makeApp(service: MailService, options: AppOptions = {}) {
     allowedHosts: [],
     allowedOrigins: options.allowedOrigins ?? [],
     ...(options.apiToken && { apiToken: options.apiToken }),
+    ...(options.mcpToken && { mcpToken: options.mcpToken }),
   });
   return createApp({
     service,
@@ -36,8 +40,22 @@ function makeApp(service: MailService, options: AppOptions = {}) {
     policy: () => policy,
     info: () => ({ smtpPort: 2525, apiPort: 3000 }),
     ...(options.webDir && { webDir: options.webDir }),
+    ...(options.mcp && { mcp: options.mcp }),
   });
 }
+
+/** An MCP endpoint that answers every request with its method. */
+const echoMcp: McpEndpoint = {
+  allowMutations: false,
+  pendingWaits: 0,
+  fetch: async (request) =>
+    Response.json({ method: request.method, body: await request.text() }),
+  close: async () => {
+    // Nothing to close.
+  },
+};
+
+const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
 
 function request(pathname: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
@@ -438,6 +456,68 @@ describe('HTTP app', () => {
       // The documentation and the web inbox stay reachable to ask for the token.
       expect((await call('/swagger/json')).status).toBe(200);
     });
+
+    it('requires the MCP token for /mcp, independent of the API token', async () => {
+      app = makeApp(service, {
+        apiToken: 'api-token',
+        mcpToken: 'mcp-token',
+        mcp: echoMcp,
+      });
+      const missing = await call('/mcp', { method: 'POST', body: '{}' });
+      expect(missing.status).toBe(401);
+      expect(missing.headers.get('www-authenticate')).toBe(
+        'Bearer realm="mail-debugger"',
+      );
+      expect(missing.body).toMatchObject({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: expect.stringContaining('MCP'),
+        },
+      });
+      expect(
+        (await call('/mcp', { method: 'POST', headers: bearer('api-token') }))
+          .status,
+      ).toBe(401);
+      expect(
+        (await call('/api/emails', { headers: bearer('mcp-token') })).status,
+      ).toBe(401);
+      const passed = await call('/mcp', {
+        method: 'POST',
+        headers: bearer('mcp-token'),
+        body: '{"jsonrpc":"2.0"}',
+      });
+      expect(passed.body).toEqual({
+        method: 'POST',
+        body: '{"jsonrpc":"2.0"}',
+      });
+    });
+
+    it('checks Host and Origin for /mcp too', async () => {
+      app = makeApp(service, { mcp: echoMcp });
+      expect(
+        (
+          await call('/mcp', {
+            method: 'POST',
+            headers: { host: 'evil.example:3000' },
+          })
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await call('/mcp', {
+            method: 'POST',
+            headers: { origin: 'https://evil.example' },
+          })
+        ).status,
+      ).toBe(403);
+      expect((await call('/mcp', { method: 'GET' })).body).toEqual({
+        method: 'GET',
+        body: '',
+      });
+      expect((await call('/mcp', { method: 'DELETE' })).body).toMatchObject({
+        method: 'DELETE',
+      });
+    });
   });
 
   describe('static web inbox', () => {
@@ -484,6 +564,21 @@ describe('HTTP app', () => {
       expect((await call('/missing.js')).status).toBe(404);
       expect((await call('/api/missing')).body).toMatchObject({
         error: { code: 'NOT_FOUND' },
+      });
+    });
+
+    it('answers /mcp with JSON 404 while MCP is disabled', async () => {
+      for (const [pathname, method] of [
+        ['/mcp', 'GET'],
+        ['/mcp', 'POST'],
+        ['/mcp/sse', 'GET'],
+      ]) {
+        const response = await call(pathname, { method });
+        expect(response.status, `${method} ${pathname}`).toBe(404);
+        expect(response.body).toMatchObject({ error: { code: 'NOT_FOUND' } });
+      }
+      expect((await call('/mcp', { method: 'POST' })).body).toMatchObject({
+        error: { message: expect.stringContaining('--mcp') },
       });
     });
 

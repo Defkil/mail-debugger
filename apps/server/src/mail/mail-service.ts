@@ -379,10 +379,30 @@ export class MailService {
     return deleted;
   }
 
-  /** Deletes every email. Ids and UIDs continue where they were. */
-  clear(origin: MutationOrigin): number {
+  /**
+   * Deletes every email. Ids and UIDs continue where they were. With
+   * `expectedCount`, the deletion only happens when exactly that many emails
+   * are stored, checked in the same transaction; otherwise it rejects with
+   * COUNT_CHANGED and deletes nothing.
+   */
+  clear(
+    origin: MutationOrigin,
+    options: { expectedCount?: number } = {},
+  ): number {
     const repository = this.store.repository;
-    const deleted = repository.transaction(() => repository.deleteAll());
+    const { expectedCount } = options;
+    const deleted = repository.transaction(() => {
+      if (expectedCount !== undefined) {
+        const count = repository.count();
+        if (count !== expectedCount) {
+          throw new ServiceError(
+            'COUNT_CHANGED',
+            `The mailbox holds ${count} emails, not ${expectedCount}; list them again before clearing`,
+          );
+        }
+      }
+      return repository.deleteAll();
+    });
     if (deleted.length > 0) {
       this.store.changed();
       this.events.emit('deleted', { emails: deleted, cleared: true, origin });

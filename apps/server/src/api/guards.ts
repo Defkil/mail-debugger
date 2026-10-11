@@ -12,12 +12,15 @@ export interface HttpPolicyOptions {
   allowedOrigins: readonly string[];
   /** When set, `/api/*` requires `Authorization: Bearer <token>`. */
   apiToken?: string;
+  /** When set, `/mcp` requires `Authorization: Bearer <token>`. */
+  mcpToken?: string;
 }
 
 export interface HttpPolicy {
   readonly allowedHosts: ReadonlySet<string>;
   readonly allowedOrigins: ReadonlySet<string>;
   readonly apiToken?: string;
+  readonly mcpToken?: string;
 }
 
 const WILDCARD_HOSTS = new Set(['0.0.0.0', '::']);
@@ -55,12 +58,18 @@ export function createHttpPolicy(options: HttpPolicyOptions): HttpPolicy {
     allowedHosts: hosts,
     allowedOrigins: origins,
     ...(options.apiToken && { apiToken: options.apiToken }),
+    ...(options.mcpToken && { mcpToken: options.mcpToken }),
   };
 }
 
 /** Paths that require the API token when one is configured. */
 export function isProtectedPath(pathname: string): boolean {
   return pathname === '/api' || pathname.startsWith('/api/');
+}
+
+/** Paths that require the MCP token when one is configured. */
+export function isMcpPath(pathname: string): boolean {
+  return pathname === '/mcp' || pathname.startsWith('/mcp/');
 }
 
 /**
@@ -89,17 +98,27 @@ export function checkRequest(
       'The request origin is not allowed; add it with --http-allowed-origin',
     );
   }
-  if (policy.apiToken && isProtectedPath(pathname)) {
-    const authorization = request.headers.get('authorization') ?? '';
-    const match = /^Bearer\s+(\S+)$/i.exec(authorization);
-    if (!match || !safeEqual(match[1], policy.apiToken)) {
-      return new HttpError(
-        401,
-        'UNAUTHORIZED',
-        'This API requires a valid bearer token',
-        { 'www-authenticate': 'Bearer realm="mail-debugger"' },
-      );
-    }
+  const token = isProtectedPath(pathname)
+    ? policy.apiToken
+    : isMcpPath(pathname)
+      ? policy.mcpToken
+      : undefined;
+  if (token && !hasBearer(request, token)) {
+    return new HttpError(
+      401,
+      'UNAUTHORIZED',
+      isMcpPath(pathname)
+        ? 'MCP requires a valid bearer token (MAIL_DEBUGGER_MCP_TOKEN)'
+        : 'This API requires a valid bearer token',
+      { 'www-authenticate': 'Bearer realm="mail-debugger"' },
+    );
   }
   return undefined;
+}
+
+/** Whether the request carries `Authorization: Bearer <token>`. */
+function hasBearer(request: Request, token: string): boolean {
+  const authorization = request.headers.get('authorization') ?? '';
+  const match = /^Bearer\s+(\S+)$/i.exec(authorization);
+  return !!match && safeEqual(match[1], token);
 }

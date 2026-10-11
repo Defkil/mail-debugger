@@ -23,6 +23,7 @@ describe('command line', () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toContain('Usage: mail-debugger [serve] [options]');
     expect(result.stdout).toContain('mail-debugger cli [options] [command]');
+    expect(result.stdout).toContain('mail-debugger mcp [--url <url>]');
     expect(result.stdout).toContain('--data-dir <dir>');
     expect(result.stderr).toBe('');
   });
@@ -37,7 +38,7 @@ describe('command line', () => {
     expect(await server.stop()).toBe(0);
   });
 
-  it.each([['frobnicate'], ['mcp'], ['--cli']])(
+  it.each([['frobnicate'], ['--cli']])(
     'rejects the command %s with exit code 2',
     async (command) => {
       const result = await runBinary([command]);

@@ -106,6 +106,15 @@ function logStartup(
   logger.info(
     `REST API: ${httpUrl(server.http, '/api')} (docs: ${httpUrl(server.http, '/swagger')})`,
   );
+  if (config.mcp) {
+    logger.info(
+      {
+        tools: config.mcp.allowMutations ? 'read and delete' : 'read-only',
+        token: config.mcp.token ? 'required' : 'none',
+      },
+      `MCP: ${httpUrl(server.http, '/mcp')}`,
+    );
+  }
   logger.info(
     config.dataDir
       ? `Mail is kept in ${config.dataDir}`

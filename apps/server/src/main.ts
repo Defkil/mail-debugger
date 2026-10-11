@@ -14,6 +14,16 @@ if (command === 'cli') {
     name: `${NAME} cli`,
     version: getVersion(),
   });
+} else if (command === 'mcp') {
+  // Loaded on demand: the stdio bridge opens no mailbox and no listener.
+  const { runMcpBridge } = await import('./mcp/bridge.js');
+  process.exitCode = await runMcpBridge(rest, {
+    name: `${NAME} mcp`,
+    version: getVersion(),
+  });
+  // Lingering handles of the SDK transports must not keep a finished bridge
+  // alive; the delay lets pending output reach the pipes first.
+  setTimeout(() => process.exit(), 1000).unref();
 } else if (
   command === undefined ||
   command === 'serve' ||

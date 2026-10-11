@@ -7,6 +7,7 @@ export type ServiceErrorCode =
   | 'STORAGE_FULL'
   | 'MESSAGE_TOO_LARGE'
   | 'LIMIT_EXCEEDED'
+  | 'COUNT_CHANGED'
   | 'SHUTTING_DOWN';
 
 /**
