@@ -61,6 +61,17 @@ function fakeApp(initial: Partial<TuiState> = {}, initialRoute = 'list') {
 
 const second: EmailSummary = { ...mockSummary, id: 2, subject: 'Second' };
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  // eslint-disable-next-line unicorn/prefer-promise-with-resolvers -- the project's ES2022 types do not include withResolvers
+  const promise = new Promise<T>((complete, fail) => {
+    resolve = complete;
+    reject = fail;
+  });
+  return { promise, resolve, reject };
+}
+
 describe('TUI actions', () => {
   it('loads the filtered list and keeps the focus inside it', async () => {
     const fake = fakeApp({ focusedEmailIndex: 5 });
@@ -118,6 +129,55 @@ describe('TUI actions', () => {
     });
     await actions.loadEmailDetail(1);
     expect(fake.state().selectedEmail).toEqual(mockEmail);
+  });
+
+  it('keeps the newest refresh when earlier requests complete later', async () => {
+    const fake = fakeApp();
+    const older = deferred<{
+      data: EmailSummary[];
+      total: number;
+    }>();
+    const client = createMockClient({
+      listEmails: vi
+        .fn()
+        .mockReturnValueOnce(older.promise)
+        .mockResolvedValueOnce({ data: [second], total: 1 }),
+    });
+    const actions = createActions({
+      appHandle: { current: fake.app },
+      container: createStateContainer(),
+      client,
+    });
+    const pending = actions.refreshEmails();
+    await actions.refreshEmails();
+    older.resolve({ data: [mockSummary], total: 1 });
+    await pending;
+    expect(fake.state().emails).toEqual([second]);
+    expect(fake.state().isLoading).toBe(false);
+  });
+
+  it('ignores a superseded detail failure instead of leaving the newer email', async () => {
+    const fake = fakeApp({}, 'detail');
+    const older = deferred<typeof mockEmail>();
+    const newer = { ...mockEmail, id: 2, subject: 'New selection' };
+    const client = createMockClient({
+      getEmail: vi
+        .fn()
+        .mockReturnValueOnce(older.promise)
+        .mockResolvedValueOnce(newer),
+    });
+    const actions = createActions({
+      appHandle: { current: fake.app },
+      container: createStateContainer(),
+      client,
+    });
+    const pending = actions.loadEmailDetail(1);
+    await actions.loadEmailDetail(2);
+    older.reject(new Error('The old email was deleted'));
+    await pending;
+    expect(fake.state().selectedEmail).toEqual(newer);
+    expect(fake.state().error).toBeNull();
+    expect(fake.router.back).not.toHaveBeenCalled();
   });
 
   it('refuses to run before the app exists', async () => {

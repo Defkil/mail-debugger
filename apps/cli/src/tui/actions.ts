@@ -26,6 +26,8 @@ export interface CreateActionsDeps {
 
 export function createActions(deps: CreateActionsDeps): TuiActions {
   const { appHandle, container, client } = deps;
+  let listRequest = 0;
+  let detailRequest = 0;
 
   function app(): App<TuiState> {
     if (!appHandle.current) {
@@ -35,10 +37,12 @@ export function createActions(deps: CreateActionsDeps): TuiActions {
   }
 
   async function refreshEmails(): Promise<void> {
+    const request = ++listRequest;
     app().update((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       const filter = buildFilter(container.getCurrentState());
       const { data: emails } = await client.listEmails(filter);
+      if (request !== listRequest) return;
       app().update((prev) => ({
         ...prev,
         emails,
@@ -50,6 +54,7 @@ export function createActions(deps: CreateActionsDeps): TuiActions {
         lastRefresh: Date.now(),
       }));
     } catch (error) {
+      if (request !== listRequest) return;
       app().update((prev) => ({
         ...prev,
         isLoading: false,
@@ -59,16 +64,19 @@ export function createActions(deps: CreateActionsDeps): TuiActions {
   }
 
   async function loadEmailDetail(id: number): Promise<void> {
+    const request = ++detailRequest;
     app().update((prev) => ({ ...prev, selectedEmail: null }));
     try {
       const email = await client.getEmail(id);
+      if (request !== detailRequest) return;
       app().update((prev) => ({ ...prev, selectedEmail: email }));
     } catch (error) {
+      if (request !== detailRequest) return;
       app().update((prev) => ({
         ...prev,
         error: getErrorMessage(error, 'Failed to load email'),
       }));
-      app().router?.back();
+      if (app().router?.currentRoute().id === 'detail') app().router?.back();
     }
   }
 

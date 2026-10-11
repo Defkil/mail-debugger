@@ -52,6 +52,15 @@ describe('runCli without a command', () => {
     expect(loadTerminalEngine).not.toHaveBeenCalled();
   });
 
+  it('sanitizes control characters in argument diagnostics', async () => {
+    const hostile = 'unknown\u{1B}]52;c;cHduZWQ=\u{7}';
+    expect(await runCli([hostile], program)).toBe(2);
+    expect(stderr).toContain('Unknown command');
+    expect(stderr).toContain('\u{FFFD}]52;c;cHduZWQ=\u{FFFD}');
+    expect(stderr).not.toContain('\u{1B}');
+    expect(stderr).not.toContain('\u{7}');
+  });
+
   it('explains when the terminal engine cannot load on this platform', async () => {
     setTerminal(true);
     loadTerminalEngine.mockRejectedValue(

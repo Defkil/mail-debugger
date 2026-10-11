@@ -35,7 +35,7 @@ export async function runCli(
   } catch (error) {
     if (!(error instanceof UsageError)) throw error;
     process.stderr.write(
-      `${program.name}: ${error.message}\nRun "${program.name} --help" for usage.\n`,
+      `${program.name}: ${terminalLine(error.message)}\nRun "${program.name} --help" for usage.\n`,
     );
     return 2;
   }
