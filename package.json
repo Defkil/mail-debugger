@@ -29,6 +29,14 @@
   "bin": {
     "mail-debugger": "apps/server/dist/main.mjs"
   },
+  "exports": {
+    "./client": {
+      "types": "./libs/client/dist/index.d.ts",
+      "import": "./libs/client/dist/index.js",
+      "default": "./libs/client/dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "setup": "husky",
     "build": "nx run-many -t build",
@@ -40,7 +48,11 @@
     "prepack": "nx build @mail-debugger/server --skip-nx-cache"
   },
   "files": [
-    "apps/server/dist"
+    "apps/server/dist",
+    "libs/client/dist",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public",
