@@ -60,7 +60,6 @@
   },
   "dependencies": {
     "@elysiajs/node": "1.4.5",
-    "@elysiajs/openapi": "1.4.16",
     "@modelcontextprotocol/client": "2.3.1",
     "@modelcontextprotocol/server": "2.3.1",
     "@rezi-ui/native": "0.1.0-beta.2",
@@ -77,6 +76,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@elysiajs/openapi": "1.4.16",
     "@eslint/js": "10.0.1",
     "@nx/esbuild": "23.3.0",
     "@nx/eslint": "23.3.0",

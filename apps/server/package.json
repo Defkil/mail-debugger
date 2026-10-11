@@ -41,13 +41,15 @@
               "sql.js",
               "pino",
               "pino-pretty",
-              "@rezi-ui/native"
+              "@rezi-ui/native",
+              "@sinclair/typebox"
             ],
             "splitting": true
           },
           "excludeFromExternal": [
             "@rezi-ui/core",
-            "@rezi-ui/node"
+            "@rezi-ui/node",
+            "@elysiajs/openapi"
           ],
           "declaration": false,
           "skipTypeCheck": true
@@ -70,7 +72,8 @@
                 "sql.js",
                 "pino",
                 "pino-pretty",
-                "@rezi-ui/native"
+                "@rezi-ui/native",
+                "@sinclair/typebox"
               ],
               "splitting": true
             }
