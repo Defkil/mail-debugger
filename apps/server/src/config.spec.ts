@@ -339,7 +339,7 @@ describe('parseServerArgs', () => {
       expect(run([], env).mcp).toBeUndefined();
       expect(
         usageError(['--mcp'], context({ MAIL_DEBUGGER_MCP_TOKEN: 'a b' })),
-      ).toMatch(/MAIL_DEBUGGER_MCP_TOKEN must be/);
+      ).toMatch(/MAIL_DEBUGGER_MCP_TOKEN must contain only visible ASCII/);
     });
 
     it('requires the token beyond loopback', () => {

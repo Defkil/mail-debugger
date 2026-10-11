@@ -169,7 +169,7 @@ describe('startServer', () => {
     try {
       await expect(
         startServer(config(['--data-dir', dataDir]), { logger: silentLogger }),
-      ).rejects.toThrow(/in use by process/);
+      ).rejects.toThrow(/locked by process/);
     } finally {
       await first.close();
     }
