@@ -255,6 +255,197 @@ describe('createApiClient', () => {
         code: 'INVALID_RESPONSE',
       });
     });
+
+    it.each([
+      ...Object.keys(summary).map((field): [string, unknown] => [
+        `summary ${field}`,
+        { ...summary, [field]: undefined },
+      ]),
+      ['a non-object summary', null],
+      ['a zero id', { ...summary, id: 0 }],
+      ['a fractional id', { ...summary, id: 1.5 }],
+      ['a non-string recipient', { ...summary, to: [1] }],
+    ])(
+      'rejects malformed %s in a list and wait result',
+      async (_name, data) => {
+        const { fetch } = stubFetch(({ url }) =>
+          url.pathname.endsWith('/wait')
+            ? Response.json({
+                data,
+                timedOut: false,
+                highWatermark: 1,
+                mailboxId: 'm1',
+              })
+            : Response.json({ data: [data], total: 1 }),
+        );
+        const client = createApiClient(BASE, { fetch });
+        await expect(client.listEmails()).rejects.toMatchObject({
+          code: 'INVALID_RESPONSE',
+        });
+        await expect(
+          client.waitForEmail({ afterId: 0, timeoutMs: 0 }),
+        ).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+      },
+    );
+
+    it.each([
+      ...[
+        'id',
+        'from',
+        'to',
+        'subject',
+        'receivedAt',
+        'messageId',
+        'cc',
+        'bcc',
+        'textBody',
+        'htmlBody',
+        'raw',
+        'headers',
+        'attachments',
+      ].map((field): [string, unknown] => [
+        `missing ${field}`,
+        { ...email, [field]: undefined },
+      ]),
+      ['a non-object email', null],
+      ['a non-string header', { ...email, headers: { subject: 1 } }],
+      ['a non-object attachment', { ...email, attachments: [null] }],
+      ...['filename', 'size', 'contentType', 'content'].map(
+        (field): [string, unknown] => [
+          `attachment ${field}`,
+          {
+            ...email,
+            attachments: [
+              {
+                filename: null,
+                size: 1,
+                contentType: 'text/plain',
+                content: 'AA==',
+                [field]: undefined,
+              },
+            ],
+          },
+        ],
+      ),
+      ['a null envelope', { ...email, envelope: null }],
+      [
+        'a malformed envelope sender',
+        { ...email, envelope: { from: 1, to: [] } },
+      ],
+      [
+        'a malformed envelope recipient',
+        { ...email, envelope: { from: null, to: [1] } },
+      ],
+    ])(
+      'rejects %s rather than asserting an Email type',
+      async (_name, data) => {
+        const client = createApiClient(BASE, {
+          fetch: stubFetch(() => Response.json({ data })).fetch,
+        });
+        await expect(client.getEmail(1)).rejects.toMatchObject({
+          code: 'INVALID_RESPONSE',
+        });
+      },
+    );
+
+    it.each([
+      ...['status', 'smtpPort', 'apiPort', 'persistent', 'emailCount'].map(
+        (field): [string, unknown] => [
+          `missing ${field}`,
+          { ...health, [field]: undefined },
+        ],
+      ),
+      ['a non-object health result', null],
+      ['a negative count', { ...health, emailCount: -1 }],
+      ['an invalid version', { ...health, version: 1 }],
+      ['an invalid IMAP port', { ...health, imapPort: '143' }],
+      ['an invalid MCP flag', { ...health, mcp: 'true' }],
+    ])('rejects health with %s', async (_name, body) => {
+      const client = createApiClient(BASE, {
+        fetch: stubFetch(() => Response.json(body)).fetch,
+      });
+      await expect(client.health()).rejects.toMatchObject({
+        code: 'INVALID_RESPONSE',
+      });
+    });
+
+    it('accepts complete optional metadata and legacy omissions', async () => {
+      const client = createApiClient(BASE, {
+        fetch: stubFetch(({ url }) => {
+          if (url.pathname.endsWith('/health'))
+            return Response.json({
+              ...health,
+              version: undefined,
+              imapPort: 143,
+              mcp: true,
+            });
+          return Response.json({
+            data: {
+              ...email,
+              envelope: { from: null, to: ['bcc@example.test'] },
+              attachments: [
+                {
+                  filename: 'a.txt',
+                  size: 1,
+                  contentType: 'text/plain',
+                  content: 'AA==',
+                },
+              ],
+            },
+          });
+        }).fetch,
+      });
+      await expect(client.health()).resolves.toMatchObject({
+        imapPort: 143,
+        mcp: true,
+      });
+      await expect(client.getEmail(1)).resolves.toMatchObject({
+        envelope: { from: null },
+      });
+    });
+
+    it.each([
+      { data: [], total: -1 },
+      { data: [], total: 0, highWatermark: -1 },
+      { data: [], total: 0, mailboxId: 1 },
+      { data: {}, total: 0 },
+    ])(
+      'rejects invalid page counters and cursor metadata: %j',
+      async (body) => {
+        const client = createApiClient(BASE, {
+          fetch: stubFetch(() => Response.json(body)).fetch,
+        });
+        await expect(client.listEmails()).rejects.toMatchObject({
+          code: 'INVALID_RESPONSE',
+        });
+      },
+    );
+
+    it.each([
+      { data: null, timedOut: false, highWatermark: 0, mailboxId: 'm1' },
+      { data: summary, timedOut: true, highWatermark: 1, mailboxId: 'm1' },
+      { data: null, timedOut: true, highWatermark: -1, mailboxId: 'm1' },
+      { data: null, timedOut: true, highWatermark: 0, mailboxId: null },
+    ])('rejects an inconsistent wait result: %j', async (body) => {
+      const client = createApiClient(BASE, {
+        fetch: stubFetch(() => Response.json(body)).fetch,
+      });
+      await expect(
+        client.waitForEmail({ afterId: 0, timeoutMs: 0 }),
+      ).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+    });
+
+    it('rejects invalid deletion responses', async () => {
+      const client = createApiClient(BASE, {
+        fetch: stubFetch(() => Response.json({ deleted: -1 })).fetch,
+      });
+      await expect(client.deleteEmail(1)).rejects.toMatchObject({
+        code: 'INVALID_RESPONSE',
+      });
+      await expect(client.deleteAllEmails()).rejects.toMatchObject({
+        code: 'INVALID_RESPONSE',
+      });
+    });
   });
 
   describe('deletion', () => {
@@ -360,6 +551,50 @@ describe('createApiClient', () => {
       ).rejects.toMatchObject({
         name: 'AbortError',
       });
+    });
+
+    it.each(['headers', 'token'] as const)(
+      'cancels while an asynchronous %s callback is pending, without fetching',
+      async (source) => {
+        const fetch = vi.fn<typeof globalThis.fetch>();
+        const reason = new Error('cancelled during credential lookup');
+        const controller = new AbortController();
+        const pendingSource = new Promise<string>(() => {
+          // A stalled credential provider must not prevent cancellation.
+        });
+        const client = createApiClient(BASE, {
+          fetch,
+          ...(source === 'headers'
+            ? {
+                headers: async () => {
+                  await pendingSource;
+                  return {};
+                },
+              }
+            : { token: () => pendingSource }),
+        });
+
+        const pending = client.health({ signal: controller.signal });
+        controller.abort(reason);
+        await expect(pending).rejects.toBe(reason);
+        expect(fetch).not.toHaveBeenCalled();
+      },
+    );
+
+    it('includes a stalled credential lookup in the request timeout', async () => {
+      const fetch = vi.fn<typeof globalThis.fetch>();
+      const client = createApiClient(BASE, {
+        fetch,
+        token: () =>
+          new Promise(() => {
+            /* The provider never answers. */
+          }),
+        timeoutMs: 10,
+      });
+      await expect(client.health()).rejects.toBeInstanceOf(
+        MailDebuggerTimeoutError,
+      );
+      expect(fetch).not.toHaveBeenCalled();
     });
 
     it('wraps connection failures', async () => {

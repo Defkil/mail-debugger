@@ -135,17 +135,6 @@ export function createApiClient(
     const callerSignal = requestOptions?.signal;
     callerSignal?.throwIfAborted();
 
-    const headers = new Headers(
-      typeof options.headers === 'function'
-        ? await options.headers()
-        : options.headers,
-    );
-    const token =
-      typeof options.token === 'function'
-        ? await options.token()
-        : options.token;
-    if (token) headers.set('authorization', `Bearer ${token}`);
-
     const controller = new AbortController();
     let timedOut = false;
     const timer =
@@ -158,6 +147,17 @@ export function createApiClient(
     const forwardAbort = () => controller.abort(callerSignal?.reason);
     callerSignal?.addEventListener('abort', forwardAbort, { once: true });
     try {
+      const headers = new Headers(
+        typeof options.headers === 'function'
+          ? await abortable(options.headers(), controller.signal)
+          : options.headers,
+      );
+      const token =
+        typeof options.token === 'function'
+          ? await abortable(options.token(), controller.signal)
+          : options.token;
+      if (token) headers.set('authorization', `Bearer ${token}`);
+      controller.signal.throwIfAborted();
       const response = await fetchImpl(url, {
         method,
         headers,
@@ -309,6 +309,24 @@ export function createApiClient(
       );
     },
   };
+}
+
+/** Header/token callbacks share the request's cancellation and timeout. */
+async function abortable<T>(
+  value: T | Promise<T>,
+  signal: AbortSignal,
+): Promise<T> {
+  signal.throwIfAborted();
+  let onAbort!: () => void;
+  const aborted = new Promise<never>((_resolve, reject) => {
+    onAbort = () => reject(signal.reason);
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
+  try {
+    return await Promise.race([value, aborted]);
+  } finally {
+    signal.removeEventListener('abort', onAbort);
+  }
 }
 
 function isListQuery(value: unknown): value is ListEmailsQuery {
@@ -472,23 +490,31 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 function isHealthResponse(body: unknown): body is HealthResponse {
-  return isObject(body) && body['status'] === 'ok';
+  return (
+    isObject(body) &&
+    body['status'] === 'ok' &&
+    isCount(body['smtpPort']) &&
+    isCount(body['apiPort']) &&
+    typeof body['persistent'] === 'boolean' &&
+    isCount(body['emailCount']) &&
+    (body['version'] === undefined || typeof body['version'] === 'string') &&
+    (body['imapPort'] === undefined || isCount(body['imapPort'])) &&
+    (body['mcp'] === undefined || typeof body['mcp'] === 'boolean')
+  );
 }
 
 function isEmailPage(body: unknown): body is EmailPage {
   return (
     isObject(body) &&
-    Array.isArray(body['data']) &&
-    typeof body['total'] === 'number'
+    isArrayOf(body['data'], isSummary) &&
+    isCount(body['total']) &&
+    (body['highWatermark'] === undefined || isCount(body['highWatermark'])) &&
+    (body['mailboxId'] === undefined || typeof body['mailboxId'] === 'string')
   );
 }
 
 function isEmailEnvelope(body: unknown): body is { data: Email } {
-  return (
-    isObject(body) &&
-    isObject(body['data']) &&
-    typeof body['data']['id'] === 'number'
-  );
+  return isObject(body) && isEmail(body['data']);
 }
 
 function isDeletedFlag(body: unknown): body is { deleted: boolean } {
@@ -496,15 +522,89 @@ function isDeletedFlag(body: unknown): body is { deleted: boolean } {
 }
 
 function isDeletedCount(body: unknown): body is { deleted: number } {
-  return isObject(body) && typeof body['deleted'] === 'number';
+  return isObject(body) && isCount(body['deleted']);
 }
 
 function isWaitResult(body: unknown): body is WaitResult {
   return (
     isObject(body) &&
     typeof body['timedOut'] === 'boolean' &&
-    (body['data'] === null || isObject(body['data'])) &&
-    typeof body['highWatermark'] === 'number' &&
-    typeof body['mailboxId'] === 'string'
+    (body['data'] === null || isSummary(body['data'])) &&
+    isCount(body['highWatermark']) &&
+    typeof body['mailboxId'] === 'string' &&
+    (body['timedOut'] ? body['data'] === null : body['data'] !== null)
+  );
+}
+
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || isString(value);
+}
+
+function isArrayOf<T>(
+  value: unknown,
+  validate: (item: unknown) => item is T,
+): value is T[] {
+  return Array.isArray(value) && value.every(validate);
+}
+
+function hasEmailFields(body: Record<string, unknown>): boolean {
+  return (
+    isCount(body['id']) &&
+    body['id'] > 0 &&
+    isString(body['from']) &&
+    isArrayOf(body['to'], isString) &&
+    isString(body['subject']) &&
+    isString(body['receivedAt'])
+  );
+}
+
+function isSummary(body: unknown): body is EmailPage['data'][number] {
+  return (
+    isObject(body) &&
+    hasEmailFields(body) &&
+    typeof body['hasAttachments'] === 'boolean'
+  );
+}
+
+function isAttachment(body: unknown): body is Email['attachments'][number] {
+  return (
+    isObject(body) &&
+    isNullableString(body['filename']) &&
+    isCount(body['size']) &&
+    isString(body['contentType']) &&
+    isString(body['content'])
+  );
+}
+
+function isEnvelope(body: unknown): body is NonNullable<Email['envelope']> {
+  return (
+    isObject(body) &&
+    isNullableString(body['from']) &&
+    isArrayOf(body['to'], isString)
+  );
+}
+
+function isEmail(body: unknown): body is Email {
+  return (
+    isObject(body) &&
+    hasEmailFields(body) &&
+    isNullableString(body['messageId']) &&
+    isArrayOf(body['cc'], isString) &&
+    isArrayOf(body['bcc'], isString) &&
+    isNullableString(body['textBody']) &&
+    isNullableString(body['htmlBody']) &&
+    isString(body['raw']) &&
+    isObject(body['headers']) &&
+    Object.values(body['headers']).every(isString) &&
+    isArrayOf(body['attachments'], isAttachment) &&
+    (body['envelope'] === undefined || isEnvelope(body['envelope']))
   );
 }
