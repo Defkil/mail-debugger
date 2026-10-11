@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { childEnvironment } from './environment.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -58,12 +59,11 @@ export async function startServerProcess(
     [options.binary ?? BINARIES.full, ...args],
     {
       cwd: options.cwd ?? os.tmpdir(),
-      env: {
-        ...process.env,
+      env: childEnvironment({
         NODE_ENV: 'production',
         LOG_LEVEL: 'info',
         ...options.env,
-      },
+      }),
       stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     },
   );
@@ -165,7 +165,7 @@ export function runBinary(
       [options.binary ?? BINARIES.full, ...args],
       {
         cwd: os.tmpdir(),
-        env: { ...process.env, NODE_ENV: 'production', ...options.env },
+        env: childEnvironment({ NODE_ENV: 'production', ...options.env }),
         stdio: ['ignore', 'pipe', 'pipe'],
       },
     );

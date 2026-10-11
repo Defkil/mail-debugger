@@ -5,6 +5,7 @@ import {
 } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { BINARIES, type ServerProcess } from './server.js';
+import { childEnvironment } from './environment.js';
 
 const clients = new Set<Client>();
 
@@ -49,7 +50,7 @@ export async function bridgeClient(
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [BINARIES.full, 'mcp', '--url', url.href],
-    env: { ...(process.env as Record<string, string>), ...options.env },
+    env: childEnvironment(options.env),
     stderr: 'pipe',
   });
   let stderr = '';
