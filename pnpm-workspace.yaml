@@ -2,9 +2,21 @@ packages:
   - 'apps/*'
   - 'libs/*'
   - 'packages/*'
+
+# Closed build-script policy: pnpm aborts the install when a dependency with a
+# lifecycle script is not listed here. Approve only what is needed to install
+# platform binaries and deny the optional fallback compilers.
+strictDepBuilds: true
 allowBuilds:
-  '@swc/core': false
   esbuild: true
   nx: true
+  node-pty: true
+  '@swc/core': false
   unrs-resolver: false
+  '@parcel/watcher': false
+
 autoInstallPeers: true
+
+# Dependencies must not install agent skills into contributor setups.
+skills:
+  dirs: []
