@@ -21,10 +21,14 @@
           "cwd": "apps/server-e2e"
         },
         "dependsOn": [
+          "^build",
           "@mail-debugger/server:build",
           "@mail-debugger/server:build-api"
         ]
       }
     }
+  },
+  "dependencies": {
+    "@mail-debugger/client": "workspace:*"
   }
 }

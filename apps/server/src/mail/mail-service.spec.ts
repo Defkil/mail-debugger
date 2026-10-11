@@ -121,7 +121,12 @@ describe('MailService', () => {
         /offset/,
       );
       expect(() => service.list({ since: 'tomorrow' })).toThrow(/since/);
-      expect(service.list(undefined)).toEqual({ data: [], total: 0 });
+      expect(service.list(undefined)).toEqual({
+        data: [],
+        total: 0,
+        highWatermark: 0,
+        mailboxId: service.identity().mailboxId,
+      });
       await store.close();
     });
 

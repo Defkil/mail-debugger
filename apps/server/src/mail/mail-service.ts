@@ -13,6 +13,7 @@ import { parseEmail } from '../parser/email-parser.js';
 import {
   InvalidArgumentError,
   MessageTooLargeError,
+  ServiceError,
   ShuttingDownError,
   StorageFullError,
 } from './errors.js';
@@ -36,6 +37,11 @@ export const DEFAULT_LIMITS: StorageLimits = {
 export const DEFAULT_PAGE_SIZE = 50;
 export const MAX_PAGE_SIZE = 200;
 
+export const DEFAULT_WAIT_MS = 30_000;
+export const MAX_WAIT_MS = 60_000;
+/** Most waits pending at once, across REST and MCP. */
+export const MAX_ACTIVE_WAITS = 100;
+
 /** Longest keyword flag and most flags per message (IMAP STORE). */
 export const MAX_FLAG_LENGTH = 64;
 export const MAX_FLAGS_PER_MESSAGE = 32;
@@ -54,6 +60,35 @@ export interface FlagChange {
   flags: readonly string[];
 }
 
+/** Where a client stands: ids up to `highWatermark` were allocated. */
+export interface MailboxCursor {
+  highWatermark: number;
+  mailboxId: string;
+}
+
+export interface WaitOptions {
+  /** The result has a higher id; ids are allocated in arrival order. */
+  afterId: number;
+  /** Expected mailbox identity; another one rejects with INVALID_CURSOR. */
+  mailboxId?: string;
+  filter?: EmailFilter;
+  /** 0 to {@link MAX_WAIT_MS}; 0 only checks the stored emails. */
+  timeoutMs: number;
+  /** Ends the wait early; it then rejects with the signal's reason. */
+  signal?: AbortSignal;
+}
+
+export interface WaitOutcome extends MailboxCursor {
+  data: EmailSummary | null;
+  timedOut: boolean;
+}
+
+export interface AttachmentContent {
+  filename: string | null;
+  contentType: string;
+  bytes: Uint8Array;
+}
+
 /**
  * The canonical mailbox. Every surface (SMTP, REST, IMAP, MCP) reads and
  * changes mail through this service, which commits each change in one
@@ -62,6 +97,8 @@ export interface FlagChange {
 export class MailService {
   readonly events: MailEvents;
   private accepting = true;
+  /** Rejects a pending wait; used on shutdown. */
+  private readonly pendingWaits = new Set<(reason: unknown) => void>();
 
   constructor(
     private readonly store: MailStore,
@@ -86,6 +123,11 @@ export class MailService {
   /** Highest id ever allocated; it never decreases, not even after clear. */
   highWatermark(): number {
     return this.store.repository.metadata().lastId;
+  }
+
+  cursor(): MailboxCursor {
+    const { lastId, mailboxId } = this.store.repository.metadata();
+    return { highWatermark: lastId, mailboxId };
   }
 
   stats(): StoreStats {
@@ -148,11 +190,14 @@ export class MailService {
     return { ...key, summary };
   }
 
-  /** Emails matching `filter`, newest first, and the number of matches. */
+  /**
+   * Emails matching `filter`, newest first, the number of matches and the
+   * cursor to wait for newer emails.
+   */
   list(
     filter: EmailFilter | undefined,
     pageOptions?: Page,
-  ): { data: EmailSummary[]; total: number } {
+  ): { data: EmailSummary[]; total: number } & MailboxCursor {
     const page = pageOptions ?? { limit: DEFAULT_PAGE_SIZE, offset: 0 };
     assertPage(page);
     const clause = buildFilterClause(normalizeFilter(filter));
@@ -160,11 +205,119 @@ export class MailService {
     return {
       data: repository.list(clause, page.limit, page.offset),
       total: repository.count(clause),
+      ...this.cursor(),
     };
+  }
+
+  /**
+   * Resolves with the matching email with the lowest id above `afterId`,
+   * waiting up to `timeoutMs` for one to arrive; a timeout resolves with
+   * `data: null`. Rejects with the signal's reason when aborted and with a
+   * {@link ShuttingDownError} when the server stops.
+   */
+  async waitForEmail(options: WaitOptions): Promise<WaitOutcome> {
+    this.assertAccepting();
+    const { afterId, timeoutMs, signal } = options;
+    signal?.throwIfAborted();
+    if (!Number.isSafeInteger(afterId) || afterId < 0) {
+      throw new InvalidArgumentError('afterId must be a non-negative integer');
+    }
+    if (
+      !Number.isSafeInteger(timeoutMs) ||
+      timeoutMs < 0 ||
+      timeoutMs > MAX_WAIT_MS
+    ) {
+      throw new InvalidArgumentError(
+        `timeoutMs must be an integer from 0 to ${MAX_WAIT_MS}`,
+      );
+    }
+    const cursor = this.cursor();
+    if (
+      options.mailboxId !== undefined &&
+      options.mailboxId !== cursor.mailboxId
+    ) {
+      throw new ServiceError(
+        'INVALID_CURSOR',
+        'The cursor belongs to another mailbox; list the emails again for a new one',
+      );
+    }
+    if (afterId > cursor.highWatermark) {
+      throw new ServiceError(
+        'INVALID_CURSOR',
+        `afterId ${afterId} is above the highest allocated id ${cursor.highWatermark}`,
+      );
+    }
+
+    const clause = buildFilterClause(normalizeFilter(options.filter));
+    const find = () => this.store.repository.firstAfter(afterId, clause);
+    const outcome = (data: EmailSummary | undefined): WaitOutcome => ({
+      data: data ?? null,
+      timedOut: !data,
+      ...this.cursor(),
+    });
+
+    const stored = find();
+    if (stored || timeoutMs === 0) return outcome(stored);
+    if (this.pendingWaits.size >= MAX_ACTIVE_WAITS) {
+      throw new ServiceError(
+        'LIMIT_EXCEEDED',
+        `At most ${MAX_ACTIVE_WAITS} waits can be pending at once`,
+      );
+    }
+
+    return new Promise<WaitOutcome>((resolve, reject) => {
+      const cleanups: (() => void)[] = [];
+      const finish = (settle: () => void) => {
+        for (const cleanup of cleanups) cleanup();
+        settle();
+      };
+      const check = () => {
+        const email = find();
+        if (email) finish(() => resolve(outcome(email)));
+      };
+      const cancel = (reason: unknown) => finish(() => reject(reason));
+      const onAbort = () => cancel(signal?.reason);
+
+      // Subscribe first, then check again, so that no arrival is missed.
+      cleanups.push(this.events.on('inserted', check));
+      const timer = setTimeout(
+        () => finish(() => resolve(outcome(undefined))),
+        timeoutMs,
+      );
+      cleanups.push(() => clearTimeout(timer));
+      signal?.addEventListener('abort', onAbort, { once: true });
+      cleanups.push(() => signal?.removeEventListener('abort', onAbort));
+      this.pendingWaits.add(cancel);
+      cleanups.push(() => this.pendingWaits.delete(cancel));
+      check();
+    });
   }
 
   get(id: number): Email | undefined {
     return this.store.repository.findById(id);
+  }
+
+  /** One decoded attachment; `index` counts from 0 in message order. */
+  getAttachment(id: number, index: number): AttachmentContent {
+    const attachments = this.store.repository.findAttachments(id);
+    if (!attachments) {
+      throw new ServiceError('EMAIL_NOT_FOUND', 'Email not found');
+    }
+    const attachment =
+      Number.isSafeInteger(index) && index >= 0
+        ? attachments[index]
+        : undefined;
+    if (!attachment) {
+      throw new ServiceError(
+        'ATTACHMENT_NOT_FOUND',
+        `Email ${id} has no attachment ${index}`,
+      );
+    }
+    return {
+      filename: attachment.filename,
+      contentType: attachment.contentType,
+      bytes: Buffer.from(attachment.content, 'base64'),
+    };
   }
 
   /** The exact octets of a message. */
@@ -227,9 +380,13 @@ export class MailService {
     return applied;
   }
 
-  /** Refuses new mail from now on; reads and deletions keep working. */
+  /**
+   * Refuses new mail and waits from now on and ends the pending waits;
+   * reads and deletions keep working.
+   */
   stopAccepting(): void {
     this.accepting = false;
+    for (const cancel of this.pendingWaits) cancel(new ShuttingDownError());
   }
 
   private assertAccepting(): void {

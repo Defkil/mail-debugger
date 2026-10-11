@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { MailStore } from '../db/store.js';
 import type { MailService } from '../mail/mail-service.js';
 import {
+  attachmentMessage,
   createTestService,
   rawMessage,
   silentLogger,
@@ -11,6 +12,7 @@ import {
 import { getVersion } from '../version.js';
 import { createApp } from './app.js';
 import { createHttpPolicy } from './guards.js';
+import { contentDisposition, safeContentType } from './routes/emails.js';
 
 const BASE = 'http://localhost:3000';
 
@@ -171,6 +173,146 @@ describe('HTTP app', () => {
         deleted: 2,
       });
     });
+  });
+
+  describe('GET /api/emails/wait', () => {
+    it('returns a stored match with the cursor', async () => {
+      await service.receive(rawMessage({ subject: 'one' }), null);
+      const { mailboxId } = service.cursor();
+      const { status, body } = await call(
+        `/api/emails/wait?afterId=0&timeoutMs=0&subject=ONE&mailboxId=${mailboxId}`,
+      );
+      expect(status).toBe(200);
+      expect(body).toEqual({
+        data: expect.objectContaining({ id: 1, subject: 'one' }),
+        timedOut: false,
+        highWatermark: 1,
+        mailboxId,
+      });
+    });
+
+    it('answers a timeout with data null', async () => {
+      const { body } = await call('/api/emails/wait?afterId=0&timeoutMs=10');
+      expect(body).toMatchObject({
+        data: null,
+        timedOut: true,
+        highWatermark: 0,
+      });
+    });
+
+    it('waits for an arrival', async () => {
+      const pending = call('/api/emails/wait?afterId=0&timeoutMs=5000');
+      await service.receive(rawMessage({ subject: 'late' }), null);
+      expect((await pending).body).toMatchObject({
+        data: { id: 1, subject: 'late' },
+        timedOut: false,
+      });
+    });
+
+    it.each([
+      ['/api/emails/wait', 'INVALID_ARGUMENT'],
+      ['/api/emails/wait?afterId=', 'INVALID_ARGUMENT'],
+      ['/api/emails/wait?afterId=-1', 'INVALID_ARGUMENT'],
+      ['/api/emails/wait?afterId=0&timeoutMs=60001', 'INVALID_ARGUMENT'],
+      ['/api/emails/wait?afterId=5', 'INVALID_CURSOR'],
+      ['/api/emails/wait?afterId=0&mailboxId=other', 'INVALID_CURSOR'],
+    ])('answers %s with 400 %s', async (pathname, code) => {
+      const { status, body } = await call(pathname);
+      expect(status).toBe(400);
+      expect(body).toMatchObject({ error: { code } });
+    });
+
+    it('reports the cursor in list responses', async () => {
+      await service.receive(rawMessage(), null);
+      service.clear('rest');
+      expect((await call('/api/emails')).body).toEqual({
+        data: [],
+        total: 0,
+        highWatermark: 1,
+        mailboxId: service.cursor().mailboxId,
+      });
+    });
+  });
+
+  describe('downloads', () => {
+    it('serves the exact source bytes', async () => {
+      const raw = Buffer.concat([rawMessage(), Buffer.from([0xff, 0xfe])]);
+      await service.receive(raw, null);
+
+      const response = await app.handle(request('/api/emails/1/raw'));
+      expect(response.status).toBe(200);
+      expect(Object.fromEntries(response.headers)).toMatchObject({
+        'content-type': 'message/rfc822',
+        'content-disposition': `attachment; filename="email-1.eml"; filename*=UTF-8''email-1.eml`,
+        'content-security-policy': 'sandbox',
+      });
+      expect(Buffer.from(await response.arrayBuffer())).toEqual(raw);
+    });
+
+    it('serves attachments with an inert type and an escaped name', async () => {
+      await service.receive(
+        attachmentMessage({
+          filename: 'a "quoted" résumé.html',
+          contentType: 'text/html',
+          bytes: Buffer.from('<script>alert(1)</script>'),
+        }),
+        null,
+      );
+
+      const response = await app.handle(request('/api/emails/1/attachments/0'));
+      expect(response.status).toBe(200);
+      expect(Object.fromEntries(response.headers)).toMatchObject({
+        'content-type': 'application/octet-stream',
+        'content-disposition': `attachment; filename="a _quoted_ r_sum_.html"; filename*=UTF-8''a%20%22quoted%22%20r%C3%A9sum%C3%A9.html`,
+        'content-security-policy': 'sandbox',
+      });
+      expect(await response.text()).toBe('<script>alert(1)</script>');
+    });
+
+    it.each([
+      ['/api/emails/9/raw', 404, 'EMAIL_NOT_FOUND'],
+      ['/api/emails/9/attachments/0', 404, 'EMAIL_NOT_FOUND'],
+      ['/api/emails/1/attachments/1', 404, 'ATTACHMENT_NOT_FOUND'],
+      ['/api/emails/1/attachments/-1', 400, 'INVALID_ARGUMENT'],
+      ['/api/emails/1/attachments/01', 400, 'INVALID_ARGUMENT'],
+      ['/api/emails/x/raw', 400, 'INVALID_ARGUMENT'],
+    ])('answers %s with %i %s', async (pathname, status, code) => {
+      await service.receive(
+        attachmentMessage({
+          filename: 'a.txt',
+          contentType: 'text/plain',
+          bytes: Buffer.from('a'),
+        }),
+        null,
+      );
+      const result = await call(pathname);
+      expect(result.status).toBe(status);
+      expect(result.body).toMatchObject({ error: { code } });
+    });
+  });
+
+  it.each([
+    ['application/pdf', 'application/pdf'],
+    ['IMAGE/PNG; name="x.png"', 'image/png'],
+    ['text/plain', 'text/plain'],
+    ['text/html', 'application/octet-stream'],
+    ['application/xhtml+xml', 'application/octet-stream'],
+    ['image/svg+xml', 'application/octet-stream'],
+    ['text/javascript', 'application/octet-stream'],
+    ['text/css', 'application/octet-stream'],
+    ['no type', 'application/octet-stream'],
+  ])('serves the declared type %s as %s', (declared, served) => {
+    expect(safeContentType(declared)).toBe(served);
+  });
+
+  it('caps long download names and replaces lone surrogates', () => {
+    const disposition = contentDisposition(`${'x'.repeat(300)}`);
+    expect(disposition).toBe(
+      `attachment; filename="${'x'.repeat(200)}"; filename*=UTF-8''${'x'.repeat(200)}`,
+    );
+    expect(contentDisposition('a\u{D800}b')).toBe(
+      `attachment; filename="a_b"; filename*=UTF-8''a_b`,
+    );
   });
 
   it('reports health with the version and the bound ports', async () => {

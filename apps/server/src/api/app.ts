@@ -45,7 +45,12 @@ export function createApp(options: CreateAppOptions) {
         );
       }
       const httpError = toHttpError(error);
-      if (httpError.status >= 500 && !(error instanceof ServiceError)) {
+      // A client that disconnected (e.g. during a wait) is not a failure.
+      if (
+        httpError.status >= 500 &&
+        !(error instanceof ServiceError) &&
+        !request.signal.aborted
+      ) {
         log.error(
           { err: error, method: request.method, url: request.url },
           'Request failed',

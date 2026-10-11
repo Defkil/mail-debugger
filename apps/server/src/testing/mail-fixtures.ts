@@ -31,6 +31,37 @@ export interface MessageOptions {
   headers?: Record<string, string>;
 }
 
+/** A multipart/mixed message with a text part and one base64 attachment. */
+export function attachmentMessage(attachment: {
+  /** Encoded as an RFC 2231 UTF-8 parameter. */
+  filename: string;
+  contentType: string;
+  bytes: Uint8Array;
+}): Buffer {
+  const name = `UTF-8''${encodeURIComponent(attachment.filename)}`;
+  const lines = [
+    'From: sender@example.com',
+    'To: recipient@example.com',
+    'Subject: Attachment',
+    'MIME-Version: 1.0',
+    'Content-Type: multipart/mixed; boundary="fixture-boundary"',
+    '',
+    '--fixture-boundary',
+    'Content-Type: text/plain; charset=utf-8',
+    '',
+    'See the attachment.',
+    '--fixture-boundary',
+    `Content-Type: ${attachment.contentType}`,
+    `Content-Disposition: attachment; filename*=${name}`,
+    'Content-Transfer-Encoding: base64',
+    '',
+    Buffer.from(attachment.bytes).toString('base64'),
+    '--fixture-boundary--',
+    '',
+  ];
+  return Buffer.from(lines.join('\r\n'), 'utf8');
+}
+
 /** A small RFC 5322 message with CRLF line endings. */
 export function rawMessage(options: MessageOptions = {}): Buffer {
   const lines = [

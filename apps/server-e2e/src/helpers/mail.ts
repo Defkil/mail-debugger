@@ -16,6 +16,8 @@ export interface TestMail {
   text?: string;
   html?: string;
   attachments?: { filename: string; content: Buffer; contentType?: string }[];
+  /** Exact message source; replaces the other content fields. */
+  raw?: Buffer;
 }
 
 /**
@@ -35,6 +37,15 @@ export async function sendMail(options: SendOptions, mail: TestMail = {}) {
     ...(options.auth && { auth: options.auth }),
   });
   try {
+    if (mail.raw) {
+      return await transport.sendMail({
+        envelope: {
+          from: mail.from ?? 'e2e-sender@example.com',
+          to: mail.to ?? 'e2e-recipient@example.com',
+        },
+        raw: mail.raw,
+      });
+    }
     return await transport.sendMail({
       from: mail.from ?? 'e2e-sender@example.com',
       to: mail.to ?? 'e2e-recipient@example.com',

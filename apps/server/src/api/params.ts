@@ -1,7 +1,9 @@
 import type { EmailFilter } from '@mail-debugger/client';
 import {
   DEFAULT_PAGE_SIZE,
+  DEFAULT_WAIT_MS,
   MAX_PAGE_SIZE,
+  MAX_WAIT_MS,
   type Page,
 } from '../mail/mail-service.js';
 import { HttpError } from './http-errors.js';
@@ -67,4 +69,31 @@ export function parsePage(query: QueryValues): Page {
     limit: integer(query, 'limit', DEFAULT_PAGE_SIZE, 1, MAX_PAGE_SIZE),
     offset: integer(query, 'offset', 0, 0, Number.MAX_SAFE_INTEGER),
   };
+}
+
+/**
+ * Wait parameters: the required cursor `afterId` >= 0, an optional
+ * `mailboxId` and `timeoutMs` 0..60000 (default 30000).
+ */
+export function parseWait(query: QueryValues): {
+  afterId: number;
+  mailboxId?: string;
+  timeoutMs: number;
+} {
+  if (!single(query, 'afterId')) throw invalid('afterId is required');
+  const mailboxId = single(query, 'mailboxId');
+  return {
+    afterId: integer(query, 'afterId', 0, 0, Number.MAX_SAFE_INTEGER),
+    timeoutMs: integer(query, 'timeoutMs', DEFAULT_WAIT_MS, 0, MAX_WAIT_MS),
+    ...(mailboxId && { mailboxId }),
+  };
+}
+
+/** A zero-based attachment index in plain decimal digits. */
+export function parseIndex(value: string): number {
+  const index = Number(value);
+  if (!/^(0|[1-9]\d*)$/.test(value) || !Number.isSafeInteger(index)) {
+    throw invalid(`Invalid attachment index "${value}"`);
+  }
+  return index;
 }

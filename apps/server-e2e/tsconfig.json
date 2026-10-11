@@ -8,5 +8,9 @@
     "rootDir": "."
   },
   "include": ["vitest.config.ts", "src/**/*.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../../libs/client/tsconfig.lib.json"
+    }
+  ]
 }

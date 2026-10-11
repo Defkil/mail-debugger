@@ -360,7 +360,11 @@ importers:
         specifier: 0.11.15
         version: 0.11.15
 
-  apps/server-e2e: {}
+  apps/server-e2e:
+    dependencies:
+      '@mail-debugger/client':
+        specifier: workspace:*
+        version: link:../../libs/client
 
   apps/web:
     dependencies:

@@ -66,7 +66,7 @@ export function rowToEmail(row: Row): Email {
   };
 }
 
-function parseJson<T>(value: SqlValue | undefined, fallback: T): T {
+export function parseJson<T>(value: SqlValue | undefined, fallback: T): T {
   if (typeof value !== 'string') return fallback;
   try {
     return JSON.parse(value) as T;

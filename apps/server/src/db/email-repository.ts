@@ -9,6 +9,7 @@ import type { FilterClause } from './email-query.js';
 import { readMetadata, type StoreMetadata } from './metadata.js';
 import {
   firstRow,
+  parseJson,
   rowsFrom,
   rowToEmail,
   rowToSummary,
@@ -146,6 +147,27 @@ export class EmailRepository {
       this.db.exec('SELECT * FROM emails WHERE id = ?', [id]),
     );
     return row ? rowToEmail(row) : undefined;
+  }
+
+  /** The matching summary with the lowest id above `afterId`. */
+  firstAfter(afterId: number, clause: FilterClause): EmailSummary | undefined {
+    const where = clause.where ? `${clause.where} AND id > ?` : 'WHERE id > ?';
+    const row = firstRow(
+      this.db.exec(
+        `SELECT ${SUMMARY_COLUMNS} FROM emails ${where} ORDER BY id LIMIT 1`,
+        [...clause.params, afterId],
+      ),
+    );
+    return row ? rowToSummary(row) : undefined;
+  }
+
+  findAttachments(id: number): AttachmentMeta[] | undefined {
+    const row = firstRow(
+      this.db.exec('SELECT attachments FROM emails WHERE id = ?', [id]),
+    );
+    return row
+      ? parseJson<AttachmentMeta[]>(row['attachments'], [])
+      : undefined;
   }
 
   /** The exact message octets, or undefined for an unknown id. */
