@@ -30,6 +30,13 @@ describe('resolveStaticPath', () => {
     expect(resolved).not.toBe(root);
   });
 
+  it.each(['/..%5c..%5cwindows', '/a%5cb.txt', String.raw`/a\b.txt`])(
+    'rejects backslashes on every platform: %s',
+    (urlPath) => {
+      expect(resolveStaticPath(root, urlPath)).toBeUndefined();
+    },
+  );
+
   it('keeps encoded traversal inside the root', () => {
     for (const urlPath of [
       '/..%2f..%2fsecret',

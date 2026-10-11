@@ -18,7 +18,8 @@ const CONTENT_TYPES: Record<string, string> = {
 
 /**
  * Maps a URL path to a file strictly inside `root`. Returns undefined for
- * undecodable paths, NUL bytes and anything that escapes the root.
+ * undecodable paths, NUL bytes, backslashes (a separator on Windows only;
+ * no web asset contains one) and anything that escapes the root.
  */
 export function resolveStaticPath(
   root: string,
@@ -30,7 +31,7 @@ export function resolveStaticPath(
   } catch {
     return undefined;
   }
-  if (decoded.includes('\0')) return undefined;
+  if (decoded.includes('\0') || decoded.includes('\\')) return undefined;
   const resolved = path.resolve(
     root,
     `.${path.posix.normalize(`/${decoded}`)}`,
