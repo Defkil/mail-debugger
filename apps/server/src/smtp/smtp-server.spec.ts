@@ -1,4 +1,6 @@
 import { createTransport, type TransportOptions } from 'nodemailer';
+import pino from 'pino';
+import type { Logger } from '../logger.js';
 import type { MailStore } from '../db/store.js';
 import type { MailService, StorageLimits } from '../mail/mail-service.js';
 import { createTestService, silentLogger } from '../testing/mail-fixtures.js';
@@ -25,13 +27,14 @@ async function startSmtp(
     credentials?: MailCredentials;
     allowInsecureAuth?: boolean;
     limits?: Partial<StorageLimits>;
+    logger?: Logger;
   } = {},
 ): Promise<Harness> {
   const { service, store } = await createTestService(options.limits);
   const tls = options.tls ?? 'none';
   const server = createSmtpServer({
     service,
-    logger: silentLogger,
+    logger: options.logger ?? silentLogger,
     tls,
     ...(tls !== 'none' && { certificate }),
     ...(options.credentials && { credentials: options.credentials }),
@@ -60,6 +63,23 @@ function transport(port: number, options: Record<string, unknown> = {}) {
     tls: { rejectUnauthorized: false },
     ...options,
   } as TransportOptions);
+}
+
+/** A logger that keeps its JSON lines for assertions. */
+function capturingLogger(): {
+  logger: Logger;
+  lines: Record<string, unknown>[];
+} {
+  const lines: Record<string, unknown>[] = [];
+  const logger = pino(
+    { level: 'info' },
+    {
+      write: (line: string) => {
+        lines.push(JSON.parse(line) as Record<string, unknown>);
+      },
+    },
+  );
+  return { logger, lines };
 }
 
 const message = {
@@ -119,6 +139,29 @@ describe('SMTP server', () => {
     expect(smtp.service.stats().count).toBe(0);
   });
 
+  it('accepts a message of exactly the size limit and refuses one byte more', async () => {
+    const exact =
+      'From: a@example.com\r\nTo: b@example.com\r\nSubject: size\r\n\r\n' +
+      `${'x'.repeat(76)}\r\n`.repeat(20);
+    smtp = await startSmtp({
+      limits: { maxMessageBytes: Buffer.byteLength(exact) },
+    });
+    const port = smtp.port;
+    const send = (raw: string) =>
+      transport(port).sendMail({
+        envelope: { from: 'a@example.com', to: ['b@example.com'] },
+        raw,
+      });
+    await send(exact);
+    expect(Buffer.from(smtp.service.getRaw(1) ?? []).toString('utf8')).toBe(
+      exact,
+    );
+    await expect(send(`${exact.slice(0, -2)}x\r\n`)).rejects.toMatchObject({
+      responseCode: 552,
+    });
+    expect(smtp.service.stats().count).toBe(1);
+  });
+
   it('refuses mail with 452 when the mailbox is full', async () => {
     smtp = await startSmtp({ limits: { maxMessages: 1 } });
     await transport(smtp.port).sendMail(message);
@@ -160,6 +203,39 @@ describe('SMTP server', () => {
       ).rejects.toMatchObject({ responseCode: 530 });
       expect(smtp.service.stats().count).toBe(1);
     });
+
+    it.each(['PLAIN', 'LOGIN'] as const)(
+      'checks the configured credentials with AUTH %s',
+      async (authMethod) => {
+        const { logger, lines } = capturingLogger();
+        smtp = await startSmtp({
+          tls: 'starttls',
+          credentials: { user: 'dev', password: 'secret' },
+          logger,
+        });
+        await transport(smtp.port, {
+          auth: credentials,
+          authMethod,
+          requireTLS: true,
+        }).sendMail(message);
+        await expect(
+          transport(smtp.port, {
+            auth: { user: 'dev', pass: 'wrong' },
+            authMethod,
+            requireTLS: true,
+          }).sendMail(message),
+        ).rejects.toMatchObject({ responseCode: 535 });
+        expect(smtp.service.stats().count).toBe(1);
+        // The server logs the mechanism the client used, never the secret.
+        expect(lines).toContainEqual(
+          expect.objectContaining({
+            msg: 'Rejected SMTP authentication',
+            method: authMethod,
+          }),
+        );
+        expect(JSON.stringify(lines)).not.toContain('wrong');
+      },
+    );
 
     it('refuses authentication before STARTTLS', async () => {
       smtp = await startSmtp({
