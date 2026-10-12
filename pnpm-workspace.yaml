@@ -20,25 +20,3 @@ autoInstallPeers: true
 # Dependencies must not install agent skills into contributor setups.
 skills:
   dirs: []
-
-# Reviewed exceptions to pnpm's minimum release age for exact pins that were
-# younger than 24 hours when the lockfile was resolved (2026-10-11). Each entry
-# names one exact version; once that version is older than the release-age
-# window the entry has no effect and can be deleted without a lockfile change.
-#   @swc/core 1.16.18 (published 2026-10-11T06:48Z) and its platform binaries
-#   smtp-server 3.19.21 (published 2026-10-10T14:58Z)
-minimumReleaseAgeExclude:
-  - '@swc/core@1.16.18'
-  - '@swc/core-darwin-arm64@1.16.18'
-  - '@swc/core-darwin-x64@1.16.18'
-  - '@swc/core-linux-arm-gnueabihf@1.16.18'
-  - '@swc/core-linux-arm64-gnu@1.16.18'
-  - '@swc/core-linux-arm64-musl@1.16.18'
-  - '@swc/core-linux-ppc64-gnu@1.16.18'
-  - '@swc/core-linux-s390x-gnu@1.16.18'
-  - '@swc/core-linux-x64-gnu@1.16.18'
-  - '@swc/core-linux-x64-musl@1.16.18'
-  - '@swc/core-win32-arm64-msvc@1.16.18'
-  - '@swc/core-win32-ia32-msvc@1.16.18'
-  - '@swc/core-win32-x64-msvc@1.16.18'
-  - smtp-server@3.19.21
