@@ -44,6 +44,7 @@ The npm packages trust this repository and the workflow file name `publish.yml` 
 
 ## Maintenance
 
+- **Build caches**: CI and release jobs install from the lockfile without GitHub Actions cache storage. Each runtime job builds and checks its own local tarballs.
 - **Dependencies** are exact pins, updated deliberately in reviewed batches: read the release notes, update the lockfile with the pinned pnpm, run `pnpm verify` and keep `pnpm audit --prod` clean. There are no automated update bots. Install scripts of new dependencies must be allowed or denied in `pnpm-workspace.yaml`.
 - **Actions** are pinned to full commit SHAs with the version in a comment. Resolve a new version with `gh api repos/<owner>/<repo>/commits/<tag> -q .sha`.
 - **Runner image**: all jobs use `ubuntu-24.04` rather than `ubuntu-latest`, which GitHub moves to Ubuntu 26.04 from 2026-10-19, so that CI and releases run on the image the gates last passed on. Move to `ubuntu-26.04` in a separate change once one CI run on it is green; the trusted publishers do not depend on the image.
